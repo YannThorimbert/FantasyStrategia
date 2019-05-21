@@ -1,10 +1,26 @@
 import pygame, thorpy
-import thornoise.purepython.noisegen as ng
-import rendering.tilers.tilemanager as tm
-from mapobjects.objects import MapObject
-import mapobjects.objects as objs
-from editor.mapeditor import MapEditor
+import PyWorld2D.thornoise.purepython.noisegen as ng
+import PyWorld2D.rendering.tilers.tilemanager as tm
+from PyWorld2D.mapobjects.objects import MapObject
+import PyWorld2D.mapobjects.objects as objs
+from PyWorld2D.editor.mapeditor import MapEditor
+from PyWorld2D import PW_PATH
 
+terrain_normal = {  "hdeepwater": 0.4, #deep water only below 0.4
+                    "hwater": 0.55, #normal water between 0.4 and 0.55
+                    "hshore": 0.6, #shore water between 0.55 and 0.6
+                    "hsand": 0.62, #and so on...
+                    "hgrass": 0.8,
+                    "hrock": 0.83,
+                    "hthinsnow": 0.9}
+
+terrain_plains = {  "hdeepwater": 0.2, #deep water only below 0.4
+                    "hwater": 0.35, #normal water between 0.4 and 0.55
+                    "hshore": 0.4, #shore water between 0.55 and 0.6
+                    "hsand": 0.42, #and so on...
+                    "hgrass": 0.6,
+                    "hrock": 0.8,
+                    "hthinsnow": 0.85}
 
 class MapInitializer:
 
@@ -15,6 +31,8 @@ class MapInitializer:
         self.chunk = (1310,14) #Kind of seed. Neighboring chunk give tilable maps.
         self.persistance = 2. #parameter of the random terrain generation.
         self.n_octaves = "max" #parameter of the random terrain generation.
+        self.reverse_hmap = False #set to True to reverse height map
+        self.colorscale_hmap = None #colorscale to use for the minimap
         ############ graphical options:
         self.zoom_cell_sizes = [32, 16, 8] #size of one cell for the different zoom levels.
         self.nframes = 16 #number of frames per world cycle (impacts memory requirement!)
@@ -27,11 +45,11 @@ class MapInitializer:
         # change how "round" look cell transitions
         self.cell_radius_divider = 8
         #path or color of the image of the different materials
-        self.water = "./rendering/tiles/water1.png"
-        self.sand = "./rendering/tiles/sand1.jpg"
-        self.grass = "./rendering/tiles/grass1.png"
-        self.grass2 = "./rendering/tiles/grass8.png"
-        self.rock = "./rendering/tiles/rock1.png"
+        self.water = PW_PATH + "/rendering/tiles/water1.png"
+        self.sand = PW_PATH + "/rendering/tiles/sand1.jpg"
+        self.grass = PW_PATH + "/rendering/tiles/grass1.png"
+        self.grass2 = PW_PATH + "/rendering/tiles/grass8.png"
+        self.rock = PW_PATH + "/rendering/tiles/rock1.png"
         self.black = (0,0,0)
         self.white = (255,255,255)
         #mixed images - we superimpose different image to make a new one
@@ -54,7 +72,7 @@ class MapInitializer:
         self.hthinsnow = 0.9
         self.hsnow = float("inf")
         #precomputed tiles are used only if load_tilers=True is passed to build_materials()
-        self.precomputed_tiles = "./rendering/tiles/precomputed/"
+        self.precomputed_tiles = PW_PATH + "/rendering/tiles/precomputed/"
         #NB : if you want to add your own materials, then you must write your
         #   own version of build_materials function below, and modify the above
         #   parameters accordingly in order to include the additional material
@@ -65,43 +83,43 @@ class MapInitializer:
         self.static_objects_chunk = (12,24)
         #normal forest:
         self.forest_text = "forest"
-        self.tree = "./mapobjects/images/tree.png"
+        self.tree = PW_PATH + "/mapobjects/images/tree.png"
         self.tree_size = 1.5
-        self.fir1 = "./mapobjects/images/yar_fir1.png"
+        self.fir1 = PW_PATH + "/mapobjects/images/yar_fir1.png"
         self.fir1_size = 1.5
-        self.fir2 = "./mapobjects/images/yar_fir2.png"
+        self.fir2 = PW_PATH + "/mapobjects/images/yar_fir2.png"
         self.fir2_size = 1.5
         self.forest_max_density = 1 #integer : number of trees per world cell
         self.forest_homogeneity = 0.1
         self.forest_zones_spread = [(0.5,0.2)]
         #snow forest:
-        self.firsnow = "./mapobjects/images/firsnow2.png"
+        self.firsnow = PW_PATH + "/mapobjects/images/firsnow2.png"
         self.firsnow_size = 1.5
         self.forest_snow_text = "forest"
         self.forest_snow_max_density = 1
         self.forest_snow_homogeneity = 0.5
         self.forest_snow_zones_spread = [(0.5,0.2)]
         #palm forest:
-        self.palm = "./mapobjects/images/skeddles.png"
+        self.palm = PW_PATH + "/mapobjects/images/skeddles.png"
         self.palm_size = 1.7
         self.palm_text = "forest"
         self.palm_max_density = 1
         self.palm_homogeneity = 0.5
         self.palm_zones_spread = [(0., 0.05), (0.3,0.05), (0.6,0.05)]
         #other things:
-        self.bush = "./mapobjects/images/yar_bush.png"
+        self.bush = PW_PATH + "/mapobjects/images/yar_bush.png"
         self.bush_size = 1.
-        self.village1 = "./mapobjects/images/pepperRacoon.png"
+        self.village1 = PW_PATH + "/mapobjects/images/pepperRacoon.png"
         self.village1_size = 1.3
-        self.village2 = "./mapobjects/images/rgbfumes1.png"
+        self.village2 = PW_PATH + "/mapobjects/images/rgbfumes1.png"
         self.village2_size = 2.2
-        self.village3 = "./mapobjects/images/rgbfumes2.png"
+        self.village3 = PW_PATH + "/mapobjects/images/rgbfumes2.png"
         self.village3_size = 2.6
-        self.village4 = "./mapobjects/images/rgbfumes3.png"
+        self.village4 = PW_PATH + "/mapobjects/images/rgbfumes3.png"
         self.village4_size = 2.6
-        self.cobble = "./mapobjects/images/cobblestone2.png"
+        self.cobble = PW_PATH + "/mapobjects/images/cobblestone2.png"
         self.cobble_size = 1.
-        self.wood = "./mapobjects/images/wood1.png"
+        self.wood = PW_PATH + "/mapobjects/images/wood1.png"
         self.wood_size = 1.
         #if you want to add objects by yourself, look at add_static_objects(self)
         self.min_road_length = 10
@@ -113,6 +131,11 @@ class MapInitializer:
         ############ End of user-defined parameters
         self._forest_map = None
         self._static_objs_layer = None
+
+    def set_terrain_type(self, terrain_type, colorscale):
+        for key in terrain_type:
+            setattr(self, key, terrain_type[key])
+        self.colorscale_hmap = colorscale
 
     def get_saved_attributes(self):
         attrs = [a for a in self.__dict__.keys() if not a.startswith("_")]
@@ -142,6 +165,8 @@ class MapInitializer:
         me.chunk = self.chunk
         me.persistance = self.persistance
         me.n_octaves = self.n_octaves
+        me.reverse_hmap = self.reverse_hmap
+        me.colorscale_hmap = self.colorscale_hmap
         me.refresh_derived_parameters()
         return me
 
@@ -194,8 +219,8 @@ class MapInitializer:
         me.build_materials(cell_radius_divider, fast=fast,
                             use_beach_tiler=use_beach_tiler,
                             load_tilers=load_tilers)
-    ##                        load_tilers="./rendering/tiles/precomputed/")
-        ##me.save_tilers("./rendering/tiles/precomputed/")
+    ##                        load_tilers=PW_PATH + "/rendering/tiles/precomputed/")
+        ##me.save_tilers(PW_PATH + "/rendering/tiles/precomputed/")
         ##import sys;app.quit();pygame.quit();sys.exit();exit()
 
 
@@ -225,7 +250,7 @@ class MapInitializer:
         village2 = MapObject(me,self.village2,"village",self.village2_size)
         village3 = MapObject(me,self.village3,"village",self.village3_size)
         village4 = MapObject(me,self.village4,"village",self.village4_size)
-        ##village5 = MapObject(me,"./mapobjects/images/rgbfumes4.png","village",2.2)
+        ##village5 = MapObject(me,PW_PATH + "/mapobjects/images/rgbfumes4.png","village",2.2)
         village1.set_same_type([village2, village3, village4]) #3 images for 1 object
         #
         cobble = MapObject(me,self.cobble,"cobblestone",self.cobble_size)
@@ -326,7 +351,7 @@ class MapInitializer:
         <load_tilers> : use precomputed textures from disk. Very slow but needed if
         you don't have Numpy but still want beach_tiler.
         """
-        if graphical_load: #just ignore this- nothing to do with map configuration
+        if graphical_load: #just ignore this - nothing to do with map configuration
             screen = thorpy.get_screen()
             screen.fill((255,255,255))
             loading_bar = thorpy.LifeBar.make(" ",
@@ -368,7 +393,7 @@ def build_hmap(me):
     hmap = me.build_hmap()
     ##hmap[2][1] = 0.7 #this is how you manually change the height of a given cell
     #Here we build the miniature map image
-    img_hmap = ng.build_surface(hmap)
+    img_hmap = ng.build_surface(hmap, me.colorscale_hmap)
     new_img_hmap = pygame.Surface(me.world_size)
     new_img_hmap.blit(img_hmap, (0,0))
     img_hmap = new_img_hmap
@@ -377,7 +402,7 @@ def build_hmap(me):
 
 
 def add_dynamic_objects(me): #here we add two units for instance
-    char1 = MapObject(me, "./mapobjects/images/char1.png", "My Unit", 1.)
+    char1 = MapObject(me, PW_PATH + "/mapobjects/images/char1.png", "My Unit", 1.)
     obj = me.add_unit(coord=(15,15), obj=char1, quantity=12)
     obj.name = "My first unit"
     obj = me.add_unit((13,13), char1, 1)

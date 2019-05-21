@@ -1,4 +1,4 @@
-from editor.mapbuilding import MapInitializer
+from PyWorld2D.editor.mapbuilding import MapInitializer
 
 #Here I simply define some properties of differnt maps. No programmation, just
 #configuration.

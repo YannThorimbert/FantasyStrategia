@@ -2,8 +2,8 @@ import math
 import pygame
 from thorpy.gamestools.basegrid import BaseGrid
 from thorpy.gamestools.grid import PygameGrid
-from rendering.tilers.tilemanager import get_couple
-from mapobjects.objects import VON_NEUMAN
+from PyWorld2D.rendering.tilers.tilemanager import get_couple
+from PyWorld2D.mapobjects.objects import VON_NEUMAN
 
 #pour eviter de tj faire des tuples, ne pas heriter de PygameGrid et faire moi meme
 

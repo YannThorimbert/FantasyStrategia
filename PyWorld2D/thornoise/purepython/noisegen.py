@@ -283,6 +283,15 @@ def normalize(terrain):
             terrain[x][y] = (terrain[x][y] - m)/(M-m)
     return terrain
 
+def apply(terrain, func):
+    """Apply <func> in place to the values of <terrain>.
+    <func> takes one float argument and must return one float."""
+    S = len(terrain)
+    for x in range(S):
+        for y in range(S):
+            terrain[x][y] = func(terrain[x][y])
+    return terrain
+
 
 def build_surface(terrain, colorscale=None):
     """Return a pygame Surface using <colorscale> as color scale. Suppose
@@ -305,6 +314,18 @@ std_colorscale =  ColorScale([  [(0,0,0), (0,0,100), 0.],            #0. deep
                          [(237, 201, 175), (50,85,10), 0.605],      #4. sand
                          [(50,85,10), (50,180,50), 0.78],           #5. forest
                          [(50,180,50),(150,180,150), 0.85],
+                         [(150,180,150), (255,255,255), 1.000001],    #6. snow
+                         [(255,255,255), (255,255,255), 10.]],      #7. snow
+                         minval = -10.)
+colorscale_normal = std_colorscale
+
+colorscale_plains =  ColorScale([  [(0,0,0), (0,0,100), 0.],            #0. deep
+                         [(0,0,100), (0,30,255), 0.32],             #1. shallow
+                         [(0,30,255), (137, 131, 200), 0.397],      #2. sand
+                         [(137, 131, 200), (237, 201, 175), 0.4],   #3. sand
+                         [(237, 201, 175), (50,85,10), 0.405],      #4. sand
+                         [(50,85,10), (50,180,50), 0.58],           #5. forest
+                         [(50,180,50),(150,180,150), 0.65],
                          [(150,180,150), (255,255,255), 1.000001],    #6. snow
                          [(255,255,255), (255,255,255), 10.]],      #7. snow
                          minval = -10.)

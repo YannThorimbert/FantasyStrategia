@@ -1,6 +1,6 @@
 import pickle, os
 import thorpy
-from mapobjects.objects import MapObject
+from PyWorld2D.mapobjects.objects import MapObject
 
 def ask_save(me):
     choice = thorpy.launch_binary_choice("Do you want to save this map ?")

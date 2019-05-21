@@ -10,7 +10,8 @@ from PyWorld2D.mapobjects.objects import MapObject
 import PyWorld2D.saveload.io as io
 from PyWorld2D.editor.mapeditor import MapEditor #base structure for a map
 from PyWorld2D.editor.mapbuilding import MapInitializer #configuration structure of a map
-import PyWorld2D.mymaps as mymaps #store some pre-defined maps so you can play with
+
+import maps.maps as maps
 
 ###ne pas oublier d'ajouter thorpy
 
@@ -20,48 +21,30 @@ import PyWorld2D.mymaps as mymaps #store some pre-defined maps so you can play w
 #At the end of this file, I provide some ways to do things like use a path finding
 #algorithm, etc.
 
-W,H = 800, 600 #screen size
+W,H = 1000, 700 #screen size
 app = thorpy.Application((W,H))
 
-# The 8 following lines are used to determine if you want to load a map
-save_filename = ""
-title = thorpy.make_text("What do you want ?", font_size=20, font_color=(200,200,200))
-load = io.get_saved_files_button("./")
-dont_load = thorpy.make_button("Build a new map", func=thorpy.functions.quit_menu_func)
-thorpy.store("screen", [title, load, dont_load])
-m = thorpy.Menu([title, load, dont_load])
-m.play()
-save_filename = load.var_text
+map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
+me = map_initializer.configure_map_editor() #me = "Map Editor"
 
-if not save_filename: #use a map that I've set for you. Go and see how to tune it:
-    map_initializer = mymaps.demo_map2 #go in mymaps.py and PLAY with PARAMS !!!
-    me = map_initializer.configure_map_editor() #me = "Map Editor"
-else:
-    savefile = open(save_filename, "rb")
-    me = io.from_file_base(savefile)
-    map_initializer = me.map_initializer
 
 #<fast> : quality a bit lower if true, loading time a bit faster.
 #<use_beach_tiler>: quality much better if true, loading much slower. Req. Numpy!
 #<load_tilers> : Very slow but needed if you don't have Numpy but still want hi quality.
 map_initializer.build_map(me, fast=False, use_beach_tiler=True, load_tilers=False)
 
-if save_filename:
-    io.from_file_cells(savefile, me)
-    io.from_file_units(savefile, me)
-    savefile.close()
-else:
-    #dynamic objects (you cann add them whenever you want):
-    character = MapObject(me, PW_PATH+"/mapobjects/images/char1.png", "My Unit", factor=1.)
-    obj = me.add_unit(coord=(15,15), obj=character, quantity=12)
-    obj.name = "My first unit"
-    obj = me.add_unit((13,14), obj=character, quantity=1)
-    obj.name = "My second unit"
-    #this is how we set the name of a cell
-    me.lm.get_cell_at(14,15).set_name("My left cell")
-    me.lm.get_cell_at(15,14).set_name("My top cell")
-    #we can get the objects belonging to a cell:
-    #assert me.lm.get_cell_at(15,15).objects[1].name == "My first unit"
+
+#dynamic objects (you can add them whenever you want):
+character = MapObject(me, PW_PATH+"/mapobjects/images/char1.png", "My Unit", factor=1.)
+obj = me.add_unit(coord=(15,15), obj=character, quantity=12)
+obj.name = "My first unit"
+obj = me.add_unit((13,14), obj=character, quantity=1)
+obj.name = "My second unit"
+#this is how we set the name of a cell
+me.lm.get_cell_at(14,15).set_name("My left cell")
+me.lm.get_cell_at(15,14).set_name("My top cell")
+#we can get the objects belonging to a cell:
+#assert me.lm.get_cell_at(15,15).objects[1].name == "My first unit"
 
 
 #### GUI and events part #######################################################

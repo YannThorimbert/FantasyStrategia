@@ -4,13 +4,13 @@ import thorpy
 
 has_surfarray = False
 try:
-    from rendering.tilers.beachtiler import BeachTiler
-    from rendering.tilers.basetiler import BaseTiler
-    from rendering.tilers.roundtiler import RoundTiler
-    from rendering.tilers.loadtiler import LoadTiler
+    from PyWorld2D.rendering.tilers.beachtiler import BeachTiler
+    from PyWorld2D.rendering.tilers.basetiler import BaseTiler
+    from PyWorld2D.rendering.tilers.roundtiler import RoundTiler
+    from PyWorld2D.rendering.tilers.loadtiler import LoadTiler
     has_surfarray = True
 except:
-    from rendering.tilers.loadtiler import LoadTiler
+    from PyWorld2D.rendering.tilers.loadtiler import LoadTiler
 
 def get_mixed_tiles(img1, img2, alpha_img_2):
     i1 = img1.copy()

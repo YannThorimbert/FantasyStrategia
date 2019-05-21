@@ -1,7 +1,7 @@
 from thorpy._utils.images import load_image
 from pygame import surfarray
 import math, pygame
-from rendering.tilers.basetiler import BaseTiler
+from PyWorld2D.rendering.tilers.basetiler import BaseTiler
 
 class RoundTiler(BaseTiler):
 

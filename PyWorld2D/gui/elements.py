@@ -1,5 +1,5 @@
 import pygame, thorpy
-import gui.parameters as guip
+import PyWorld2D.gui.parameters as guip
 
 
 def get_help_text(*texts,start="normal"):

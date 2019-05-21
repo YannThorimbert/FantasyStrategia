@@ -1,6 +1,6 @@
 import pygame
 from pygame.math import Vector2 as V2
-from gui.parameters import RMOUSE_COLOR
+from PyWorld2D.gui.parameters import RMOUSE_COLOR
 
 
 class Camera:

@@ -2,7 +2,7 @@ from thorpy._utils.images import load_image
 from thorpy._utils.interpolation import get_y
 from pygame import surfarray
 import math, pygame
-from rendering.tilers.roundtiler import RoundTiler
+from PyWorld2D.rendering.tilers.roundtiler import RoundTiler
 
 
 class BeachTiler(RoundTiler):

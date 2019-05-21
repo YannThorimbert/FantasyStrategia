@@ -2,8 +2,8 @@ import random, math
 import pygame
 import thorpy
 
-from ia.path import BranchAndBoundForMap
-import rendering.tilers.tilemanager as tm
+from PyWorld2D.ia.path import BranchAndBoundForMap
+import PyWorld2D.rendering.tilers.tilemanager as tm
 
 VON_NEUMAN = [(-1,0), (1,0), (0,-1), (0,1)]
 
