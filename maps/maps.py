@@ -8,7 +8,7 @@ from PyWorld2D.thornoise.purepython.noisegen import colorscale_plains
 #and have a look at the MapInitializer constructor
 
 map1 = MapInitializer("First demo map")
-map1.chunk = (13,14)
+map1.chunk = (0,0)
 map1.reverse_hmap = True
 map1.world_size = (32,32)
 map1.set_terrain_type(terrain_plains, colorscale_plains)

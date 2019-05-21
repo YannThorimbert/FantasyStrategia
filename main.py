@@ -12,14 +12,7 @@ from PyWorld2D.editor.mapeditor import MapEditor #base structure for a map
 from PyWorld2D.editor.mapbuilding import MapInitializer #configuration structure of a map
 
 import maps.maps as maps
-
-###ne pas oublier d'ajouter thorpy
-
-#IMPORTANT : probably almost all you need is inside mymaps.py, which provides
-#examples about map configuration.
-
-#At the end of this file, I provide some ways to do things like use a path finding
-#algorithm, etc.
+import gui.gui as gui
 
 W,H = 1000, 700 #screen size
 app = thorpy.Application((W,H))
@@ -36,11 +29,12 @@ map_initializer.build_map(me, fast=False, use_beach_tiler=True, load_tilers=Fals
 
 #dynamic objects (you can add them whenever you want):
 character = MapObject(me, PW_PATH+"/mapobjects/images/char1.png", "My Unit", factor=1.)
-obj = me.add_unit(coord=(15,15), obj=character, quantity=12)
+obj = me.add_unit(coord=(10,16), obj=character, quantity=12)
 obj.name = "My first unit"
-obj = me.add_unit((13,14), obj=character, quantity=1)
+obj = me.add_unit((10,14), obj=character, quantity=1)
 obj.name = "My second unit"
-#this is how we set the name of a cell
+
+
 me.lm.get_cell_at(14,15).set_name("My left cell")
 me.lm.get_cell_at(15,14).set_name("My top cell")
 #we can get the objects belonging to a cell:
@@ -54,6 +48,7 @@ def func_reac_time(): #here add wathever you want
     me.func_reac_time()
     pygame.display.flip()
 thorpy.add_time_reaction(me.e_box, func_reac_time)
+
 
 #here you can add/remove buttons to/from the menu
 def quit_func():
@@ -80,6 +75,8 @@ me.menu_button.user_params = {"element":launched_menu}
 ##me.e_box.remove_reaction("k <sign>")
 #remember to modify/deactivate the help text corresponding to the removed reac
 
+reac_click = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, gui.lbm,{"button":1},{"me":me})
+me.e_box.add_reaction(reac_click)
 
 me.set_zoom(level=0)
 m = thorpy.Menu(me.e_box,fps=me.fps)

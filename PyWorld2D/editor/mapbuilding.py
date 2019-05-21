@@ -19,8 +19,8 @@ terrain_plains = {  "hdeepwater": 0.2, #deep water only below 0.4
                     "hshore": 0.4, #shore water between 0.55 and 0.6
                     "hsand": 0.42, #and so on...
                     "hgrass": 0.6,
-                    "hrock": 0.8,
-                    "hthinsnow": 0.85}
+                    "hrock": 0.84,
+                    "hthinsnow": 0.88}
 
 class MapInitializer:
 

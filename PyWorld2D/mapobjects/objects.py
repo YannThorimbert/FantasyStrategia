@@ -186,13 +186,24 @@ class MapObject:
         return copy
 
     def add_unit_on_cell(self, cell):
-        print(cell.coord, cell.unit, cell.objects)
+        # print(cell.coord, cell.unit, cell.objects)
         assert cell.unit is None
         copy = self.copy()
         copy.cell = cell
         cell.objects.append(copy)
         cell.unit = copy
         return copy
+
+    def move_to_cell(self, dest_cell):
+        assert dest_cell.unit is None
+        #remove from old cell
+        self.cell.objects.remove(self)
+        self.cell.unit = None
+        #go to new cell
+        dest_cell.unit = self
+        dest_cell.objects.append(self)
+        self.cell = dest_cell
+
 
 ##    def build_imgs(self):
 ##        self.imgs_z_t = [] #list of list of images - idx0:scale, idx1:frame
