@@ -147,7 +147,7 @@ class LogicalMap(BaseGrid):
             self[x,y] = LogicalCell(hmap[x][y], (x,y), self)
 
 
-    def get_cell_at(self, x,y):
+    def get_cell_at(self, x, y):
         if self.is_inside((x,y)):
             return self[x,y]
         else:

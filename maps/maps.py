@@ -1,11 +1,19 @@
-from PyWorld2D.editor.mapbuilding import MapInitializer, terrain_plains
-from PyWorld2D.thornoise.purepython.noisegen import colorscale_plains
+from PyWorld2D.editor.mapbuilding import MapInitializer, terrain_plains, terrain_flat
+from PyWorld2D.thornoise.purepython.noisegen import colorscale_plains, colorscale_flat
 
 #Here I simply define some properties of differnt maps. No programmation, just
 #configuration.
 
 #For a description of each parameter, please go the file PyWorld2D/editor/mapbuilding.py
 #and have a look at the MapInitializer constructor
+
+map0 = MapInitializer("Map0")
+map0.chunk = (1400,0)
+map0.world_size = (16,16)
+##map0.set_terrain_type(terrain_flat, colorscale_flat)
+map0.set_terrain_type(terrain_plains, colorscale_plains)
+map0.max_number_of_rivers = 1
+map0.max_number_of_roads = 1
 
 map1 = MapInitializer("First demo map")
 map1.chunk = (0,0)

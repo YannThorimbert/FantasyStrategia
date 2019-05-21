@@ -13,11 +13,12 @@ from PyWorld2D.editor.mapbuilding import MapInitializer #configuration structure
 
 import maps.maps as maps
 import gui.gui as gui
+from logic.unit import Unit
 
 W,H = 1000, 700 #screen size
 app = thorpy.Application((W,H))
 
-map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
+map_initializer = maps.map0 #go in mymaps.py and PLAY with PARAMS !!!
 me = map_initializer.configure_map_editor() #me = "Map Editor"
 
 
@@ -28,11 +29,9 @@ map_initializer.build_map(me, fast=False, use_beach_tiler=True, load_tilers=Fals
 
 
 #dynamic objects (you can add them whenever you want):
-character = MapObject(me, PW_PATH+"/mapobjects/images/char1.png", "My Unit", factor=1.)
-obj = me.add_unit(coord=(10,16), obj=character, quantity=12)
-obj.name = "My first unit"
-obj = me.add_unit((10,14), obj=character, quantity=1)
-obj.name = "My second unit"
+character = Unit("Infantry", me, PW_PATH+"/mapobjects/images/char1.png", "", factor=1.)
+obj = me.add_unit(coord=(5,8), obj=character, quantity=12)
+obj = me.add_unit((10,5), obj=character, quantity=1)
 
 
 me.lm.get_cell_at(14,15).set_name("My left cell")
@@ -42,6 +41,8 @@ me.lm.get_cell_at(15,14).set_name("My top cell")
 
 
 #### GUI and events part #######################################################
+
+ui = gui.Gui(me)
 
 def func_reac_time(): #here add wathever you want
     """Function called each frame"""
@@ -75,8 +76,10 @@ me.menu_button.user_params = {"element":launched_menu}
 ##me.e_box.remove_reaction("k <sign>")
 #remember to modify/deactivate the help text corresponding to the removed reac
 
-reac_click = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, gui.lbm,{"button":1},{"me":me})
+reac_click = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, ui.lbm,{"button":1})
 me.e_box.add_reaction(reac_click)
+reac_motion = thorpy.Reaction(pygame.MOUSEMOTION, ui.mousemotion)
+me.e_box.add_reaction(reac_motion)
 
 me.set_zoom(level=0)
 m = thorpy.Menu(me.e_box,fps=me.fps)

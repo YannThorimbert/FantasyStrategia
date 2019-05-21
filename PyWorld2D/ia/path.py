@@ -1,7 +1,3 @@
-"""
-Yann Thorimbert, 04.11.2014
-"""
-
 class State(object):
     """
     Generic datatype for storing a state.
@@ -111,3 +107,6 @@ class BranchAndBoundForMap:
                         self.enode = self.lnl.pop()
                     already.add(self.enode.cell.coord)
                     i += 1
+
+
+

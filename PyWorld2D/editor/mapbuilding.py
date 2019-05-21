@@ -22,6 +22,14 @@ terrain_plains = {  "hdeepwater": 0.2, #deep water only below 0.4
                     "hrock": 0.84,
                     "hthinsnow": 0.88}
 
+terrain_flat = {    "hdeepwater": 0.2, #deep water only below 0.4
+                    "hwater": 0.35, #normal water between 0.4 and 0.55
+                    "hshore": 0.4, #shore water between 0.55 and 0.6
+                    "hsand": 0.42, #and so on...
+                    "hgrass": 1.,
+                    "hrock": 1.999,
+                    "hthinsnow": 1.9999}
+
 class MapInitializer:
 
     def __init__(self, name):
@@ -47,7 +55,7 @@ class MapInitializer:
         #path or color of the image of the different materials
         self.water = PW_PATH + "/rendering/tiles/water1.png"
         self.sand = PW_PATH + "/rendering/tiles/sand1.jpg"
-        self.grass = PW_PATH + "/rendering/tiles/grass1.png"
+        self.grass = PW_PATH + "/rendering/tiles/grass.png"
         self.grass2 = PW_PATH + "/rendering/tiles/grass8.png"
         self.rock = PW_PATH + "/rendering/tiles/rock1.png"
         self.black = (0,0,0)

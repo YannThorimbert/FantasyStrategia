@@ -342,7 +342,7 @@ def add_random_river(me, layer,
     #
     objs = {}
     for key in imgs:
-        objs[key] = MapObject(me, imgs[key][0], "River", 1.)
+        objs[key] = MapObject(me, imgs[key][0], "river", 1.)
     #5) add river cells to map and layer
     for i,cell in enumerate(actual_path):
         dx, dy = 0, 0

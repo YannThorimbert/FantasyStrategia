@@ -16,6 +16,7 @@ class Camera:
         self.world_size = V2()
         self.nx, self.ny = 0, 0
         self.img_hmap = None
+        self.other_to_draw = []
 
     def set_parameters(self, world_size, cell_size, viewport_rect, img_hmap, max_minimap_size):
         ws, img = get_world_and_minimap_sizes(img_hmap, max_minimap_size)
@@ -167,6 +168,10 @@ class Camera:
             ir.center = r.center
             ir.move_ip(o.relpos[0]*s, o.relpos[1]*s)
             screen.blit(img, ir.topleft)
+
+    def draw_others(self, screen):
+        for surf, pos in self.other_to_draw:
+            screen.blit(surf, pos)
 
     def get_center_coord(self):
         return self.get_coord_at_pix(self.map_rect.center)
