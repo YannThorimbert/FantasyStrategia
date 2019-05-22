@@ -14,24 +14,43 @@ from PyWorld2D.editor.mapbuilding import MapInitializer #configuration structure
 import maps.maps as maps
 import gui.gui as gui
 from logic.unit import Unit
+from logic.races import Race
+
+
+
 
 W,H = 1000, 700 #screen size
 app = thorpy.Application((W,H))
 
-map_initializer = maps.map0 #go in mymaps.py and PLAY with PARAMS !!!
+map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
 me = map_initializer.configure_map_editor() #me = "Map Editor"
 
 
 #<fast> : quality a bit lower if true, loading time a bit faster.
 #<use_beach_tiler>: quality much better if true, loading much slower. Req. Numpy!
 #<load_tilers> : Very slow but needed if you don't have Numpy but still want hi quality.
-map_initializer.build_map(me, fast=False, use_beach_tiler=True, load_tilers=False)
+# map_initializer.build_map(me, fast=False, use_beach_tiler=True, load_tilers=False)
+map_initializer.build_map(me, fast=True, use_beach_tiler=False, load_tilers=False)
 
 
-#dynamic objects (you can add them whenever you want):
-character = Unit("Infantry", me, PW_PATH+"/mapobjects/images/char1.png", "", factor=1.)
-obj = me.add_unit((6,6), obj=character, quantity=1)
-obj = me.add_unit(coord=(5,8), obj=character, quantity=12)
+humans = Race("Humans", me)
+humans.base_cost["grass"] = 2
+humans.base_cost["forest"] = 5
+humans.base_max_dist = 5
+
+humans.add_type("infantry", PW_PATH+"/mapobjects/images/char1.png")
+humans["infantry"].cost["sand"] = 4
+
+humans.add_type("archer", PW_PATH+"/mapobjects/images/char1.png")
+humans["archer"].max_dist = 6
+humans["archer"].cost["cobblestone"] = 1.5
+
+
+
+# obj = me.add_unit((6,6), obj=character, quantity=1)
+# obj = me.add_unit(coord=(5,8), obj=character, quantity=12)
+obj = me.add_unit((16,16), humans["infantry"], 1)
+obj = me.add_unit((15,18), humans["archer"], quantity=12)
 
 
 

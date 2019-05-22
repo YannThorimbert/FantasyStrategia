@@ -1,23 +1,7 @@
 from PyWorld2D.mapobjects.objects import MapObject
 
 
-std_cost_material = {'Deep water': float("inf"),
-                     'Grass': 1,
-                     'Rock': 2,
-                     'Sand': 2,
-                     'Shallow water': float("inf"),
-                     'Snow': 4,
-                     'Thin snow': 3,
-                     'Water': float("inf"),
-                     'outside': float("inf")}
-
-#these are used as multipliers on the base material of the cell
-std_cost_objects = {'forest': 1.5,
-                    'cobblestone':0.5,
-                    'village':0.5,
-                    'wood':0.5,
-                    'river':3,
-                    'bush':1.5}
+DELTAS = ((1,0),(-1,0),(0,1),(0,-1))
 
 class Unit(MapObject):
 
@@ -25,33 +9,37 @@ class Unit(MapObject):
                     build=True, new_type=True):
         MapObject.__init__(self, editor, fns, name, factor, relpos, build, new_type)
         self.type_name = type_name
-        self.costs_material = std_cost_material.copy()
-        self.costs_objects = std_cost_objects.copy()
-        self.deltas = ((1,0),(-1,0),(0,1),(0,-1))
-        self.max_dist = 3
+        self.cost = None
+        self.max_dist = None
+        self.race = None
 
-    def _spawn_possible_destinations(self, x, y, tot_cost, score):
-        for dx,dy in self.deltas:
-            cx, cy = x+dx, y+dy
-            cell = self.editor.lm.get_cell_at(cx,cy)
-            if cell:
-                best_score = score.get((cx,cy), float("inf"))
-                cost_material = self.costs_material[cell.material.name]
-                mult_object = 1.
-                for obj in cell.objects:
+    def _spawn_possible_destinations(self, x, y, tot_cost, path_to_here, score):
+        for dx,dy in DELTAS:
+            cx, cy = x+dx, y+dy #next cell
+            next_cell = self.editor.lm.get_cell_at(cx,cy)
+            if next_cell:
+                no_key_value = float("inf"), None
+                best_score, best_path = score.get((cx,cy), no_key_value)
+                #compute the cost of the current path ##########################
+                for obj in next_cell.objects:
                     if not isinstance(obj, Unit):
-                        mult_object = self.costs_objects[obj.name]
+                        this_tot_cost = self.cost[obj.name]
                         break
-                this_tot_cost = tot_cost + cost_material*mult_object
-                if this_tot_cost <= self.max_dist:
+                else: #if break is never reached
+                    this_tot_cost = self.cost[next_cell.material.name]
+                this_tot_cost += tot_cost #+ cost so far
+                ################################################################
+                if this_tot_cost <= self.max_dist: #should update the best
                     if this_tot_cost < best_score:
-                        score[(cx,cy)] = this_tot_cost
-                        self._spawn_possible_destinations(cx, cy, this_tot_cost, score)
+                        new_best_path = path_to_here + [(cx,cy)]
+                        score[(cx,cy)] = this_tot_cost, new_best_path
+                        self._spawn_possible_destinations(cx, cy, this_tot_cost,
+                                                          new_best_path, score)
 
     def get_possible_destinations(self):
         score = {}
         x,y = self.cell.coord
-        self._spawn_possible_destinations(x, y, 0., score)
+        self._spawn_possible_destinations(x, y, 0., [self.cell.coord], score)
         return score
 
 
@@ -68,6 +56,10 @@ class Unit(MapObject):
         obj.object_type = self.object_type
         obj.quantity = self.quantity
         obj.fns = self.fns
+        #
+        obj.cost = self.cost.copy()
+        obj.max_dist = self.max_dist
+        obj.race = self.race
         return obj
 
     def deep_copy(self):
@@ -87,4 +79,8 @@ class Unit(MapObject):
         obj.min_relpos = list(self.min_relpos)
         obj.max_relpos = list(self.max_relpos)
         obj.object_type = self.object_type
+        #
+        obj.cost = self.cost.copy()
+        obj.max_dist = self.max_dist
+        obj.race = self.race
         return obj
