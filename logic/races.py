@@ -17,15 +17,33 @@ std_cost_material = {'Deep water': float("inf"),
                      'bush':5}
 
 
+faire un objet quand meme, juste pour storer : cost factor, attack range et degats associes, defense, besoins en nourriture, + vulnerabilite a certains types ? 
+
 std_type_cost = {'villager':1,
                 'infantry':1,
                 'archer':1,
                 'cavalry':2,
+                'mounted archer':2,
                 'wizard':1,
+                'arch mage':1,
+                'king':1,
                 'cook':0.5,
                 'doctor':0.5,
                 'transport boat':1.5,
                 'attack boat':2}
+
+std_attack_range = {'villager':(1,1),
+                    'infantry':(1,1),
+                    'archer':(2,4),
+                    'cavalry':(1,1),
+                    'mounted archer':(2,4),
+                    'wizard':(1,2),
+                    'arch mage':(1,5),
+                    'king':(1,1),
+                    'cook':(0,0),
+                    'doctor':(0,0),
+                    'transport boat':(0,0),
+                    'attack boat':(1,3)}
 
 std_distance = 5
 
