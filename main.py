@@ -1,4 +1,4 @@
-"""Yann Thorimbert - 2018
+"""Yann Thorimbert - 2019
 yann.thorimbert@gmail.com
 """
 from __future__ import print_function, division
@@ -30,8 +30,9 @@ map_initializer.build_map(me, fast=False, use_beach_tiler=True, load_tilers=Fals
 
 #dynamic objects (you can add them whenever you want):
 character = Unit("Infantry", me, PW_PATH+"/mapobjects/images/char1.png", "", factor=1.)
+obj = me.add_unit((6,6), obj=character, quantity=1)
 obj = me.add_unit(coord=(5,8), obj=character, quantity=12)
-obj = me.add_unit((10,5), obj=character, quantity=1)
+
 
 
 me.lm.get_cell_at(14,15).set_name("My left cell")
@@ -41,6 +42,8 @@ me.lm.get_cell_at(15,14).set_name("My top cell")
 
 
 #### GUI and events part #######################################################
+
+
 
 ui = gui.Gui(me)
 
@@ -76,7 +79,7 @@ me.menu_button.user_params = {"element":launched_menu}
 ##me.e_box.remove_reaction("k <sign>")
 #remember to modify/deactivate the help text corresponding to the removed reac
 
-reac_click = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, ui.lbm,{"button":1})
+reac_click = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, ui.lmb,{"button":1})
 me.e_box.add_reaction(reac_click)
 reac_motion = thorpy.Reaction(pygame.MOUSEMOTION, ui.mousemotion)
 me.e_box.add_reaction(reac_motion)

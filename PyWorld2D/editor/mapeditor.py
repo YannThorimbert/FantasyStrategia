@@ -265,7 +265,6 @@ class MapEditor:
 
 
     def set_zoom(self, level, refresh_slider=True):
-        self.cam.other_to_draw = []
         center_before = self.cam.get_center_coord()
         self.zoom_level = level
         self.refresh_derived_parameters()
@@ -330,7 +329,6 @@ class MapEditor:
         self.cam.draw_grid(self.screen, self.show_grid_lines)
         #blit objects
         self.cam.draw_objects(self.screen, self.dynamic_objects)
-        self.cam.draw_others(self.screen)
         #update right pane
         self.update_cell_info()
         #blit right pane and draw rect on minimap
@@ -345,7 +343,6 @@ class MapEditor:
         self.cam.draw_grid(self.screen, self.show_grid_lines)
         #blit objects
         self.cam.draw_objects(self.screen, self.dynamic_objects)
-        self.cam.draw_others(self.screen)
         #blit right pane and draw rect on minimap
         self.e_box.blit()
 ##        pygame.draw.rect(self.screen, (255,255,255), self.cam.rmouse, 1)
