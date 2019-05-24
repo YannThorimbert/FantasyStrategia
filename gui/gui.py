@@ -61,6 +61,7 @@ class Gui:
     def rmb(self, e):
         self.destinations_mousemotion = []
         self.destinations_lmb = []
+        self.selected_unit = None
 
     def mousemotion(self, e):
         self.destinations_mousemotion = []

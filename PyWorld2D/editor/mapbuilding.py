@@ -247,9 +247,13 @@ class MapInitializer:
         #3) We build the objects that we want.
         # its up to you to decide what should be the size of the object (3rd arg)
         tree = MapObject(me,self.tree,self.forest_text,self.tree_size)
+        tree.max_relpos = [0., 0.]
         fir1 = MapObject(me,self.fir1,self.forest_text,self.fir1_size)
+        fir1.max_relpos = [0., 0.]
         fir2 = MapObject(me,self.fir2,self.forest_text,self.fir2_size)
+        fir2.max_relpos = [0., 0.]
         firsnow = MapObject(me,self.firsnow,self.forest_snow_text,self.firsnow_size)
+        firsnow.max_relpos = [0., 0.]
         fir1.set_same_type([fir2, firsnow])
         palm = MapObject(me,self.palm,self.palm_text,self.palm_size)
         palm.max_relpos[0] = 0.1 #restrict because they are near to water
@@ -263,7 +267,9 @@ class MapInitializer:
         village1.set_same_type([village2, village3, village4]) #3 images for 1 object
         #
         cobble = MapObject(me,self.cobble,"cobblestone",self.cobble_size)
+        cobble.is_ground = True
         wood = MapObject(me,self.wood,"wooden bridge",self.wood_size)
+        wood.is_ground = True
         #
 ##        anim_tree = MapObject(me, [self.fir1]*3+[self.fir2]*3, "My animated tree",1.)
 ##        anim_tree = objs.put_static_obj(anim_tree, me.lm, (12,12), self._static_objs_layer)

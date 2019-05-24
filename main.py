@@ -10,14 +10,14 @@ from PyWorld2D.mapobjects.objects import MapObject
 import PyWorld2D.saveload.io as io
 from PyWorld2D.editor.mapeditor import MapEditor #base structure for a map
 from PyWorld2D.editor.mapbuilding import MapInitializer #configuration structure of a map
+import PyWorld2D.constants as const
 
 import maps.maps as maps
 import gui.gui as gui
-from logic.unit import Unit
+from logic.unit import Unit, get_unit_sprites
 from logic.races import Race
 
-
-
+#PROBLEME MAINTENANT : on se cache derrière les maisons... dessiner silhouettes ???
 
 
 W,H = 1000, 700 #screen size
@@ -43,10 +43,15 @@ humans.base_cost["grass"] = 2
 humans.base_cost["forest"] = 5
 humans.base_max_dist = 10
 
-# humans.add_type("infantry", PW_PATH+"/mapobjects/images/char1.png")
-humans.add_type("infantry", "sprites/Warrior_1_Shiny_Armed")
+fn = "sprites/human_warrior"
+deltas_lr =  [(0,0), (0,-1), (0,-2), (0,-1), (0,0), (0,0)]
+right = get_unit_sprites(fn+"_right.png")#, deltas_lr)
+idle = get_unit_sprites(fn+"_idle.png")
+sprites_human = {"right":(right,const.FAST), "idle":(idle,const.SLOW)}
+
+
+humans.add_type("infantry", sprites_human)
 humans["infantry"].cost["sand"] = 4
-humans["infantry"].vel = 0.05
 
 # humans.add_type("archer", PW_PATH+"/mapobjects/images/char1.png")
 # humans["archer"].max_dist = 6

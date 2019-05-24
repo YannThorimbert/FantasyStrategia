@@ -20,6 +20,7 @@ map1.chunk = (0,0)
 map1.reverse_hmap = True
 map1.world_size = (32,32)
 map1.set_terrain_type(terrain_plains, colorscale_plains)
+# map1.zoom_cell_sizes = [64,32,16]
 ##map1.max_river_length = 100
 
 map2 = MapInitializer("Second demo map")
@@ -27,7 +28,6 @@ map2.world_size = (256, 128) #with big maps it is better to use lower persistanc
 map2.persistance = 1.3 #The higher, the bigger are the "continents"
 map2.palm_homogeneity = 0.9
 map2.chunk = (12345,0)
-
 
 map3 = MapInitializer("Third demo map")
 map3.chunk = (6666,6666)

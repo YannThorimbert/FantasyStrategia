@@ -105,9 +105,11 @@ class LogicalMap(BaseGrid):
         self.nframes = len(material_couples[0].get_tilers(0))
         self.t = 0 #in unit of materials frame
         self.t2 = 0 #used for fast animated graphics
+        self.t3 = 0
         self.tot_time = 0 #in unit of pygame frame
         self.frame_slowness = 20 #associated to t1
         self.frame_slowness2 = 3 #associated to t2
+        self.frame_slowness3 = 40
         #
         self.refresh_cell_heights(hmap)
         self.refresh_cell_types()
@@ -140,6 +142,8 @@ class LogicalMap(BaseGrid):
         self.tot_time += 1
         if self.tot_time % self.frame_slowness2 == 0:
             self.t2 += 1
+        if self.tot_time % self.frame_slowness3 == 0:
+            self.t3 += 1
         if self.tot_time % self.frame_slowness == 0:
             self.t = (self.t+1) % self.nframes
             for lay in self.layers:

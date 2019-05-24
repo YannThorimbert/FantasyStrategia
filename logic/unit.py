@@ -4,12 +4,23 @@ from PyWorld2D.mapobjects.objects import MapObject
 
 DELTAS = ((1,0),(-1,0),(0,1),(0,-1))
 
+SPRITES_KEYS = ["idle","right"]
+DELTA_TO_KEYS = {(0,0):"idle", (1,0):"right"}
+
 class Unit(MapObject):
 
-    def __init__(self, type_name, editor, fns, name="", factor=1., relpos=(0,0),
+    def __init__(self, type_name, editor, sprites, name="", factor=1., relpos=(0,0),
                     build=True, new_type=True):
-        if fns:
-            imgs = get_sprites(fns+"_right.png", [(0,0), (0,-1), (0,-2), (0,-1), (0,0), (0,0)])
+        self.sprites_ref = {}
+        if sprites:
+            imgs = []
+            isprite = 0
+            for key in SPRITES_KEYS:
+                sprites_for_this_key, frame_type = sprites[key]
+                imgs.extend(sprites_for_this_key)
+                n = len(sprites_for_this_key)
+                self.sprites_ref[key] = (isprite, n, frame_type)
+                isprite += n
         else:
             imgs = [""]
         MapObject.__init__(self, editor, imgs, name, factor, relpos, build, new_type)
@@ -18,8 +29,11 @@ class Unit(MapObject):
         self.max_dist = None
         self.race = None
         #
-        self.current_frame = 0
         self.walk_img = {}
+        self.set_frame_refresh_type(2) #type fast
+        self.vel = 0.07
+        self.current_isprite = 0
+
 
     def _spawn_possible_destinations(self, x, y, tot_cost, path_to_here, score):
         for dx,dy in DELTAS:
@@ -69,6 +83,9 @@ class Unit(MapObject):
         obj.max_dist = self.max_dist
         obj.race = self.race
         obj.vel = self.vel
+        obj.set_frame_refresh_type(self._refresh_frame_type)
+        obj.sprites_ref = self.sprites_ref.copy()
+        obj.is_ground = self.is_ground
         return obj
 
     def deep_copy(self):
@@ -93,18 +110,30 @@ class Unit(MapObject):
         obj.max_dist = self.max_dist
         obj.race = self.race
         obj.vel = self.vel
+        obj.set_frame_refresh_type(self._refresh_frame_type)
+        obj.sprites_ref = self.sprites_ref.copy()
+        obj.is_ground = self.is_ground
         return obj
 
     def get_current_img(self):
-        return self.imgs_z_t[self.editor.zoom_level][self.editor.lm.t2%self.nframes]
-        # if self.editor.lm.tot_time % 3 == 0:
-        #     self.current_frame += 1
-        # return self.imgs_z_t[self.editor.zoom_level][self.current_frame%self.nframes]
+        frame = self.get_current_frame()+self.current_isprite
+        return self.imgs_z_t[self.editor.zoom_level][frame]
+
+    def set_sprite_type(self, key):
+        i,n,t = self.sprites_ref[key]
+        self.current_isprite = i
+        self.nframes = n
+        self.set_frame_refresh_type(t)
+
+    def refresh_translation_animation(self):
+        delta = MapObject.refresh_translation_animation(self)
+        # key = DELTA_TO_KEYS[delta]
+        key = DELTA_TO_KEYS.get(delta,"idle")
+        self.set_sprite_type(key)
 
 
 
-
-def get_sprites(fn, deltas=None, s=32, ckey=(255,255,255)):
+def get_unit_sprites(fn, deltas=None, s=32, ckey=(255,255,255)):
     """<imgs> is a dict on the form: imgs['right'] = [img1, img2, ..],
     imgs['idle'] = [img1, img2, ...] and so on.
 

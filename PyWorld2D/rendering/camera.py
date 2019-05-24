@@ -3,6 +3,8 @@ from pygame.math import Vector2 as V2
 from PyWorld2D.gui.parameters import RMOUSE_COLOR
 
 
+DELTA_STATIC_OBJECTS = [(1,0),(-1,0),(0,-1),(0,1),(0,0),
+                        (1,1), (-1,1), (1,-1), (-1,-1)]
 class Camera:
 
     def __init__(self):
@@ -158,18 +160,37 @@ class Camera:
         return self.get_rect_at_coord(self.get_coord_at_pix(pix))
 
 
+    def blit_static_objects_around(self, screen, o, ir):
+        x,y = o.cell.coord
+        s = self.lm.get_current_cell_size()
+        for dx,dy in DELTA_STATIC_OBJECTS:
+            cell = self.lm.get_cell_at(x+dx, y+dy)
+            r = self.get_rect_at_coord(cell.coord)
+            for so in cell.objects:
+                if so is not o:
+                    if not so.is_ground:
+                        so_img = so.get_current_img()
+                        so_rect = so_img.get_rect()
+                        so_rect.center = r.center
+                        so_rect.move_ip(so.relpos[0]*s, so.relpos[1]*s)
+                        if so_rect.bottom > ir.bottom:
+                            screen.blit(so_img, so_rect.topleft)
+
     def draw_objects(self, screen, objs):
         s = self.lm.get_current_cell_size()
-        self.ui_manager.draw_before_objects(s)
+        if self.ui_manager:
+            self.ui_manager.draw_before_objects(s)
         for o in objs:
             r = self.get_rect_at_coord(o.cell.coord)
-            #if self.map_rect.colliderect(r):
             img = o.get_current_img()
             ir = img.get_rect()
             ir.center = r.center
             ir.move_ip(o.relpos[0]*s, o.relpos[1]*s)
             screen.blit(img, ir.topleft)
-        self.ui_manager.draw_after_objects(s)
+            #check static object:
+            self.blit_static_objects_around(screen, o, ir)
+        if self.ui_manager:
+            self.ui_manager.draw_after_objects(s)
 
     def get_center_coord(self):
         return self.get_coord_at_pix(self.map_rect.center)

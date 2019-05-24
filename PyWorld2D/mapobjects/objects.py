@@ -4,7 +4,7 @@ import thorpy
 
 from PyWorld2D.ia.path import BranchAndBoundForMap
 import PyWorld2D.rendering.tilers.tilemanager as tm
-
+import PyWorld2D.constants as const
 
 
 VON_NEUMAN = [(-1,0), (1,0), (0,-1), (0,1)]
@@ -84,7 +84,7 @@ class MapObject:
     @staticmethod
     def get_saved_attributes():
         return ["name", "quantity", "fns", "factor", "new_type", "relpos",
-                "build", "vel", "_refresh_frame_type"]
+                "build", "vel", "_refresh_frame_type", "is_ground"]
 
     def __init__(self, editor, fns, name="", factor=1., relpos=(0,0), build=True,
                  new_type=True):
@@ -120,7 +120,7 @@ class MapObject:
         self.quantity = 1 #not necessarily 1 for units
         self.build = build
         if build and thing:
-            print("BUILDING", self.name, self.fns)
+            # print("BUILDING", self.name, self.fns)
             self.build_imgs()
         self.new_type = new_type
         if new_type:
@@ -133,6 +133,7 @@ class MapObject:
         self.get_current_frame = None
         self._refresh_frame_type = 1
         self.set_frame_refresh_type(self._refresh_frame_type)
+        self.is_ground = False
 
     def get_cell_coord(self):
         return self.cell.coord
@@ -163,6 +164,7 @@ class MapObject:
         obj.fns = self.fns
         obj.vel = self.vel
         obj.set_frame_refresh_type(self._refresh_frame_type)
+        obj.is_ground = self.is_ground
         return obj
 
     def deep_copy(self):
@@ -184,6 +186,7 @@ class MapObject:
         obj.object_type = self.object_type
         obj.vel = self.vel
         obj.set_frame_refresh_type(self._refresh_frame_type)
+        obj.is_ground = self.is_ground
         return obj
 
 
@@ -239,10 +242,10 @@ class MapObject:
                         self.relpos[0] = 1. - self.relpos[0]
                     else:
                         self.relpos[0] = 1. + self.relpos[0]
-                    print("Popping", self.anim_path[0])
                     self.anim_path.pop(0)
                     if not self.anim_path:
                         self.relpos[0] = 0.
+                return sign, 0
             elif dy != 0:
                 sign = sgn(dy)
                 self.relpos[1] += self.vel * sign
@@ -252,10 +255,11 @@ class MapObject:
                         self.relpos[1] = 1. - self.relpos[1]
                     else:
                         self.relpos[1] = 1. + self.relpos[1]
-                    print("Popping", self.anim_path[1])
                     self.anim_path.pop(0)
                     if not self.anim_path:
                         self.relpos[1] = 0.
+                return 0, sign
+        return 0, 0
 
 
 
@@ -292,6 +296,9 @@ class MapObject:
     def _get_current_frame2(self):
         return self.cell.map.t2%self.nframes
 
+    def _get_current_frame3(self):
+        return self.cell.map.t3%self.nframes
+
     def get_current_img(self):
         return self.imgs_z_t[self.editor.zoom_level][self.get_current_frame()]
 
@@ -303,12 +310,12 @@ class MapObject:
         return self.cell.get_distance_to(another_obj.cell)
 
     def set_frame_refresh_type(self, type_):
-        assert type_ == 1 or type_ == 2
+        functions = {const.NORMAL:self._get_current_frame1,
+                     const.FAST:self._get_current_frame2,
+                     const.SLOW:self._get_current_frame3}
+        assert type_ in functions
         self._refresh_frame_type = type_
-        if type_ == 1:
-            self.get_current_frame = self._get_current_frame1
-        else:
-            self.get_current_frame = self._get_current_frame2
+        self.get_current_frame = functions[type_]
 
 
 
