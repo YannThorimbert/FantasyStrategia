@@ -17,8 +17,6 @@ import gui.gui as gui
 from logic.unit import Unit, get_unit_sprites
 from logic.races import Race
 
-#PROBLEME MAINTENANT : on se cache derrière les maisons... dessiner silhouettes ???
-
 
 W,H = 1000, 700 #screen size
 app = thorpy.Application((W,H))
@@ -60,7 +58,7 @@ humans["infantry"].cost["sand"] = 4
 
 #OMBRE DES CHOSES
 
-obj = me.add_unit((16,16), humans["infantry"], 1)
+obj = me.add_unit((17,9), humans["infantry"], 1)
 # obj = me.add_unit((15,18), humans["archer"], quantity=12)
 
 
