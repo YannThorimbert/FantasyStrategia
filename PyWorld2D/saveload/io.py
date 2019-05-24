@@ -92,4 +92,5 @@ def from_file_units(f, me):
         print(a)
         obj = MapObject(me, fns=a["fns"], name=a["name"], factor=a["factor"],
                         relpos=a["relpos"], build=a["build"], new_type=a["new_type"])
+        obj.set_frame_refresh_type(obj._refresh_frame_type)
         obj_added = me.add_unit(coord, obj, a["quantity"])

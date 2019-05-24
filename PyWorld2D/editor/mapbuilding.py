@@ -57,7 +57,7 @@ class MapInitializer:
         self.sand = PW_PATH + "/rendering/tiles/sand1.jpg"
         self.grass = PW_PATH + "/rendering/tiles/grass.png"
         self.grass2 = PW_PATH + "/rendering/tiles/grass8.png"
-        self.rock = PW_PATH + "/rendering/tiles/rock1.png"
+        self.rock = PW_PATH + "/rendering/tiles/rock2.png"
         self.black = (0,0,0)
         self.white = (255,255,255)
         #mixed images - we superimpose different image to make a new one
@@ -125,7 +125,8 @@ class MapInitializer:
         self.village3_size = 2.6
         self.village4 = PW_PATH + "/mapobjects/images/rgbfumes3.png"
         self.village4_size = 2.6
-        self.cobble = PW_PATH + "/mapobjects/images/cobblestone2.png"
+        # self.cobble = PW_PATH + "/mapobjects/images/cobblestone2.png"
+        self.cobble = PW_PATH + "/rendering/tiles/dirt1.jpg"
         self.cobble_size = 1.
         self.wood = PW_PATH + "/mapobjects/images/wood1.png"
         self.wood_size = 1.

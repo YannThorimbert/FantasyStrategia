@@ -5,9 +5,15 @@ import thorpy
 from PyWorld2D.ia.path import BranchAndBoundForMap
 import PyWorld2D.rendering.tilers.tilemanager as tm
 
+
+
 VON_NEUMAN = [(-1,0), (1,0), (0,-1), (0,1)]
 
-
+def sgn(x):
+    if x < 0:
+        return -1
+    elif x > 0:
+        return 1
 
 def get_distributor(me, objects, forest_map, material_names,
                     limit_relpos_y=True):
@@ -77,7 +83,8 @@ class MapObject:
 
     @staticmethod
     def get_saved_attributes():
-        return ["name", "quantity", "fns", "factor", "new_type", "relpos", "build"]
+        return ["name", "quantity", "fns", "factor", "new_type", "relpos",
+                "build", "vel", "_refresh_frame_type"]
 
     def __init__(self, editor, fns, name="", factor=1., relpos=(0,0), build=True,
                  new_type=True):
@@ -121,6 +128,11 @@ class MapObject:
             MapObject.current_id += 1
         else:
             self.object_type = None
+        self.anim_path = []
+        self.vel = 0.1
+        self.get_current_frame = None
+        self._refresh_frame_type = 1
+        self.set_frame_refresh_type(self._refresh_frame_type)
 
     def get_cell_coord(self):
         return self.cell.coord
@@ -149,6 +161,8 @@ class MapObject:
         obj.object_type = self.object_type
         obj.quantity = self.quantity
         obj.fns = self.fns
+        obj.vel = self.vel
+        obj.set_frame_refresh_type(self._refresh_frame_type)
         return obj
 
     def deep_copy(self):
@@ -168,6 +182,8 @@ class MapObject:
         obj.min_relpos = list(self.min_relpos)
         obj.max_relpos = list(self.max_relpos)
         obj.object_type = self.object_type
+        obj.vel = self.vel
+        obj.set_frame_refresh_type(self._refresh_frame_type)
         return obj
 
 
@@ -204,6 +220,45 @@ class MapObject:
         dest_cell.objects.append(self)
         self.cell = dest_cell
 
+    def move_to_cell_animated(self, path):
+        self.anim_path = path
+
+    def refresh_translation_animation(self):
+        if self.anim_path:
+            # print(self.anim_path, self.relpos)
+            x0,y0 = self.cell.coord
+            xf,yf = self.anim_path[0]
+            dx, dy = xf-x0, yf-y0
+            assert not(dx!=0 and dy!=0)
+            if dx != 0:
+                sign = sgn(dx)
+                self.relpos[0] += self.vel * sign
+                if abs(self.relpos[0]) > 1.: #then the object change its cell
+                    self.move_to_cell(self.editor.lm.get_cell_at(x0+sign,y0))
+                    if sign > 0:
+                        self.relpos[0] = 1. - self.relpos[0]
+                    else:
+                        self.relpos[0] = 1. + self.relpos[0]
+                    print("Popping", self.anim_path[0])
+                    self.anim_path.pop(0)
+                    if not self.anim_path:
+                        self.relpos[0] = 0.
+            elif dy != 0:
+                sign = sgn(dy)
+                self.relpos[1] += self.vel * sign
+                if abs(self.relpos[1]) > 1.: #then the object change its cell
+                    self.move_to_cell(self.editor.lm.get_cell_at(x0,y0+sign))
+                    if sign > 0:
+                        self.relpos[1] = 1. - self.relpos[1]
+                    else:
+                        self.relpos[1] = 1. + self.relpos[1]
+                    print("Popping", self.anim_path[1])
+                    self.anim_path.pop(0)
+                    if not self.anim_path:
+                        self.relpos[1] = 0.
+
+
+
 
 ##    def build_imgs(self):
 ##        self.imgs_z_t = [] #list of list of images - idx0:scale, idx1:frame
@@ -231,8 +286,14 @@ class MapObject:
                 imgs.append(img)
             self.imgs_z_t.append(imgs)
 
+    def _get_current_frame1(self):
+        return self.cell.map.t%self.nframes
+
+    def _get_current_frame2(self):
+        return self.cell.map.t2%self.nframes
+
     def get_current_img(self):
-        return self.imgs_z_t[self.editor.zoom_level][self.cell.map.t%self.nframes]
+        return self.imgs_z_t[self.editor.zoom_level][self.get_current_frame()]
 
     def set_same_type(self, objs):
         for o in objs:
@@ -240,6 +301,15 @@ class MapObject:
 
     def distance_to(self, another_obj):
         return self.cell.get_distance_to(another_obj.cell)
+
+    def set_frame_refresh_type(self, type_):
+        assert type_ == 1 or type_ == 2
+        self._refresh_frame_type = type_
+        if type_ == 1:
+            self.get_current_frame = self._get_current_frame1
+        else:
+            self.get_current_frame = self._get_current_frame2
+
 
 
 def find_free_next_to(lm, coord):

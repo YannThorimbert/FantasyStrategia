@@ -27,6 +27,8 @@ class Gui:
     def get_destinations(self, cell):
         destinations = []
         if cell.unit:
+            if cell.unit.anim_path:
+                return []
             score = cell.unit.get_possible_destinations()
             self.last_destination_score = score
             self.selected_unit = cell.unit
@@ -46,13 +48,19 @@ class Gui:
             rect = self.me.cam.get_rect_at_coord(cell.coord)
             if rect.center in self.destinations_lmb:
                 if not cell.unit: #then move the unit
-                    self.selected_unit.move_to_cell(cell)
+                    cost, path = self.last_destination_score.get(cell.coord, None)
+                    self.selected_unit.move_to_cell_animated(path[1:])
+                    # self.selected_unit.move_to_cell(cell)
                     self.selected_unit = None
                 else:
                     self.add_alert(self.e_cant_move)
             self.destinations_lmb = [] #clear destinations
         elif cell: #else update destinations
             self.destinations_lmb = self.get_destinations(cell)
+
+    def rmb(self, e):
+        self.destinations_mousemotion = []
+        self.destinations_lmb = []
 
     def mousemotion(self, e):
         self.destinations_mousemotion = []

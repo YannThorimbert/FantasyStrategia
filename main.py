@@ -19,6 +19,7 @@ from logic.races import Race
 
 
 
+
 W,H = 1000, 700 #screen size
 app = thorpy.Application((W,H))
 
@@ -33,24 +34,29 @@ me = map_initializer.configure_map_editor() #me = "Map Editor"
 map_initializer.build_map(me, fast=True, use_beach_tiler=False, load_tilers=False)
 
 
+
+# right = get_frames_from_gif("sprites/Warrior_1_Shiny_Armed_right_walking.gif")
+
+
 humans = Race("Humans", me)
 humans.base_cost["grass"] = 2
 humans.base_cost["forest"] = 5
-humans.base_max_dist = 5
+humans.base_max_dist = 10
 
-humans.add_type("infantry", PW_PATH+"/mapobjects/images/char1.png")
+# humans.add_type("infantry", PW_PATH+"/mapobjects/images/char1.png")
+humans.add_type("infantry", "sprites/Warrior_1_Shiny_Armed")
 humans["infantry"].cost["sand"] = 4
+humans["infantry"].vel = 0.05
 
-humans.add_type("archer", PW_PATH+"/mapobjects/images/char1.png")
-humans["archer"].max_dist = 6
-humans["archer"].cost["cobblestone"] = 1.5
+# humans.add_type("archer", PW_PATH+"/mapobjects/images/char1.png")
+# humans["archer"].max_dist = 6
+# humans["archer"].cost["cobblestone"] = 1.5
 
 
+#OMBRE DES CHOSES
 
-# obj = me.add_unit((6,6), obj=character, quantity=1)
-# obj = me.add_unit(coord=(5,8), obj=character, quantity=12)
 obj = me.add_unit((16,16), humans["infantry"], 1)
-obj = me.add_unit((15,18), humans["archer"], quantity=12)
+# obj = me.add_unit((15,18), humans["archer"], quantity=12)
 
 
 
@@ -99,6 +105,8 @@ me.menu_button.user_params = {"element":launched_menu}
 #remember to modify/deactivate the help text corresponding to the removed reac
 
 reac_click = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, ui.lmb,{"button":1})
+me.e_box.add_reaction(reac_click)
+reac_click = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, ui.rmb,{"button":2})
 me.e_box.add_reaction(reac_click)
 reac_motion = thorpy.Reaction(pygame.MOUSEMOTION, ui.mousemotion)
 me.e_box.add_reaction(reac_motion)

@@ -349,6 +349,8 @@ class MapEditor:
         self.cam.draw_rmouse(self.screen, self.box_hmap.get_rect())
 
     def func_reac_time(self):
+        for o in self.dynamic_objects:
+            o.refresh_translation_animation()
         self.process_mouse_navigation()
         self.draw()
         self.ap.refresh()

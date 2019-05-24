@@ -17,7 +17,10 @@ std_cost_material = {'Deep water': float("inf"),
                      'bush':5}
 
 
-faire un objet quand meme, juste pour storer : cost factor, attack range et degats associes, defense, besoins en nourriture, + vulnerabilite a certains types ? 
+# faire un objet quand meme, juste pour storer : cost factor, attack range et degats associes, defense, besoins en nourriture, + vulnerabilite a certains types ?
+# Ou alors faire un systeme avec un dict qui store les exceptions a la regle
+# class UnitType:
+#     def ???
 
 std_type_cost = {'villager':1,
                 'infantry':1,
@@ -48,6 +51,8 @@ std_attack_range = {'villager':(1,1),
 std_distance = 5
 
 
+
+
 class Race:
     def __init__(self, name, me):
         self.name = name
@@ -56,9 +61,9 @@ class Race:
         self.unit_types = {}
         self.me = me
 
-    def add_type(self, type_name, img_fn, factor=1.):
+    def add_type(self, type_name, imgs_fn, factor=1.):
         assert type_name not in self.unit_types
-        u = unit.Unit(type_name, self.me, img_fn, "", factor)
+        u = unit.Unit(type_name, self.me, imgs_fn, "", factor)
         u.race = self
         u.max_dist = self.base_max_dist * std_type_cost.get(type_name, 1.)
         u.cost = self.base_cost.copy()

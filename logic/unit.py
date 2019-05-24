@@ -1,3 +1,4 @@
+import pygame, thorpy
 from PyWorld2D.mapobjects.objects import MapObject
 
 
@@ -7,11 +8,18 @@ class Unit(MapObject):
 
     def __init__(self, type_name, editor, fns, name="", factor=1., relpos=(0,0),
                     build=True, new_type=True):
-        MapObject.__init__(self, editor, fns, name, factor, relpos, build, new_type)
+        if fns:
+            imgs = get_sprites(fns+"_right.png", [(0,0), (0,-1), (0,-2), (0,-1), (0,0), (0,0)])
+        else:
+            imgs = [""]
+        MapObject.__init__(self, editor, imgs, name, factor, relpos, build, new_type)
         self.type_name = type_name
         self.cost = None
         self.max_dist = None
         self.race = None
+        #
+        self.current_frame = 0
+        self.walk_img = {}
 
     def _spawn_possible_destinations(self, x, y, tot_cost, path_to_here, score):
         for dx,dy in DELTAS:
@@ -46,7 +54,7 @@ class Unit(MapObject):
     def copy(self):
         """The copy references the same images as the original !"""
         self.ncopies += 1
-        obj = Unit(self.type_name, self.editor, [""], self.name, self.factor,
+        obj = Unit(self.type_name, self.editor, None, self.name, self.factor,
                         list(self.relpos), new_type=False)
         obj.original_imgs = self.original_imgs
         obj.nframes = self.nframes
@@ -60,10 +68,11 @@ class Unit(MapObject):
         obj.cost = self.cost.copy()
         obj.max_dist = self.max_dist
         obj.race = self.race
+        obj.vel = self.vel
         return obj
 
     def deep_copy(self):
-        obj = Unit(self.type_name, self.editor, [""], self.name, self.factor,
+        obj = Unit(self.type_name, self.editor, None, self.name, self.factor,
                         list(self.relpos), new_type=False)
         obj.quantity = self.quantity
         obj.fns = self.fns
@@ -83,4 +92,36 @@ class Unit(MapObject):
         obj.cost = self.cost.copy()
         obj.max_dist = self.max_dist
         obj.race = self.race
+        obj.vel = self.vel
         return obj
+
+    def get_current_img(self):
+        return self.imgs_z_t[self.editor.zoom_level][self.editor.lm.t2%self.nframes]
+        # if self.editor.lm.tot_time % 3 == 0:
+        #     self.current_frame += 1
+        # return self.imgs_z_t[self.editor.zoom_level][self.current_frame%self.nframes]
+
+
+
+
+def get_sprites(fn, deltas=None, s=32, ckey=(255,255,255)):
+    """<imgs> is a dict on the form: imgs['right'] = [img1, img2, ..],
+    imgs['idle'] = [img1, img2, ...] and so on.
+
+    Keys : 'right', 'left', 'up', 'down', 'idle', 'death', 'attack'
+    """
+    imgs = []
+    sprites = pygame.image.load(fn)
+    n = sprites.get_width() // s
+    if not deltas:
+        deltas = [(0,0) for i in range(n)]
+    x = 0
+    for i in range(n):
+        surf = pygame.Surface((s,s))
+        surf.fill(ckey)
+        surf.set_colorkey(ckey)
+        dx, dy = deltas[i]
+        surf.blit(sprites, (dx,dy), pygame.Rect(x,0,s,s))
+        imgs.append(surf)
+        x += s
+    return imgs
