@@ -1,14 +1,18 @@
 import pygame, thorpy
 from PyWorld2D.mapobjects.objects import MapObject
+import PyWorld2D.constants as const
 
 
 DELTAS = ((1,0),(-1,0),(0,1),(0,-1))
-
-SPRITES_KEYS = ["idle", "right", "left", "down"]
-DELTA_TO_KEYS = {(0,0):"idle", (1,0):"right", (-1,0):"left", (0,1):"down", (0,-1):"left"}
+SPRITES_KEYS = ["idle", "right", "left", "down", "up"]
+DELTA_TO_KEYS = {(0,0):"idle", (1,0):"right", (-1,0):"left", (0,1):"down", (0,-1):"up"}
 COLORS_HIGHLIGHTS = {"red":(255,0,0), "yellow":(255,255,0), "blue":(0,0,255)}
 HIGHLIGHT_BLUR = 3
 HIGHLIGHT_INFLATE = 10
+
+COLORS = {"blue":((160,195,210),(110,160,185),(76,95,128)), #SRC_COLOR
+          "red":((210,195,160),(185,160,110),(128,95,76)),
+          "green":((195,210,160),(160,185,110),(95,128,76))}
 
 class Unit(MapObject):
 
@@ -206,7 +210,7 @@ class Unit(MapObject):
 
 
 
-def get_unit_sprites(fn, deltas=None, s=32, ckey=(255,255,255)):
+def get_unit_sprites(fn,  colors="blue", deltas=None, s=32, ckey=(255,255,255)):
     """<imgs> is a dict on the form: imgs['right'] = [img1, img2, ..],
     imgs['idle'] = [img1, img2, ...] and so on.
 
@@ -214,6 +218,14 @@ def get_unit_sprites(fn, deltas=None, s=32, ckey=(255,255,255)):
     """
     imgs = []
     sprites = pygame.image.load(fn)
+    if colors != "blue":
+        if isinstance(colors,str):
+            colors = COLORS[colors]
+        for i in range(3):
+            src = COLORS["blue"][i]
+            dst = colors[i]
+            print(src,"-->",dst)
+            thorpy.change_color_on_img_ip(sprites, src, dst)
     n = sprites.get_width() // s
     if not deltas:
         deltas = [(0,0) for i in range(n)]
@@ -227,3 +239,14 @@ def get_unit_sprites(fn, deltas=None, s=32, ckey=(255,255,255)):
         imgs.append(surf)
         x += s
     return imgs
+
+def load_sprites(fn, colors="blue", h=const.FAST, v=const.FAST, i=const.SLOW):
+##    deltas_lr =  [(0,0), (0,-1), (0,-2), (0,-1), (0,0), (0,0)]
+    left = get_unit_sprites(fn+"_left.png",colors)#, deltas_lr)
+    right = get_unit_sprites(fn+"_right.png",colors)
+    down = get_unit_sprites(fn+"_down.png",colors)
+    up = get_unit_sprites(fn+"_up.png",colors)
+    idle = get_unit_sprites(fn+"_idle.png",colors)
+    sprites = {"right":(right,h), "left":(left,h), "down":(down,v), "up":(up,v),
+                "idle":(idle,i)}
+    return sprites

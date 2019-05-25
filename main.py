@@ -10,11 +10,11 @@ from PyWorld2D.mapobjects.objects import MapObject
 import PyWorld2D.saveload.io as io
 from PyWorld2D.editor.mapeditor import MapEditor #base structure for a map
 from PyWorld2D.editor.mapbuilding import MapInitializer #configuration structure of a map
-import PyWorld2D.constants as const
+
 
 import maps.maps as maps
 import gui.gui as gui
-from logic.unit import Unit, get_unit_sprites
+from logic.unit import Unit, load_sprites
 from logic.races import Race
 from logic.game import Game
 
@@ -34,34 +34,26 @@ game = Game(me)
 map_initializer.build_map(me, fast=False, use_beach_tiler=False, load_tilers=False)
 
 
-humans = Race("Humans", me)
+humans = Race("Humans 1", me)
 humans.base_cost["grass"] = 2
 humans.base_cost["forest"] = 5
 humans.base_max_dist = 10
-
-fn = "sprites/human_warrior"
-deltas_lr =  [(0,0), (0,-1), (0,-2), (0,-1), (0,0), (0,0)]
-left = get_unit_sprites(fn+"_left.png")#, deltas_lr)
-right = get_unit_sprites(fn+"_right.png")#, deltas_lr)
-down = get_unit_sprites(fn+"_down.png")#, deltas_lr)
-idle = get_unit_sprites(fn+"_idle.png")
-sprites_human = {"right":(right,const.FAST), "left":(left,const.FAST),
-                 "down":(down,const.FAST),
-                 "idle":(idle,const.SLOW)}
-
-
-humans.add_type("infantry", sprites_human)
+humans.add_type("infantry", load_sprites("sprites/human_warrior", "blue"))
 humans["infantry"].cost["sand"] = 4
+
+humans2 = Race("Humans 2", me)
+humans2.base_cost["forest"] = 10
+humans2.add_type("infantry", load_sprites("sprites/human_warrior", "red"))
 
 
 # humans.add_type("archer", PW_PATH+"/mapobjects/images/char1.png")
 # humans["archer"].max_dist = 6
 # humans["archer"].cost["cobblestone"] = 1.5
 
-game.add_unit((20,8), humans["infantry"], 1)
+game.add_unit((20,8), humans2["infantry"], 1)
 game.get_unit_at(20,8).team = 1
 
-game.add_unit((15,7), humans["infantry"], 1)
+game.add_unit((15,7), humans2["infantry"], 1)
 game.get_unit_at(15,7).team = 1
 
 game.add_unit((15,5), humans["infantry"], 1)
