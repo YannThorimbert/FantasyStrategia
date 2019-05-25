@@ -14,6 +14,7 @@ class Gui:
         self.destinations_mousemotion = []
         self.destinations_lmb = []
         self.selected_unit = None
+        self.unit_under_cursor = None
         #
         self.color_dest_lmb = (255,0,0)
         self.color_dest_mousemotion = (255,255,0)
@@ -31,10 +32,11 @@ class Gui:
                 return []
             score = cell.unit.get_possible_destinations()
             self.last_destination_score = score
-            self.selected_unit = cell.unit
+##            self.selected_unit = cell.unit
             for coord in score:
-                rect = self.me.cam.get_rect_at_coord(coord)
-                destinations.append(rect.center)
+                if coord != cell.coord:
+                    rect = self.me.cam.get_rect_at_coord(coord)
+                    destinations.append(rect.center)
         return destinations
 
     def add_alert(self, e):
@@ -56,8 +58,11 @@ class Gui:
                     else:
                         self.add_alert(self.e_cant_move)
                 self.destinations_lmb = [] #clear destinations
+                self.selected_unit = None
             elif cell: #else update destinations
                 self.destinations_lmb = self.get_destinations(cell)
+                if cell.unit:
+                    self.selected_unit = cell.unit
 
     def rmb(self, e):
         self.destinations_mousemotion = []
@@ -69,6 +74,10 @@ class Gui:
         pos = e.pos
         cell = self.me.cam.get_cell(pos)
         if cell:
+            if cell.unit:
+                self.unit_under_cursor = cell.unit
+            else:
+                self.unit_under_cursor = None
             if self.destinations_lmb: #then the user may be tracing the path
                 value = self.last_destination_score.get(cell.coord, None)
                 if value:
@@ -84,6 +93,11 @@ class Gui:
         return math.sin(t * self.dest_omega) * self.dest_alpha_amplitude + self.dest_alpha0
 
     def draw_before_objects(self, s):
+        if self.unit_under_cursor:
+            img = self.unit_under_cursor.get_current_highlight()
+            rect = img.get_rect()
+            rect.center = self.unit_under_cursor.get_current_rect_center(s)
+            self.surface.blit(img, rect.topleft)
         #1. left mouse button
         if self.destinations_lmb:
             surf = pygame.Surface((s,s))
@@ -105,6 +119,7 @@ class Gui:
                 self.surface.blit(surf, rect)
                 if self._debug:
                     coord = self.me.cam.get_coord_at_pix(rect.center)
+                    #debug : draw distance
 ##                    if coord in self.last_destination_score:
 ##                        cost = self.last_destination_score[coord][0]
 ##                        text = thorpy.make_text(str(cost))

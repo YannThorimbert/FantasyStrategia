@@ -182,15 +182,11 @@ class Camera:
         if self.ui_manager:
             self.ui_manager.draw_before_objects(s)
         for o in objs:
-            r = self.get_rect_at_coord(o.cell.coord)
-            img = o.get_current_img()
-            ir = img.get_rect()
-            ir.center = r.center
-            ir.move_ip(o.relpos[0]*s, o.relpos[1]*s)
-            screen.blit(img, ir.topleft)
+            img, rect = o.get_current_img_and_rect(s)
+            screen.blit(img, rect.topleft)
             #check static object:
             if not o.is_ground:
-                self.blit_static_objects_around(screen, o, ir)
+                self.blit_static_objects_around(screen, o, rect)
         if self.ui_manager:
             self.ui_manager.draw_after_objects(s)
 

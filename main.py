@@ -51,6 +51,7 @@ sprites_human = {"right":(right,const.FAST), "idle":(idle,const.SLOW)}
 humans.add_type("infantry", sprites_human)
 humans["infantry"].cost["sand"] = 4
 
+
 # humans.add_type("archer", PW_PATH+"/mapobjects/images/char1.png")
 # humans["archer"].max_dist = 6
 # humans["archer"].cost["cobblestone"] = 1.5

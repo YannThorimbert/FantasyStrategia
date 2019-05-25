@@ -409,7 +409,8 @@ class MapEditor:
         self.cam.set_mg_pos_from_rcam()
 
     def add_unit(self, coord, obj, quantity=None):
-        cell = self.lm.cells[coord[0]][coord[1]]
+        cell = self.lm.get_cell_at(coord[0],coord[1])
+        assert cell
         obj_added = obj.add_unit_on_cell(cell)
         if quantity is not None:
             obj_added.quantity = quantity

@@ -278,6 +278,7 @@ class MapObject:
 ##            self.imgs_z_t.append(imgs)
 
     def build_imgs(self):
+        self.build = True
         self.imgs_z_t = [] #list of list of images - idx0:scale, idx1:frame
         for w in self.editor.zoom_cell_sizes: #loop over sizes
             imgs = []
@@ -302,9 +303,24 @@ class MapObject:
     def get_current_img(self):
         return self.imgs_z_t[self.editor.zoom_level][self.get_current_frame()]
 
+    def get_current_img_and_rect(self, cell_size):
+        img = self.get_current_img()
+        r = self.editor.cam.get_rect_at_coord(self.cell.coord)
+        ir = img.get_rect()
+        ir.center = r.center
+        ir.move_ip(self.relpos[0]*cell_size, self.relpos[1]*cell_size)
+        return img, ir
+
+    def get_current_rect_center(self, cell_size):
+        r = self.editor.cam.get_rect_at_coord(self.cell.coord)
+        x = self.relpos[0]*cell_size+r.centerx
+        y = self.relpos[1]*cell_size+r.centery
+        return x,y
+
     def set_same_type(self, objs):
         for o in objs:
             o.object_type = self.object_type
+
 
     def distance_to(self, another_obj):
         return self.cell.get_distance_to(another_obj.cell)

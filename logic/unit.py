@@ -11,6 +11,7 @@ class Unit(MapObject):
 
     def __init__(self, type_name, editor, sprites, name="", factor=1., relpos=(0,0),
                     build=True, new_type=True):
+        self.highlights = []
         self.sprites_ref = {}
         if sprites:
             imgs = []
@@ -33,6 +34,8 @@ class Unit(MapObject):
         self.set_frame_refresh_type(2) #type fast
         self.vel = 0.07
         self.current_isprite = 0
+
+
 
 
     def _spawn_possible_destinations(self, x, y, tot_cost, path_to_here, score):
@@ -86,6 +89,8 @@ class Unit(MapObject):
         obj.set_frame_refresh_type(self._refresh_frame_type)
         obj.sprites_ref = self.sprites_ref.copy()
         obj.is_ground = self.is_ground
+        obj.highlights = self.highlights
+        assert len(obj.highlights) == 3
         return obj
 
     def deep_copy(self):
@@ -113,7 +118,11 @@ class Unit(MapObject):
         obj.set_frame_refresh_type(self._refresh_frame_type)
         obj.sprites_ref = self.sprites_ref.copy()
         obj.is_ground = self.is_ground
+        obj.highlights = [i.copy() for i in self.highlights]
         return obj
+
+    def get_current_highlight(self):
+        return self.highlights[self.editor.zoom_level]
 
     def get_current_img(self):
         frame = self.get_current_frame()+self.current_isprite
@@ -131,6 +140,24 @@ class Unit(MapObject):
         key = DELTA_TO_KEYS.get(delta,"idle")
         self.set_sprite_type(key)
 
+    def build_imgs(self):
+        MapObject.build_imgs(self)
+        self.build_highlighted_idles()
+
+    def build_highlighted_idles(self):
+        frame = self.sprites_ref["idle"][0]
+        self.highlights = []
+        for z in range(len(self.editor.zoom_cell_sizes)):
+            img = self.imgs_z_t[z]
+            img = img[frame]
+            e = thorpy.Image(img)
+            shad = thorpy.graphics.get_shadow(img, shadow_radius=1, black=255,
+                                color_format="RGBA", alpha_factor=1.,
+                                decay_mode="exponential", color=(255,255,0),
+                                sun_angle=45., vertical=True, angle_mode="flip",
+                                mode_value=(False, False))
+            shad = pygame.transform.smoothscale(shad, shad.get_rect().inflate(12,12).size)
+            self.highlights.append(shad)
 
 
 def get_unit_sprites(fn, deltas=None, s=32, ckey=(255,255,255)):
