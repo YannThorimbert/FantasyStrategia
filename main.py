@@ -16,6 +16,7 @@ import maps.maps as maps
 import gui.gui as gui
 from logic.unit import Unit, get_unit_sprites
 from logic.races import Race
+from logic.game import Game
 
 
 W,H = 1000, 700 #screen size
@@ -23,17 +24,14 @@ app = thorpy.Application((W,H))
 
 map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
 me = map_initializer.configure_map_editor() #me = "Map Editor"
+game = Game(me)
 
 
 #<fast> : quality a bit lower if true, loading time a bit faster.
 #<use_beach_tiler>: quality much better if true, loading much slower. Req. Numpy!
 #<load_tilers> : Very slow but needed if you don't have Numpy but still want hi quality.
-# map_initializer.build_map(me, fast=False, use_beach_tiler=True, load_tilers=False)
-map_initializer.build_map(me, fast=True, use_beach_tiler=False, load_tilers=False)
-
-
-
-# right = get_frames_from_gif("sprites/Warrior_1_Shiny_Armed_right_walking.gif")
+##map_initializer.build_map(me, fast=False, use_beach_tiler=True, load_tilers=False)
+map_initializer.build_map(me, fast=False, use_beach_tiler=False, load_tilers=False)
 
 
 humans = Race("Humans", me)
@@ -56,26 +54,25 @@ humans["infantry"].cost["sand"] = 4
 # humans["archer"].max_dist = 6
 # humans["archer"].cost["cobblestone"] = 1.5
 
+game.add_unit((20,8), humans["infantry"], 1)
+game.get_unit_at(20,8).team = 1
 
-#OMBRE DES CHOSES
+game.add_unit((15,7), humans["infantry"], 1)
+game.get_unit_at(15,7).team = 1
 
-##obj = me.add_unit((10,9), humans["infantry"], 1)
-obj = me.add_unit((17,9), humans["infantry"], 1)
-# obj = me.add_unit((15,18), humans["archer"], quantity=12)
-
+game.add_unit((15,5), humans["infantry"], 1)
 
 
-me.lm.get_cell_at(14,15).set_name("My left cell")
-me.lm.get_cell_at(15,14).set_name("My top cell")
+
+##game.get_cell_at(14,15).set_name("My left cell")
+##game.get_cell_at(15,14).set_name("My top cell")
 #we can get the objects belonging to a cell:
 #assert me.lm.get_cell_at(15,15).objects[1].name == "My first unit"
 
 
 #### GUI and events part #######################################################
 
-
-
-ui = gui.Gui(me)
+ui = gui.Gui(game)
 
 def func_reac_time(): #here add wathever you want
     """Function called each frame"""
@@ -138,6 +135,7 @@ app.quit()
 
 
 ###############################################################################
+#CHAQUE DYNAMIC OBJECT A UN DELTA_FRAME ALEATOIRE, COMME CA PAS TOUS SYNCHRO
 #pour FS: ajouter un info box quand on click sur material name, quand on click sur une cellule
 
 #pour fs: chateaux, murailles, units: (herite de objet dynamique)

@@ -377,20 +377,26 @@ class MapEditor:
         # if e.button == 1: #left click
         #     pass
         if e.button == 3: #right click
+            destinations_drawn = False
             if self.cam.ui_manager:
+                mm = bool(self.cam.ui_manager.destinations_mousemotion)
+                lmb = bool(self.cam.ui_manager.destinations_lmb)
+                destinations_drawn = mm or lmb
+            if destinations_drawn: #undraw destinations
                 self.cam.ui_manager.destinations_mousemotion = []
                 self.cam.ui_manager.destinations_lmb = []
                 self.cam.ui_manager.selected_unit = None
                 self.draw_no_update()
                 pygame.display.flip()
-            if self.unit_info.can_be_launched(cell, self):
-                self.unit_info.last_cell_clicked = cell
-                self.unit_info.launch_em(cell, e.pos, self.cam.map_rect)
-            elif cell:
-                if self.cell_info.can_be_launched(cell, self):
-                    self.cell_info.last_cell_clicked = cell
-                    self.cell_info.launch_em(cell, e.pos, self.cam.map_rect)
-                self.cell_info.last_cell_clicked = None
+            else:
+                if self.unit_info.can_be_launched(cell, self):
+                    self.unit_info.last_cell_clicked = cell
+                    self.unit_info.launch_em(cell, e.pos, self.cam.map_rect)
+                elif cell:
+                    if self.cell_info.can_be_launched(cell, self):
+                        self.cell_info.last_cell_clicked = cell
+                        self.cell_info.launch_em(cell, e.pos, self.cam.map_rect)
+                    self.cell_info.last_cell_clicked = None
             self.unit_info.last_cell_clicked = None
 
     def func_reac_mousemotion(self, e):
@@ -430,7 +436,6 @@ class MapEditor:
                 self.cam.move(delta)
                 self.cam.set_mg_pos_from_rcam()
                 self.ap.add_alert_countdown(self.e_ap_move, guip.DELAY_HELP * self.fps)
-
 
     def load_image(self, fn):
         img = thorpy.load_image(fn)

@@ -6,12 +6,19 @@ DELTAS = ((1,0),(-1,0),(0,1),(0,-1))
 
 SPRITES_KEYS = ["idle","right"]
 DELTA_TO_KEYS = {(0,0):"idle", (1,0):"right"}
+COLORS_HIGHLIGHTS = {"red":(255,0,0), "yellow":(255,255,0), "blue":(0,0,255)}
+HIGHLIGHT_BLUR = 3
+HIGHLIGHT_INFLATE = 10
 
 class Unit(MapObject):
 
+    @staticmethod
+    def get_saved_attributes():
+        return MapObject.get_saved_attributes() + ["team"]
+
     def __init__(self, type_name, editor, sprites, name="", factor=1., relpos=(0,0),
                     build=True, new_type=True):
-        self.highlights = []
+        self.highlights = {}
         self.sprites_ref = {}
         if sprites:
             imgs = []
@@ -34,6 +41,9 @@ class Unit(MapObject):
         self.set_frame_refresh_type(2) #type fast
         self.vel = 0.07
         self.current_isprite = 0
+        self.team = None
+        self.attack_range = None
+        self.help_range = None
 
 
 
@@ -43,6 +53,9 @@ class Unit(MapObject):
             cx, cy = x+dx, y+dy #next cell
             next_cell = self.editor.lm.get_cell_at(cx,cy)
             if next_cell:
+                if next_cell.unit:
+                    if next_cell.unit.team != self.team:
+                        continue
                 no_key_value = float("inf"), None
                 best_score, best_path = score.get((cx,cy), no_key_value)
                 #compute the cost of the current path ##########################
@@ -52,6 +65,8 @@ class Unit(MapObject):
                         break
                 else: #if break is never reached
                     this_tot_cost = self.cost[next_cell.material.name]
+                if next_cell == (14,4):
+                    print("UH", this_tot_cost, next_cell.objects, next_cell.material.name)
                 this_tot_cost += tot_cost #+ cost so far
                 ################################################################
                 if this_tot_cost <= self.max_dist: #should update the best
@@ -90,7 +105,9 @@ class Unit(MapObject):
         obj.sprites_ref = self.sprites_ref.copy()
         obj.is_ground = self.is_ground
         obj.highlights = self.highlights
-        assert len(obj.highlights) == 3
+        obj.team = self.team
+        obj.help_range = self.help_range
+        obj.attack_range = self.attack_range
         return obj
 
     def deep_copy(self):
@@ -118,11 +135,16 @@ class Unit(MapObject):
         obj.set_frame_refresh_type(self._refresh_frame_type)
         obj.sprites_ref = self.sprites_ref.copy()
         obj.is_ground = self.is_ground
-        obj.highlights = [i.copy() for i in self.highlights]
+        obj.team = self.team
+        obj.help_range = self.help_range
+        obj.attack_range = self.attack_range
+        obj.highlights = {}
+        for color in self.highlights:
+            obj.highlights[color] = [i.copy() for i in self.highlights[color]]
         return obj
 
-    def get_current_highlight(self):
-        return self.highlights[self.editor.zoom_level]
+    def get_current_highlight(self, color):
+        return self.highlights[color][self.editor.zoom_level]
 
     def get_current_img(self):
         frame = self.get_current_frame()+self.current_isprite
@@ -146,18 +168,45 @@ class Unit(MapObject):
 
     def build_highlighted_idles(self):
         frame = self.sprites_ref["idle"][0]
-        self.highlights = []
-        for z in range(len(self.editor.zoom_cell_sizes)):
-            img = self.imgs_z_t[z]
-            img = img[frame]
-            e = thorpy.Image(img)
-            shad = thorpy.graphics.get_shadow(img, shadow_radius=1, black=255,
-                                color_format="RGBA", alpha_factor=1.,
-                                decay_mode="exponential", color=(255,255,0),
-                                sun_angle=45., vertical=True, angle_mode="flip",
-                                mode_value=(False, False))
-            shad = pygame.transform.smoothscale(shad, shad.get_rect().inflate(12,12).size)
-            self.highlights.append(shad)
+        self.highlights = {}
+        for color in COLORS_HIGHLIGHTS:
+            self.highlights[color] = []
+            rgb = COLORS_HIGHLIGHTS[color]
+            for z in range(len(self.editor.zoom_cell_sizes)):
+                img = self.imgs_z_t[z]
+                img = img[frame]
+                e = thorpy.Image(img)
+                shad = thorpy.graphics.get_shadow(img, shadow_radius=HIGHLIGHT_BLUR, black=255,
+                                    color_format="RGBA", alpha_factor=1.,
+                                    decay_mode="exponential", color=rgb,
+                                    sun_angle=45., vertical=True, angle_mode="flip",
+                                    mode_value=(False, False))
+                size = shad.get_rect().inflate(HIGHLIGHT_INFLATE,HIGHLIGHT_INFLATE).size
+                shad = pygame.transform.smoothscale(shad, size)
+                self.highlights[color].append(shad)
+
+
+    def get_coords_within_range(self, rng):
+        dmin,dmax = rng
+        if dmax == 0: #quicker
+            return []
+        elif dmax == 1: #quicker
+            return DELTAS
+        else:
+            cells = []
+            x0, y0 = self.cell.coord
+            for dx in range(-dmax,dmax+1):
+                for dy in range(-dmax,-dmax+1):
+                    if dmin <= abs(dx) + abs(dy) <= dmax:
+                        cells.append((x0+dx, y0+dy))
+            return cells
+
+    def get_coords_in_attack_range(self):
+        return self.get_coords_within_range(self.attack_range)
+
+    def get_coords_in_help_range(self):
+        return self.get_coords_within_range(self.help_range)
+
 
 
 def get_unit_sprites(fn, deltas=None, s=32, ckey=(255,255,255)):

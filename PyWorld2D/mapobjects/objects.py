@@ -214,7 +214,7 @@ class MapObject:
         return copy
 
     def move_to_cell(self, dest_cell):
-        assert dest_cell.unit is None
+##        assert dest_cell.unit is None
         #remove from old cell
         self.cell.objects.remove(self)
         self.cell.unit = None

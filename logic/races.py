@@ -48,6 +48,19 @@ std_attack_range = {'villager':(1,1),
                     'transport boat':(0,0),
                     'attack boat':(1,3)}
 
+std_help_range = {'villager':(1,1),
+                    'infantry':(1,1),
+                    'archer':(1,1),
+                    'cavalry':(1,1),
+                    'mounted archer':(1,1),
+                    'wizard':(1,2),
+                    'arch mage':(1,5),
+                    'king':(1,1),
+                    'cook':(1,1),
+                    'doctor':(1,1),
+                    'transport boat':(1,1),
+                    'attack boat':(1,1)}
+
 std_distance = 5
 
 
@@ -66,6 +79,8 @@ class Race:
         u = unit.Unit(type_name, self.me, imgs_fn, "", factor)
         u.race = self
         u.max_dist = self.base_max_dist * std_type_cost.get(type_name, 1.)
+        u.attack_range = std_attack_range.get(type_name, 1)
+        u.help_range = std_help_range.get(type_name, 1)
         u.cost = self.base_cost.copy()
         self.unit_types[type_name] = u
         return u
