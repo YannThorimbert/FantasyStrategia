@@ -44,19 +44,20 @@ class Gui:
         self.destinations_mousemotion = []
         pos = e.pos
         cell = self.me.cam.get_cell(pos)
-        if self.destinations_lmb: #then the user may be clicking a destination
-            rect = self.me.cam.get_rect_at_coord(cell.coord)
-            if rect.center in self.destinations_lmb:
-                if not cell.unit: #then move the unit
-                    cost, path = self.last_destination_score.get(cell.coord, None)
-                    self.selected_unit.move_to_cell_animated(path[1:])
-                    # self.selected_unit.move_to_cell(cell)
-                    self.selected_unit = None
-                else:
-                    self.add_alert(self.e_cant_move)
-            self.destinations_lmb = [] #clear destinations
-        elif cell: #else update destinations
-            self.destinations_lmb = self.get_destinations(cell)
+        if cell:
+            if self.destinations_lmb: #then the user may be clicking a destination
+                rect = self.me.cam.get_rect_at_coord(cell.coord)
+                if rect.center in self.destinations_lmb:
+                    if not cell.unit: #then move the unit
+                        cost, path = self.last_destination_score.get(cell.coord, None)
+                        self.selected_unit.move_to_cell_animated(path[1:])
+                        # self.selected_unit.move_to_cell(cell)
+                        self.selected_unit = None
+                    else:
+                        self.add_alert(self.e_cant_move)
+                self.destinations_lmb = [] #clear destinations
+            elif cell: #else update destinations
+                self.destinations_lmb = self.get_destinations(cell)
 
     def rmb(self, e):
         self.destinations_mousemotion = []
@@ -104,10 +105,10 @@ class Gui:
                 self.surface.blit(surf, rect)
                 if self._debug:
                     coord = self.me.cam.get_coord_at_pix(rect.center)
-                    if coord in self.last_destination_score:
-                        cost = self.last_destination_score[coord][0]
-                        text = thorpy.make_text(str(cost))
-                        self.surface.blit(text.get_image(), rect)
+##                    if coord in self.last_destination_score:
+##                        cost = self.last_destination_score[coord][0]
+##                        text = thorpy.make_text(str(cost))
+##                        self.surface.blit(text.get_image(), rect)
 
     def draw_after_objects(self, s):
         pass

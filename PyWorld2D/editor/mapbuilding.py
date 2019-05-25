@@ -102,7 +102,7 @@ class MapInitializer:
         self.forest_zones_spread = [(0.5,0.2)]
         #snow forest:
         self.firsnow = PW_PATH + "/mapobjects/images/firsnow2.png"
-        self.firsnow_size = 1.5
+        self.firsnow_size = 1.
         self.forest_snow_text = "forest"
         self.forest_snow_max_density = 1
         self.forest_snow_homogeneity = 0.5
@@ -117,14 +117,18 @@ class MapInitializer:
         #other things:
         self.bush = PW_PATH + "/mapobjects/images/yar_bush.png"
         self.bush_size = 1.
-        self.village1 = PW_PATH + "/mapobjects/images/pepperRacoon.png"
+        self.village1 = PW_PATH + "/mapobjects/images/house0.png"
+        self.village2 = PW_PATH + "/mapobjects/images/house2.png"
+        self.village3 = PW_PATH + "/mapobjects/images/house3.png"
         self.village1_size = 1.
-        self.village2 = PW_PATH + "/mapobjects/images/rgbfumes1.png"
-        self.village2_size = 2.
-        self.village3 = PW_PATH + "/mapobjects/images/rgbfumes2.png"
-        self.village3_size = 2.3
-        self.village4 = PW_PATH + "/mapobjects/images/rgbfumes3.png"
-        self.village4_size = 2.3
+        self.village2_size = 1.
+        self.village3_size = 1.
+##        self.village1 = PW_PATH + "/mapobjects/images/pepperRacoon.png
+##        self.village2 = PW_PATH + "/mapobjects/images/rgbfumes1.png"
+##        self.village3 = PW_PATH + "/mapobjects/images/rgbfumes2.png"
+##        self.village3_size = 2.3
+##        self.village4 = PW_PATH + "/mapobjects/images/rgbfumes3.png"
+##        self.village4_size = 2.3
         # self.cobble = PW_PATH + "/mapobjects/images/cobblestone2.png"
         self.cobble = PW_PATH + "/rendering/tiles/dirt1.jpg"
         self.cobble_size = 1.
@@ -262,9 +266,11 @@ class MapInitializer:
         village1 = MapObject(me,self.village1, "village",self.village1_size)
         village2 = MapObject(me,self.village2, "village",self.village2_size)
         village3 = MapObject(me,self.village3, "village",self.village3_size)
-        village4 = MapObject(me,self.village4, "village",self.village4_size)
+##        village3 = MapObject(me,self.village3, "village",self.village3_size)
+##        village4 = MapObject(me,self.village4, "village",self.village4_size)
         ##village5 = MapObject(me,PW_PATH + "/mapobjects/images/rgbfumes4.png","village",2.2)
-        village1.set_same_type([village2, village3, village4]) #3 images for 1 object
+##        village1.set_same_type([village2, village3, village4]) #3 images for 1 object
+##        village1.set_same_type([village2, village3]) #3 images for 1 object
         #
         cobble = MapObject(me,self.cobble,"cobblestone",self.cobble_size)
         cobble.is_ground = True
@@ -274,9 +280,10 @@ class MapInitializer:
 ##        anim_tree = MapObject(me, [self.fir1]*3+[self.fir2]*3, "My animated tree",1.)
 ##        anim_tree = objs.put_static_obj(anim_tree, me.lm, (12,12), self._static_objs_layer)
         #
-        for v in[village1,village2,village3,village4]:
-            v.max_relpos = [0, 0.5]
-            v.min_relpos = [0, 0.45]
+##        for v in [village1,village2,village3,village4]:
+        for v in [village1,village2,village3]:
+            v.max_relpos = [0, 0.15]
+            v.min_relpos = [0, 0.1]
         #4) we add the objects via distributors, to add them randomly in a nice way
         #normal forest
         distributor = objs.get_distributor(me, [fir1, fir2, tree],
@@ -312,8 +319,11 @@ class MapInitializer:
         distributor.distribute_objects(self._static_objs_layer)
         #villages
         distributor = objs.get_distributor(me,
-                                [village1, village1.flip(), village2, village2.flip(),
-                                 village3, village3.flip(), village4, village4.flip()],
+##                                [village1, village1.flip(), village2, village2.flip(),
+##                                 village3, village3.flip(), village4, village4.flip()],
+##                                [village1, village1.flip(), village2, village2.flip(), village3, village3.flip()],
+                                    [village1, village1.flip()],
+##                                 village3, village3.flip(), village4, village4.flip()],
                                 self._forest_map, ["Grass"], limit_relpos_y=False)
         distributor.max_density = 1
         distributor.homogeneity = 0.05

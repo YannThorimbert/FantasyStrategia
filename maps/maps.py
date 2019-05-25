@@ -35,4 +35,4 @@ map3.world_size = (128,128)
 map3.persistance = 1.5
 #Note : it is better to start the cells sizes with a power of 2. Then it doesn't matter.
 map3.zoom_cell_sizes = [32,20,8]
-map3.max_number_of_roads = 20
+map3.max_number_of_roads = 0

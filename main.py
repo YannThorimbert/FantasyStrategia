@@ -58,6 +58,7 @@ humans["infantry"].cost["sand"] = 4
 
 #OMBRE DES CHOSES
 
+##obj = me.add_unit((10,9), humans["infantry"], 1)
 obj = me.add_unit((17,9), humans["infantry"], 1)
 # obj = me.add_unit((15,18), humans["archer"], quantity=12)
 
