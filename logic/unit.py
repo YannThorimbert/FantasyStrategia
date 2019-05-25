@@ -4,8 +4,8 @@ from PyWorld2D.mapobjects.objects import MapObject
 
 DELTAS = ((1,0),(-1,0),(0,1),(0,-1))
 
-SPRITES_KEYS = ["idle","right"]
-DELTA_TO_KEYS = {(0,0):"idle", (1,0):"right"}
+SPRITES_KEYS = ["idle", "right", "left", "down"]
+DELTA_TO_KEYS = {(0,0):"idle", (1,0):"right", (-1,0):"left", (0,1):"down", (0,-1):"left"}
 COLORS_HIGHLIGHTS = {"red":(255,0,0), "yellow":(255,255,0), "blue":(0,0,255)}
 HIGHLIGHT_BLUR = 3
 HIGHLIGHT_INFLATE = 10
@@ -65,8 +65,6 @@ class Unit(MapObject):
                         break
                 else: #if break is never reached
                     this_tot_cost = self.cost[next_cell.material.name]
-                if next_cell == (14,4):
-                    print("UH", this_tot_cost, next_cell.objects, next_cell.material.name)
                 this_tot_cost += tot_cost #+ cost so far
                 ################################################################
                 if this_tot_cost <= self.max_dist: #should update the best
@@ -158,8 +156,7 @@ class Unit(MapObject):
 
     def refresh_translation_animation(self):
         delta = MapObject.refresh_translation_animation(self)
-        # key = DELTA_TO_KEYS[delta]
-        key = DELTA_TO_KEYS.get(delta,"idle")
+        key = DELTA_TO_KEYS[delta]
         self.set_sprite_type(key)
 
     def build_imgs(self):

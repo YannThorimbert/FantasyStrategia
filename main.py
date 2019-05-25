@@ -41,9 +41,13 @@ humans.base_max_dist = 10
 
 fn = "sprites/human_warrior"
 deltas_lr =  [(0,0), (0,-1), (0,-2), (0,-1), (0,0), (0,0)]
+left = get_unit_sprites(fn+"_left.png")#, deltas_lr)
 right = get_unit_sprites(fn+"_right.png")#, deltas_lr)
+down = get_unit_sprites(fn+"_down.png")#, deltas_lr)
 idle = get_unit_sprites(fn+"_idle.png")
-sprites_human = {"right":(right,const.FAST), "idle":(idle,const.SLOW)}
+sprites_human = {"right":(right,const.FAST), "left":(left,const.FAST),
+                 "down":(down,const.FAST),
+                 "idle":(idle,const.SLOW)}
 
 
 humans.add_type("infantry", sprites_human)

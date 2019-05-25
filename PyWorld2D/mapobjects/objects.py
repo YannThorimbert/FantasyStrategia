@@ -228,7 +228,6 @@ class MapObject:
 
     def refresh_translation_animation(self):
         if self.anim_path:
-            # print(self.anim_path, self.relpos)
             x0,y0 = self.cell.coord
             xf,yf = self.anim_path[0]
             dx, dy = xf-x0, yf-y0

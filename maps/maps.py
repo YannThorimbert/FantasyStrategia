@@ -21,7 +21,7 @@ map1.reverse_hmap = True
 map1.world_size = (32,32)
 map1.set_terrain_type(terrain_plains, colorscale_plains)
 map1.max_number_of_roads = 1
-# map1.zoom_cell_sizes = [64,32,16]
+map1.zoom_cell_sizes = [32,16]
 ##map1.max_river_length = 100
 
 map2 = MapInitializer("Second demo map")
