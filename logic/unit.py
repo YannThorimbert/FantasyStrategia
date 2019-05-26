@@ -196,11 +196,10 @@ class Unit(MapObject):
             return DELTAS
         else:
             cells = []
-            x0, y0 = self.cell.coord
             for dx in range(-dmax,dmax+1):
-                for dy in range(-dmax,-dmax+1):
+                for dy in range(-dmax,dmax+1):
                     if dmin <= abs(dx) + abs(dy) <= dmax:
-                        cells.append((x0+dx, y0+dy))
+                        cells.append((dx, dy))
             return cells
 
     def get_coords_in_attack_range(self):

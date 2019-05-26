@@ -14,7 +14,7 @@ from PyWorld2D.editor.mapbuilding import MapInitializer #configuration structure
 
 import maps.maps as maps
 import gui.gui as gui
-from logic.unit import Unit, load_sprites
+from logic.unit import Unit
 from logic.races import Race
 from logic.game import Game
 
@@ -34,21 +34,24 @@ game = Game(me)
 map_initializer.build_map(me, fast=False, use_beach_tiler=False, load_tilers=False)
 
 
-humans = Race("Humans 1", me)
+humans = Race("Humans 1", me, "green")
 humans.base_cost["grass"] = 2
 humans.base_cost["forest"] = 5
 humans.base_max_dist = 10
-humans.add_type("infantry", load_sprites("sprites/human_warrior", "green"))
+humans.add_type("infantry", "sprites/human_warrior")
 humans["infantry"].cost["sand"] = 4
+humans.add_type("wizard", "sprites/human_wizard")
 
-humans2 = Race("Humans 2", me)
+humans2 = Race("Humans 2", me, "blue")
 humans2.base_cost["forest"] = 10
-humans2.add_type("infantry", load_sprites("sprites/human_warrior", "red"))
+humans2.add_type("infantry", "sprites/human_warrior")
 
 
 # humans.add_type("archer", PW_PATH+"/mapobjects/images/char1.png")
 # humans["archer"].max_dist = 6
 # humans["archer"].cost["cobblestone"] = 1.5
+
+controler distance tir wizard
 
 game.add_unit((20,8), humans2["infantry"], 1)
 game.get_unit_at(20,8).team = 1
@@ -57,6 +60,7 @@ game.add_unit((15,7), humans2["infantry"], 1)
 game.get_unit_at(15,7).team = 1
 
 game.add_unit((15,5), humans["infantry"], 1)
+game.add_unit((16,6), humans["wizard"], 1)
 
 
 

@@ -51,18 +51,19 @@ class Gui:
         return destinations
 
     def update_possible_interactions(self, ref_unit, coord):
-        for unit in self.game.units:
-            if unit is not ref_unit:
-                if unit.cell.coord == coord:
-                    self.add_unit_highlight(ref_unit, unit)
+        for other in self.game.units:
+            if other is not ref_unit:
+                if other.cell.coord == coord:
+                    self.add_unit_highlight(ref_unit, other)
                 else:
-                    if unit.team == ref_unit.team:
+                    if other.team == ref_unit.team:
                         coords = ref_unit.get_coords_in_help_range()
                     else:
                         coords = ref_unit.get_coords_in_attack_range()
+                        print(coords)
                     for dx,dy in coords:
-                        if unit.cell.coord == (coord[0]+dx, coord[1]+dy):
-                            self.add_unit_highlight(ref_unit, unit)
+                        if other.cell.coord == (coord[0]+dx, coord[1]+dy):
+                            self.add_unit_highlight(ref_unit, other)
 
 
     def add_unit_highlight(self, ref_unit, unit):

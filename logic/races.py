@@ -48,7 +48,7 @@ std_attack_range = {'villager':(1,1),
                     'transport boat':(0,0),
                     'attack boat':(1,3)}
 
-std_help_range = {'villager':(1,1),
+std_help_range = {  'villager':(1,1),
                     'infantry':(1,1),
                     'archer':(1,1),
                     'cavalry':(1,1),
@@ -67,16 +67,18 @@ std_distance = 5
 
 
 class Race:
-    def __init__(self, name, me):
+    def __init__(self, name, me, color="blue"):
         self.name = name
         self.base_cost = std_cost_material.copy()
         self.base_max_dist = std_distance
         self.unit_types = {}
         self.me = me
+        self.color = color
 
     def add_type(self, type_name, imgs_fn, factor=1.):
+        imgs = unit.load_sprites(imgs_fn, self.color)
         assert type_name not in self.unit_types
-        u = unit.Unit(type_name, self.me, imgs_fn, type_name, factor)
+        u = unit.Unit(type_name, self.me, imgs, type_name, factor)
         u.race = self
         u.max_dist = self.base_max_dist * std_type_cost.get(type_name, 1.)
         u.attack_range = std_attack_range.get(type_name, 1)
