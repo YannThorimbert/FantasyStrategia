@@ -111,7 +111,7 @@ class MapEditor:
         ########################################################################
         self.cell_info = gui.CellInfo(self.menu_rect.inflate((-10,0)).size,
                          self.cell_rect.size, self.draw_no_update, e_hmap)
-        self.unit_info = gui.UnitInfo(self.menu_rect.inflate((-10,0)).size,
+        self.unit_info = gui.UnitInfo(self,self.menu_rect.inflate((-10,0)).size,
                          self.cell_rect.size, self.draw_no_update, e_hmap)
 ##        self.misc_info = gui.MiscInfo(self.menu_rect.inflate((-10,0)).size)
         self.menu_button = thorpy.make_menu_button()
@@ -377,26 +377,27 @@ class MapEditor:
         # if e.button == 1: #left click
         #     pass
         if e.button == 3: #right click
-            destinations_drawn = False
+            #1. undraw destinations if necessary
+            mm, lmb = False, False
             if self.cam.ui_manager:
                 mm = bool(self.cam.ui_manager.destinations_mousemotion)
                 lmb = bool(self.cam.ui_manager.destinations_lmb)
-                destinations_drawn = mm or lmb
-            if destinations_drawn: #undraw destinations
+            if mm or lmb:
                 self.cam.ui_manager.destinations_mousemotion = []
                 self.cam.ui_manager.destinations_lmb = []
                 self.cam.ui_manager.selected_unit = None
                 self.draw_no_update()
                 pygame.display.flip()
-            else:
-                if self.unit_info.can_be_launched(cell, self):
+            if not lmb: #2. display infos
+                can_unit = self.unit_info.can_be_launched(cell, self)
+                can_cell = self.cell_info.can_be_launched(cell, self)
+                if can_unit:
                     self.unit_info.last_cell_clicked = cell
                     self.unit_info.launch_em(cell, e.pos, self.cam.map_rect)
-                elif cell:
-                    if self.cell_info.can_be_launched(cell, self):
-                        self.cell_info.last_cell_clicked = cell
-                        self.cell_info.launch_em(cell, e.pos, self.cam.map_rect)
-                    self.cell_info.last_cell_clicked = None
+                elif can_cell:
+                    self.cell_info.last_cell_clicked = cell
+                    self.cell_info.launch_em(cell, e.pos, self.cam.map_rect)
+                self.cell_info.last_cell_clicked = None
             self.unit_info.last_cell_clicked = None
 
     def func_reac_mousemotion(self, e):

@@ -76,7 +76,7 @@ class Race:
 
     def add_type(self, type_name, imgs_fn, factor=1.):
         assert type_name not in self.unit_types
-        u = unit.Unit(type_name, self.me, imgs_fn, "", factor)
+        u = unit.Unit(type_name, self.me, imgs_fn, type_name, factor)
         u.race = self
         u.max_dist = self.base_max_dist * std_type_cost.get(type_name, 1.)
         u.attack_range = std_attack_range.get(type_name, 1)

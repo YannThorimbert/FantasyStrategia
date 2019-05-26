@@ -38,7 +38,7 @@ humans = Race("Humans 1", me)
 humans.base_cost["grass"] = 2
 humans.base_cost["forest"] = 5
 humans.base_max_dist = 10
-humans.add_type("infantry", load_sprites("sprites/human_warrior", "blue"))
+humans.add_type("infantry", load_sprites("sprites/human_warrior", "green"))
 humans["infantry"].cost["sand"] = 4
 
 humans2 = Race("Humans 2", me)

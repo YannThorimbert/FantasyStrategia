@@ -11,8 +11,9 @@ HIGHLIGHT_BLUR = 3
 HIGHLIGHT_INFLATE = 10
 
 COLORS = {"blue":((160,195,210),(110,160,185),(76,95,128)), #SRC_COLOR
-          "red":((210,195,160),(185,160,110),(128,95,76)),
-          "green":((195,210,160),(160,185,110),(95,128,76))}
+          "red":((255,175,140),(230,140,90),(175,75,56)),
+          "green":((195,255,160),(160,230,110),(95,175,76)),
+          "black":((130,)*3,(90,)*3,(75,)*3)}
 
 class Unit(MapObject):
 
@@ -20,7 +21,7 @@ class Unit(MapObject):
     def get_saved_attributes():
         return MapObject.get_saved_attributes() + ["team"]
 
-    def __init__(self, type_name, editor, sprites, name="", factor=1., relpos=(0,0),
+    def __init__(self, type_name, editor, sprites, name=None, factor=1., relpos=(0,0),
                     build=True, new_type=True):
         self.highlights = {}
         self.sprites_ref = {}
@@ -35,7 +36,7 @@ class Unit(MapObject):
                 isprite += n
         else:
             imgs = [""]
-        MapObject.__init__(self, editor, imgs, name, factor, relpos, build, new_type)
+        MapObject.__init__(self, editor, imgs, type_name, factor, relpos, build, new_type)
         self.type_name = type_name
         self.cost = None
         self.max_dist = None

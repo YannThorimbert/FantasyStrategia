@@ -114,12 +114,26 @@ class CellInfo:
     def update_em(self, cell):
         new_img = cell.extract_all_layers_img_at_zoom(0)
         self.em_mat_img_img.set_image(new_img)
-        text = cell.material.name
-        objs = set([])
+        ground_obj = False
         for obj in cell.objects:
-            objs.add(obj.name) #split to not take the id
-        for name in objs:
-            text += " ("+name+")"
+            if obj.is_ground:
+                ground_obj = obj.name
+                break
+        if ground_obj: #cobblestone, river etc should not display "grass"
+            text = ground_obj.capitalize()
+            objs = set([])
+            for obj in cell.objects:
+                if not obj.is_ground:
+                    objs.add(obj.name) #split to not take the id
+            for name in objs:
+                text += " ("+name+")"
+        else:
+            text = cell.material.name
+            objs = set([])
+            for obj in cell.objects:
+                objs.add(obj.name) #split to not take the id
+            for name in objs:
+                text += " ("+name+")"
         self.em_mat_name.set_text(text)
         thorpy.store(self.em_mat, mode="h")
         self.em_coord.set_text("Coordinates: "+str(cell.coord))
@@ -178,10 +192,22 @@ class CellInfo:
 
     def update_e(self, cell):
         self.cell = cell
-        if cell.name:
-            name = cell.name + " (" + cell.material.name + ")"
+        ground_obj = False
+        for obj in cell.objects:
+            if obj.is_ground:
+                ground_obj = obj.name
+                break
+        if ground_obj: #cobblestone, river etc should not display "grass"
+            basename = ground_obj.capitalize()
         else:
-            name = cell.material.name
+            basename = cell.material.name
+        if cell.name:
+            name = cell.name + " (" + basename + ")"
+        else:
+            name = basename
+        for obj in cell.objects:
+            if not obj.is_ground:
+                name += " (" + obj.name + ")"
         self.e_mat_name.set_text(name)
         new_img = cell.extract_all_layers_img_at_zoom(0)
         self.e_mat_img.set_image(new_img)
@@ -203,7 +229,8 @@ class CellInfo:
 
 
 class UnitInfo: #name, image, nombre(=vie dans FS!)
-    def __init__(self, size, cell_size, redraw, external_e):
+    def __init__(self, me, size, cell_size, redraw, external_e):
+        self.me = me
         self.unit = None
 ##        self.cell = None probleme
         self.e_img = thorpy.Image.make(pygame.Surface(cell_size))
@@ -228,18 +255,32 @@ class UnitInfo: #name, image, nombre(=vie dans FS!)
         self.em_title = guip.get_title("Unit informations")
 ##        self.em_coord = guip.get_text("")
 ##        self.em_altitude = guip.get_text("")
-        self.em_name = guip.get_small_text("")
-        self.em_rename = guip.get_small_button("Rename", self.rename_current_unit)
-        self.em_name_rename = thorpy.make_group([self.em_name, self.em_rename])
+##        self.em_name = guip.get_small_text("")
+        self.em_rename = guip.get_button("Rename", self.rename_current_unit)
+##        self.em_name_rename = thorpy.make_group([self.em_name, self.em_rename])
 ####        self.em_name_rename = thorpy.Clickable.make(elements=[self.em_name, self.em_rename])
 ####        thorpy.store(self.em_name_rename)
-        self.em_name_rename.fit_children()
+##        self.em_name_rename.fit_children()
         self.em_unit_img_img = thorpy.Image.make(pygame.Surface(cell_size))
         self.em_unit_img = thorpy.Clickable.make(elements=[self.em_unit_img_img])
         self.em_unit_img.fit_children()
         self.em_unit_name = guip.get_text("")
-        self.em_unit = thorpy.make_group([self.em_unit_img, self.em_unit_name])
-        self.em_elements = [self.em_title, thorpy.Line.make(100), self.em_unit, self.em_name_rename]
+        self.em_unit_race = guip.get_text("")
+        self.em_nameNrace = thorpy.make_group([self.em_unit_name, self.em_unit_race], "v")
+        self.em_unit = thorpy.make_group([self.em_unit_img, self.em_nameNrace])
+        self.em_elements = [self.em_title, thorpy.Line.make(100), self.em_unit, self.em_rename]#self.em_name_rename]
+        #
+        self.em_mat_img_img = thorpy.Image.make(pygame.Surface(cell_size))
+        self.em_mat_img = thorpy.Clickable.make(elements=[self.em_mat_img_img])
+        self.em_mat_img.fit_children()
+        def show_terrain_infos():
+            cell = self.unit.cell
+            self.me.cell_info.last_cell_clicked = cell
+            pos = self.me.cam.get_rect_at_coord(cell.coord).center
+            self.me.cell_info.launch_em(cell, pos, self.me.cam.map_rect)
+##        self.em_button_cell = guip.get_button("Terrain infos", show_terrain_infos)
+        self.em_mat_img.user_func = show_terrain_infos
+        self.em_elements += [thorpy.Line.make(100), self.em_mat_img]
         self.em = thorpy.Box.make(self.em_elements)
         self.em.set_main_color((200,200,200,150))
         self.launched = False
@@ -266,15 +307,11 @@ class UnitInfo: #name, image, nombre(=vie dans FS!)
     def update_em(self, cell):
         new_img = cell.unit.get_current_img()
         self.em_unit_img_img.set_image(new_img)
-        text = cell.unit.name
-        self.em_unit_name.set_text(text)
+        self.em_unit_name.set_text(cell.unit.name.capitalize())
+        self.em_unit_race.set_text(cell.unit.race.name)
         thorpy.store(self.em_unit, mode="h")
-        if not cell.unit.name:
-            unitname = "This unit has no name"
-        else:
-            unitname = cell.unit.name
-        self.em_name.set_text(unitname)
-        thorpy.store(self.em_name_rename, mode="h")
+        #
+        self.em_mat_img_img.set_image(self.me.cell_info.e_mat_img.get_image())
         self.em.store()
         self.em.fit_children()
 
