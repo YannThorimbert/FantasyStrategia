@@ -231,7 +231,7 @@ class MapObject:
             x0,y0 = self.cell.coord
             xf,yf = self.anim_path[0]
             dx, dy = xf-x0, yf-y0
-            assert not(dx!=0 and dy!=0)
+            # assert not(dx!=0 and dy!=0)
             if dx != 0:
                 sign = sgn(dx)
                 self.relpos[0] += self.vel * sign

@@ -51,16 +51,16 @@ humans2.add_type("infantry", "sprites/human_warrior")
 # humans["archer"].max_dist = 6
 # humans["archer"].cost["cobblestone"] = 1.5
 
-controler distance tir wizard
 
-game.add_unit((20,8), humans2["infantry"], 1)
-game.get_unit_at(20,8).team = 1
+game.add_unit((20,8), humans2["infantry"], 100, team=1)
+game.add_unit((15,7), humans2["infantry"], 60, team=1)
 
-game.add_unit((15,7), humans2["infantry"], 1)
-game.get_unit_at(15,7).team = 1
+game.add_unit((15,5), humans["infantry"], 100, team=2)
+game.add_unit((16,6), humans["wizard"], 1, team=2)
 
-game.add_unit((15,5), humans["infantry"], 1)
-game.add_unit((16,6), humans["wizard"], 1)
+
+from fights.animations import Battle
+Battle(game.units[0], game.units[2], "lolterrain", 0)
 
 
 

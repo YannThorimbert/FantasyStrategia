@@ -4,8 +4,8 @@ import PyWorld2D.constants as const
 
 
 DELTAS = ((1,0),(-1,0),(0,1),(0,-1))
-SPRITES_KEYS = ["idle", "right", "left", "down", "up"]
-DELTA_TO_KEYS = {(0,0):"idle", (1,0):"right", (-1,0):"left", (0,1):"down", (0,-1):"up"}
+SPRITES_KEYS = ["idle", "right", "left", "down", "up", "lattack"]
+DELTA_TO_KEY = {(0,0):"idle", (1,0):"right", (-1,0):"left", (0,1):"down", (0,-1):"up"}
 COLORS_HIGHLIGHTS = {"red":(255,0,0), "yellow":(255,255,0), "blue":(0,0,255)}
 HIGHLIGHT_BLUR = 3
 HIGHLIGHT_INFLATE = 10
@@ -41,6 +41,7 @@ class Unit(MapObject):
         self.cost = None
         self.max_dist = None
         self.race = None
+        self.game = None
         #
         self.walk_img = {}
         self.set_frame_refresh_type(2) #type fast
@@ -161,7 +162,7 @@ class Unit(MapObject):
 
     def refresh_translation_animation(self):
         delta = MapObject.refresh_translation_animation(self)
-        key = DELTA_TO_KEYS[delta]
+        key = DELTA_TO_KEY[delta]
         self.set_sprite_type(key)
 
     def build_imgs(self):
@@ -211,11 +212,6 @@ class Unit(MapObject):
 
 
 def get_unit_sprites(fn,  colors="blue", deltas=None, s=32, ckey=(255,255,255)):
-    """<imgs> is a dict on the form: imgs['right'] = [img1, img2, ..],
-    imgs['idle'] = [img1, img2, ...] and so on.
-
-    Keys : 'right', 'left', 'up', 'down', 'idle', 'death', 'attack'
-    """
     imgs = []
     sprites = pygame.image.load(fn)
     if colors != "blue":
@@ -224,7 +220,6 @@ def get_unit_sprites(fn,  colors="blue", deltas=None, s=32, ckey=(255,255,255)):
         for i in range(3):
             src = COLORS["blue"][i]
             dst = colors[i]
-            print(src,"-->",dst)
             thorpy.change_color_on_img_ip(sprites, src, dst)
     n = sprites.get_width() // s
     if not deltas:
@@ -247,6 +242,8 @@ def load_sprites(fn, colors="blue", h=const.FAST, v=const.FAST, i=const.SLOW):
     down = get_unit_sprites(fn+"_down.png",colors)
     up = get_unit_sprites(fn+"_up.png",colors)
     idle = get_unit_sprites(fn+"_idle.png",colors)
+    lattack = get_unit_sprites(fn+"_left_attack.png",colors)
     sprites = {"right":(right,h), "left":(left,h), "down":(down,v), "up":(up,v),
-                "idle":(idle,i)}
+                "idle":(idle,i),
+                "lattack":(lattack,i)}
     return sprites

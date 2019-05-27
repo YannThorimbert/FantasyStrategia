@@ -60,7 +60,6 @@ class Gui:
                         coords = ref_unit.get_coords_in_help_range()
                     else:
                         coords = ref_unit.get_coords_in_attack_range()
-                        print(coords)
                     for dx,dy in coords:
                         if other.cell.coord == (coord[0]+dx, coord[1]+dy):
                             self.add_unit_highlight(ref_unit, other)
