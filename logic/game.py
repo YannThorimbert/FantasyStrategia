@@ -6,8 +6,6 @@ class Game:
         self.me = me
         self.units = []
         self.objects = []
-        self.fight_t = 0
-        self.fight_frame = 0
 
 
     def add_unit(self, coord, unit, quantity, team):
@@ -27,7 +25,7 @@ class Game:
         return self.me.lm.get_cell_at(x,y).unit
 
     def update_fights(self, fights):
-        a = 0.1
+        a = 0.0002
         to_remove = []
         deads = []
         for i, us in enumerate(fights):

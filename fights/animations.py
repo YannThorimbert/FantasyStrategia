@@ -4,9 +4,11 @@ import pygame
 
 KEY_TO_DELTA = {"right":(1,0), "left":(-1,0), "down":(0,1), "up":(0,-1)}
 DELTA_TO_KEY = {(0,0):"idle", (1,0):"right", (-1,0):"left", (0,1):"down", (0,-1):"up"}
+DELTA_TO_KEY_A = {(0,0):"idle", (1,0):"rattack", (-1,0):"lattack", (0,1):"down", (0,-1):"up"}
 ANIM_VEL = 0.1
-SLOW_FIGHT_FRAME = 4
-MOD_CHANGE_TARGET = 10
+SLOW_FIGHT_FRAME1 = 4
+SLOW_FIGHT_FRAME2 = 16
+STOP_TARGET_DIST_FACTOR = 3.
 
 def sgn(x):
     if x < 0:
@@ -14,6 +16,8 @@ def sgn(x):
     elif x > 0:
         return 1
     return 0
+
+
 
 
 class FightingUnit:
@@ -28,6 +32,8 @@ class FightingUnit:
         self.direction = direction
         self.vel = self.unit.max_dist * ANIM_VEL
         self.target = None
+        self.fighting = False
+        self.opponents = None
         #
         self.frame0 = random.randint(0,12)
         self.nframes = None
@@ -38,31 +44,59 @@ class FightingUnit:
         self.dead_img = pygame.Surface(self.rect.size)
         self.dead_img.fill((255,0,0))
 
+
     def set_sprite_type(self, key):
         i,n,t = self.unit.sprites_ref[key]
         self.isprite = i
         self.nframes = n
         # self.set_frame_refresh_type(t)
 
+    def update_target(self):
+        x,y = self.pos
+        distances = []
+        # distances = [(abs(x-u2.pos[0]) + abs(y-u2.pos[1]),u2) for u2 in self.opponents]
+        for u in self.opponents:
+            d = abs(x-u.pos[0]) + abs(y-u.pos[1])
+            if d < STOP_TARGET_DIST_FACTOR*self.battle.cell_size:
+                self.target = u
+                return
+            else:
+                distances.append((d,u))
+        distances.sort(key=lambda x:x[0])
+        self.target = distances[0][1]
+
 
     def draw_and_move(self, surface):
         if self.dead:
             return
-        frame = (self.frame0 + self.unit.game.fight_frame)%self.nframes
+        if self.target.dead:
+            self.update_target()
+        if self.fighting:
+            frame = (self.frame0 + self.battle.fight_frame2)%self.nframes
+        else:
+            frame = (self.frame0 + self.battle.fight_frame1)%self.nframes
         frame += self.isprite
         img = self.unit.imgs_z_t[self.z][frame]
         surface.blit(img, self.rect)
         #
         rdx = self.target.pos[0] - self.pos[0]
         rdy = self.target.pos[1] - self.pos[1]
+        #update direction #####################################################
+        dx = sgn(rdx)
+        dy = sgn(rdy)
+        #######################################################################
         if abs(rdx) < 30 and abs(rdy) < 30:
-            self.set_sprite_type("lattack")
+            if dx:
+                self.direction = DELTA_TO_KEY_A[(dx,0)]
+            elif dy:
+                self.direction = DELTA_TO_KEY_A[(0,dy)]
+            self.fighting = True
+            self.set_sprite_type(self.direction)
             if self.unit.team < self.target.unit.team: #prevent doublons
                 self.battle.fights.append((self, self.target))
             return
         else:
-            dx = sgn(rdx)
-            dy = sgn(rdy)
+            self.fighting = False
             if dx:
                 self.direction = DELTA_TO_KEY[(dx,0)]
             elif dy:
@@ -77,6 +111,10 @@ class FightingUnit:
 
 
 
+#changer target pour cellule libre toujours, sinon autre target sinon attente.
+#coller sang sur la map plutot que de continuer de bliter sang a chaque frame
+#pas dans la neige et dans le sable
+#cas ou terrain pas le meme dans deux units ? terrain = terrain de l'attaquant ou du defenseur ? ou plutot faire vite une map mixte ?
 class Battle:
 
     def __init__(self, u1, u2, terrain, zoom_level):
@@ -86,11 +124,15 @@ class Battle:
         self.u2 = u2
         self.terrain = terrain
         self.z = zoom_level
+        self.cell_size = None
         self.f1 = []
         self.f2 = []
         self.f = []
         self.deads = []
         self.fights = []
+        self.fight_t = 0
+        self.fight_frame1 = 0
+        self.fight_frame2 = 0
         self.prepare_battle()
         self.show()
 
@@ -109,45 +151,38 @@ class Battle:
             self.surface.blit(u.dead_img, u.rect)
         for u in self.f:
             u.draw_and_move(self.surface)
-        self.game.fight_t += 1
-        if self.game.fight_t % SLOW_FIGHT_FRAME == 0:
-            self.game.fight_frame += 1
+        self.fight_t += 1
+        if self.fight_t % SLOW_FIGHT_FRAME1 == 0:
+            self.fight_frame1 += 1
+        if self.fight_t % SLOW_FIGHT_FRAME2 == 0:
+            self.fight_frame2 += 1
         pygame.display.flip()
         #
         self.f.sort(key=lambda x:x.pos[1]) #peut etre pas besoin selon systeme de cible
-        if self.game.fight_t % MOD_CHANGE_TARGET == 0:
-            self.update_target()
         to_remove, deads = self.game.update_fights(self.fights)
         self.deads += deads
         for i in to_remove[::-1]:
-            print("DEAD",i)
             self.fights.pop(i)
         for u in deads:
             if u in self.f1:
                 self.f1.remove(u)
             elif u in self.f2:
                 self.f2.remove(u)
-            # self.f.remove(u)
+        if len(self.f1) == 0 or len(self.f2) == 0:
+            thorpy.functions.quit_menu_func()
 
     def update_target(self): #trick : faire un break si distance < 2*s
         for u1 in self.f1:
-            x,y = u1.pos
-            distances = []
-            distances = [(abs(x-u2.pos[0]) + abs(y-u2.pos[1]),u2) for u2 in self.f2]
-            distances.sort(key=lambda x:x[0])
-            u1.target = distances[0][1]
+            u1.update_target()
         for u2 in self.f2:
-            x,y = u2.pos
-            distances = []
-            distances = [(abs(x-u1.pos[0]) + abs(y-u1.pos[1]),u1) for u1 in self.f1]
-            distances.sort(key=lambda x:x[0])
-            u2.target = distances[0][1]
+            u2.update_target()
 
 
     def prepare_battle(self):
         screen = thorpy.get_screen()
         W,H = screen.get_size()
         s = self.u1.editor.zoom_cell_sizes[self.z]
+        self.cell_size = s
         #
         max_nx = W // (2*s) - 1 - 4
         max_ny = H // s - 1
@@ -185,5 +220,9 @@ class Battle:
             pos[1] += random.randint(0,s//3)
             unit = FightingUnit(self, self.u2, "left", self.z, pos)
             self.f2.append(unit)
+        for u1 in self.f1:
+            u1.opponents = self.f2
+        for u2 in self.f2:
+            u2.opponents = self.f1
         self.update_target()
         self.f = self.f1 + self.f2

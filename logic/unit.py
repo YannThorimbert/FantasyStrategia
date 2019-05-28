@@ -4,7 +4,7 @@ import PyWorld2D.constants as const
 
 
 DELTAS = ((1,0),(-1,0),(0,1),(0,-1))
-SPRITES_KEYS = ["idle", "right", "left", "down", "up", "lattack"]
+SPRITES_KEYS = ["idle", "right", "left", "down", "up", "lattack", "rattack"]
 DELTA_TO_KEY = {(0,0):"idle", (1,0):"right", (-1,0):"left", (0,1):"down", (0,-1):"up"}
 COLORS_HIGHLIGHTS = {"red":(255,0,0), "yellow":(255,255,0), "blue":(0,0,255)}
 HIGHLIGHT_BLUR = 3
@@ -243,7 +243,8 @@ def load_sprites(fn, colors="blue", h=const.FAST, v=const.FAST, i=const.SLOW):
     up = get_unit_sprites(fn+"_up.png",colors)
     idle = get_unit_sprites(fn+"_idle.png",colors)
     lattack = get_unit_sprites(fn+"_left_attack.png",colors)
+    rattack = get_unit_sprites(fn+"_right_attack.png",colors)
     sprites = {"right":(right,h), "left":(left,h), "down":(down,v), "up":(up,v),
                 "idle":(idle,i),
-                "lattack":(lattack,i)}
+                "lattack":(lattack,i), "rattack":(rattack,i)}
     return sprites
