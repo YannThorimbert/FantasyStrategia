@@ -25,7 +25,8 @@ class Game:
         return self.me.lm.get_cell_at(x,y).unit
 
     def update_fights(self, fights):
-        a = 0.0002
+        # a = 0.0002
+        a = -1
         to_remove = []
         deads = []
         for i, us in enumerate(fights):

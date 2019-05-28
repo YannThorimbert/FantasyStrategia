@@ -1,7 +1,7 @@
 import random, thorpy
 import pygame
 
-from .unit import DELTA_TO_KEY, DELTA_TO_KEY_A, KEY_TO_DELTA
+from .unit import DELTA_TO_KEY, DELTA_TO_KEY_A, KEY_TO_DELTA, DELTAS
 
 
 
@@ -32,8 +32,10 @@ class FightingUnit:
         self.direction = direction
         self.vel = self.unit.max_dist * ANIM_VEL
         self.target = None
+        self.current_destination = None
         self.fighting = False
         self.opponents = None
+        self.targeted_by = []
         #
         self.frame0 = random.randint(0,12)
         self.nframes = None
@@ -43,6 +45,15 @@ class FightingUnit:
         self.dead = False
         self.dead_img = pygame.Surface(self.rect.size)
         self.dead_img.fill((255,0,0))
+
+    def set_target(self, other):
+        other.targeted_by.append(self)
+        self.target = other
+        self.refresh_current_destination()
+
+    def unset_target(self):
+        self.target.targeted_by.remove(self)
+        self.target = None
 
 
     def set_sprite_type(self, key):
@@ -54,22 +65,68 @@ class FightingUnit:
     def update_target(self):
         x,y = self.pos
         distances = []
-        # distances = [(abs(x-u2.pos[0]) + abs(y-u2.pos[1]),u2) for u2 in self.opponents]
+        best_d, best_o = float("inf"), None
         for u in self.opponents:
             d = abs(x-u.pos[0]) + abs(y-u.pos[1])
             if d < STOP_TARGET_DIST_FACTOR*self.battle.cell_size:
-                self.target = u
+                self.set_target(u)
                 return
             else:
-                distances.append((d,u))
-        distances.sort(key=lambda x:x[0])
-        self.target = distances[0][1]
+                if d < best_d:
+                    best_d, best_o = d, u
+        self.set_target(best_o)
 
+    # def choose_direction(self, dx, dy):
+    #     if dx and dy:
+    #         if random.random() < 0.5:
+    #             self.direction = DELTA_TO_KEY[(dx,0)]
+    #         else:
+    #             self.direction = DELTA_TO_KEY[(0,dy)]
+    #         if self.unit.team == 1:
+    #             print(self.direction)
+    #     else:
+    #         if dx:
+    #             self.direction = DELTA_TO_KEY[(dx,0)]
+    #         elif dy:
+    #             self.direction = DELTA_TO_KEY[(0,dy)]
+    #         else:
+    #             self.direction = DELTA_TO_KEY[(0,0)]
+
+    def choose_direction(self, dx, dy):
+        if dx:
+            self.direction = DELTA_TO_KEY[(dx,0)]
+        elif dy:
+            self.direction = DELTA_TO_KEY[(0,dy)]
+        else:
+            self.direction = DELTA_TO_KEY[(0,0)]
+
+
+    def choose_direction_attack(self, dx, dy):
+        if dx:
+            self.direction = DELTA_TO_KEY[(dx,0)]
+        elif dy:
+            self.direction = DELTA_TO_KEY[(0,dy)]
+
+    def refresh_current_destination(self):
+        already_taken = []
+        for u in self.target.targeted_by:
+            if u is not self:
+                if u.fighting:
+                    already_taken.append(u.rect)
+        if already_taken:
+            print("PROBLEM")
+            for dx,dy in DELTAS:
+                r = self.target.rect.move(dx,dy)
+                if not r.collidelist(already_taken):
+                    self.current_destination = r.center
+                    return
+        self.current_destination = self.target.rect.move(3*self.battle.cell_size,0)
 
     def draw_and_move(self, surface):
         if self.dead:
             return
         if self.target.dead:
+            self.unset_target()
             self.update_target()
         if self.fighting:
             frame = (self.frame0 + self.battle.fight_frame2)%self.nframes
@@ -79,28 +136,32 @@ class FightingUnit:
         img = self.unit.imgs_z_t[self.z][frame]
         surface.blit(img, self.rect)
         #
-        rdx = self.target.pos[0] - self.pos[0]
-        rdy = self.target.pos[1] - self.pos[1]
-        #update direction #####################################################
+        if not self.fighting:
+            rdx = self.target.pos[0] - self.pos[0]
+            rdy = self.target.pos[1] - self.pos[1]
+        else:
+            rdx = self.current_destination[0] - self.pos[0]
+            rdy = self.current_destination[1] - self.pos[1]
+        #update direction ######################################################
         dx = sgn(rdx)
         dy = sgn(rdy)
-        #######################################################################
+        ########################################################################
         if abs(rdx) < 30 and abs(rdy) < 30:
-            if dx:
-                self.direction = DELTA_TO_KEY_A[(dx,0)]
-            elif dy:
-                self.direction = DELTA_TO_KEY_A[(0,dy)]
+            # print("ENTER")
+            self.vel = 0.
+            self.choose_direction_attack(dx,dy)
+            if not self.fighting: #just entered the fight
+                self.refresh_current_destination()
             self.fighting = True
             self.set_sprite_type(self.direction)
             if self.unit.team < self.target.unit.team: #prevent doublons
                 self.battle.fights.append((self, self.target))
             return
         else:
+            # print(self.battle.fight_frame1)
+            self.vel = self.unit.max_dist * ANIM_VEL
+            self.choose_direction(dx,dy)
             self.fighting = False
-            if dx:
-                self.direction = DELTA_TO_KEY[(dx,0)]
-            elif dy:
-                self.direction = DELTA_TO_KEY[(0,dy)]
             dx, dy =  KEY_TO_DELTA[self.direction] #if you remove it, units can move in diagonal
             self.set_sprite_type(self.direction)
             #
@@ -111,6 +172,7 @@ class FightingUnit:
 
 
 
+#remettre un choose_direction aleatoire, mais forcer de pas changer tout les + que x frames
 #accelerer batailles avec space (reduit les SLOWNESS), finir battaile avec enter (supprime fps et affichage)
 #changer target pour cellule libre toujours, sinon autre target sinon attente.
 #coller sang sur la map plutot que de continuer de bliter sang a chaque frame
@@ -137,11 +199,22 @@ class Battle:
         self.prepare_battle()
         self.show()
 
+
+    def accelerate(self):
+        for u in self.f:
+            u.vel *= 6.
+
+
     def show(self):
         bckgr = thorpy.Ghost()
         reac = thorpy.ConstantReaction(thorpy.constants.THORPY_EVENT,
                                     self.update_battle,
                                     {"id":thorpy.constants.EVENT_TIME})
+        bckgr.add_reaction(reac)
+        #
+        reac = thorpy.ConstantReaction(pygame.KEYDOWN,
+                                        self.accelerate,
+                                        {"key":pygame.K_SPACE})
         bckgr.add_reaction(reac)
         menu = thorpy.Menu(bckgr, fps=60)
         menu.play()
@@ -164,7 +237,6 @@ class Battle:
         self.deads += deads
         for i in to_remove[::-1]:
             self.fights.pop(i)
-        for u in deads:
             if u in self.f1:
                 self.f1.remove(u)
             elif u in self.f2:
@@ -172,7 +244,7 @@ class Battle:
         if len(self.f1) == 0 or len(self.f2) == 0:
             thorpy.functions.quit_menu_func()
 
-    def update_target(self): #trick : faire un break si distance < 2*s
+    def update_all_targets(self): #trick : faire un break si distance < 2*s
         for u1 in self.f1:
             u1.update_target()
         for u2 in self.f2:
@@ -225,5 +297,5 @@ class Battle:
             u1.opponents = self.f2
         for u2 in self.f2:
             u2.opponents = self.f1
-        self.update_target()
+        self.update_all_targets()
         self.f = self.f1 + self.f2
