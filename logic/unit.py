@@ -5,10 +5,13 @@ import PyWorld2D.constants as const
 
 DELTAS = ((1,0),(-1,0),(0,1),(0,-1))
 SPRITES_KEYS = ["idle", "right", "left", "down", "up", "lattack", "rattack"]
-DELTA_TO_KEY = {(0,0):"idle", (1,0):"right", (-1,0):"left", (0,1):"down", (0,-1):"up"}
 COLORS_HIGHLIGHTS = {"red":(255,0,0), "yellow":(255,255,0), "blue":(0,0,255)}
 HIGHLIGHT_BLUR = 3
 HIGHLIGHT_INFLATE = 10
+
+DELTA_TO_KEY = {(0,0):"idle", (1,0):"right", (-1,0):"left", (0,1):"down", (0,-1):"up"}
+KEY_TO_DELTA = {DELTA_TO_KEY[key]:key for key in DELTA_TO_KEY}
+DELTA_TO_KEY_A = {(0,0):"idle", (1,0):"rattack", (-1,0):"lattack", (0,1):"down", (0,-1):"up"}
 
 COLORS = {"blue":((160,195,210),(110,160,185),(76,95,128)), #SRC_COLOR
           "red":((255,175,140),(230,140,90),(175,75,56)),

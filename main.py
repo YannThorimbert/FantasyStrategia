@@ -52,14 +52,14 @@ humans2.add_type("infantry", "sprites/human_warrior")
 # humans["archer"].cost["cobblestone"] = 1.5
 
 
-game.add_unit((20,8), humans2["infantry"], 10, team=1)
+game.add_unit((20,8), humans2["infantry"], 180, team=1)
 game.add_unit((15,7), humans2["infantry"], 60, team=1)
 
-game.add_unit((15,5), humans["infantry"], 10, team=2)
+game.add_unit((15,5), humans["infantry"], 180, team=2)
 game.add_unit((16,6), humans["wizard"], 1, team=2)
 
 
-from fights.animations import Battle
+from logic.battle import Battle
 Battle(game.units[0], game.units[2], "lolterrain", 0)
 
 
