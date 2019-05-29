@@ -1,11 +1,16 @@
 import random, thorpy
 import pygame
 
-from .unit import DELTA_TO_KEY, DELTA_TO_KEY_A, KEY_TO_DELTA, DELTAS
+##from .unit import DELTA_TO_KEY, DELTA_TO_KEY_A, KEY_TO_DELTA, DELTAS
+
+DELTAS = ((1,0),(-1,0),(0,1),(0,-1))
+DELTA_TO_KEY = {(0,0):"idle", (1,0):"right", (-1,0):"left", (0,1):"down", (0,-1):"up"}
+KEY_TO_DELTA = {DELTA_TO_KEY[key]:key for key in DELTA_TO_KEY}
+DELTA_TO_KEY_A = {(0,0):"idle", (1,0):"rattack", (-1,0):"lattack", (0,1):"down", (0,-1):"up"}
 
 
 
-ANIM_VEL = 0.1
+ANIM_VEL = 0.2
 SLOW_FIGHT_FRAME1 = 4
 SLOW_FIGHT_FRAME2 = 16
 STOP_TARGET_DIST_FACTOR = 3.
@@ -18,6 +23,7 @@ def sgn(x):
     return 0
 
 
+#remove the assertions
 
 
 class FightingUnit:
@@ -32,10 +38,11 @@ class FightingUnit:
         self.direction = direction
         self.vel = self.unit.max_dist * ANIM_VEL
         self.target = None
-        self.current_destination = None
-        self.fighting = False
+        self.target_slot = None
         self.opponents = None
+        self.friends = None
         self.targeted_by = []
+        self.free_slots = {direction:True for direction in DELTAS}
         #
         self.frame0 = random.randint(0,12)
         self.nframes = None
@@ -46,14 +53,64 @@ class FightingUnit:
         self.dead_img = pygame.Surface(self.rect.size)
         self.dead_img.fill((255,0,0))
 
-    def set_target(self, other):
-        other.targeted_by.append(self)
-        self.target = other
-        self.refresh_current_destination()
+    def ask_slot(self):
+        for direction in self.free_slots:
+            if self.free_slots[direction]:
+                return direction
 
-    def unset_target(self):
-        self.target.targeted_by.remove(self)
-        self.target = None
+    def get_target_slot_pos(self): #TODO: dx*s could be precomputed when target_slot is set
+        dx,dy = self.target_slot
+        s = self.battle.cell_size
+        return self.target.pos[0]+dx*s//2, self.target.pos[1]+dy*s//2
+
+    def set_target(self, other):
+        self.target = other
+        self.target_slot = other.ask_slot()
+        if self.target_slot:
+            other.free_slots[self.target_slot] = False
+        other.targeted_by.append(self)
+
+
+    def get_nearest_free_ennemy(self):
+        x,y = self.pos
+        distances = []
+        best_d, best_o = float("inf"), None
+        dok = STOP_TARGET_DIST_FACTOR*self.battle.cell_size
+        for u in self.opponents:
+            if not u.target:
+                d = abs(x-u.pos[0]) + abs(y-u.pos[1])
+                if d < dok:
+                    return u
+                elif d < best_d:
+                    best_d, best_o = d, u
+        return best_o
+
+    def get_nearest_ennemy(self):
+        x,y = self.pos
+        distances = []
+        best_d, best_o = float("inf"), None
+        dok = STOP_TARGET_DIST_FACTOR*self.battle.cell_size
+        for u in self.opponents:
+            d = abs(x-u.pos[0]) + abs(y-u.pos[1])
+            if d < dok:
+                return u
+            elif d < best_d:
+                best_d, best_o = d, u
+        return best_o
+
+    def die(self):
+        self.dead = True
+        #tell goodbye to friends
+        self.friends.remove(self)
+        #tell the target that the slot is now free
+        self.target.free_slots[self.target_slot] = True
+        #tell the ennemies to find someone else among friends
+        for u in self.targeted_by:
+            u.target = None
+            u.target_slot = None
+        #add himself to the list of deads
+        self.battle.deads.append(self)
+
 
 
     def set_sprite_type(self, key):
@@ -62,19 +119,6 @@ class FightingUnit:
         self.nframes = n
         # self.set_frame_refresh_type(t)
 
-    def update_target(self):
-        x,y = self.pos
-        distances = []
-        best_d, best_o = float("inf"), None
-        for u in self.opponents:
-            d = abs(x-u.pos[0]) + abs(y-u.pos[1])
-            if d < STOP_TARGET_DIST_FACTOR*self.battle.cell_size:
-                self.set_target(u)
-                return
-            else:
-                if d < best_d:
-                    best_d, best_o = d, u
-        self.set_target(best_o)
 
     # def choose_direction(self, dx, dy):
     #     if dx and dy:
@@ -92,13 +136,27 @@ class FightingUnit:
     #         else:
     #             self.direction = DELTA_TO_KEY[(0,0)]
 
-    def choose_direction(self, dx, dy):
-        if dx:
-            self.direction = DELTA_TO_KEY[(dx,0)]
-        elif dy:
-            self.direction = DELTA_TO_KEY[(0,dy)]
-        else:
-            self.direction = DELTA_TO_KEY[(0,0)]
+##    def choose_direction(self, dx, dy):
+##        if dx:
+##            self.direction = DELTA_TO_KEY[(dx,0)]
+##        elif dy:
+##            self.direction = DELTA_TO_KEY[(0,dy)]
+##        else:
+##            self.direction = DELTA_TO_KEY[(0,0)]
+
+    def choose_direction(self, rdx, rdy):
+        adx = abs(rdx)
+        ady = abs(rdy)
+        if adx > ady:
+            if rdx > 0:
+                return 1,0
+            else:
+                return -1,0
+        else: #must not stay at rest
+            if rdy > 0:
+                return 0, 1
+            else:
+                return 0, -1
 
 
     def choose_direction_attack(self, dx, dy):
@@ -107,66 +165,98 @@ class FightingUnit:
         elif dy:
             self.direction = DELTA_TO_KEY[(0,dy)]
 
-    def refresh_current_destination(self):
-        already_taken = []
-        for u in self.target.targeted_by:
-            if u is not self:
-                if u.fighting:
-                    already_taken.append(u.rect)
-        if already_taken:
-            print("PROBLEM")
-            for dx,dy in DELTAS:
-                r = self.target.rect.move(dx,dy)
-                if not r.collidelist(already_taken):
-                    self.current_destination = r.center
-                    return
-        self.current_destination = self.target.rect.move(3*self.battle.cell_size,0)
+##    def set_compatible_slot(self):
+##        if self.target.target is self:
+##            dx = self.target.pos[0] - self.pos[0]
+##            dy = self.target.pos[1] - self.pos[1]
+##            if dx > 0: #ennemy is on the right
+##                if dy > 0: #ennemy is on the top
+##                    if dx > dy: #more on the right than on the top
+##                        self_slot = (1,0)
+##                        target_slot = (-1,0)
+##                    else: #more on the top than on the right
+##                        self_slot = (0,-1)
+##                        target_slot = (0,1)
+##                else: #ennemy is on the bottom
+##                    if dx > dy: #more on the right than on the bottom
+##                        self_slot = (1,0)
+##                        target_slot = (-1,0)
+##                    else: #more on the bottom than on the right
+##                        self_slot = (0,1)
+##                        target_slot = (0,-1)
+##            else: #ennemy is on the left
+##                if dy > 0: #ennemy is on the top
+##                    if dx > dy: #more on the left than on the top
+##                        self_slot = (-1,0)
+##                        target_slot = (1,0)
+##                    else: #more on the top than on the left
+##                        self_slot = (0,-1)
+##                        target_slot = (0,1)
+##                else: #ennemy is on the bottom
+##                    if dx > dy: #more on the left than on the bottom
+##                        self_slot = (-1,0)
+##                        target_slot = (1,0)
+##                    else: #more on the bottom than on the left
+##                        self_slot = (0,1)
+##                        target_slot = (0,-1)
+##            ####################################################################
+##            self.target_slot = self_slot
+##            self.target.target_slot = target_slot
+##            for u in self.target.targeted_by:
+##                if u is not self:
+##                    u.target_slot = None
+##            for u in self.targeted_by:
+##                if u is not self.target:
+##                    u.target_slot = None
+
+
+    def set_compatible_slot(self): il y a un bug car le vert sarrete bcp trop tot
+        self.vel = 0.
+##        self.target.pos = self.target.get_target_slot_pos()
+##        self.pos = self.get_target_slot_pos()
+
+
+
 
     def draw_and_move(self, surface):
         if self.dead:
             return
-        if self.target.dead:
-            self.unset_target()
-            self.update_target()
-        if self.fighting:
-            frame = (self.frame0 + self.battle.fight_frame2)%self.nframes
+        #
+        if self.target_slot:
+            x,y = self.get_target_slot_pos()
         else:
-            frame = (self.frame0 + self.battle.fight_frame1)%self.nframes
+            x,y = random.randint(0,self.battle.W), random.randint(0,self.battle.H)
+        rdx = x - self.pos[0]
+        rdy = y - self.pos[1]
+        ########################################################################
+        if self.target:
+            if abs(rdx) < 40 and abs(rdy) < 40:
+                if self.target.target is self:
+                    self.set_compatible_slot()
+                frame = (self.frame0 + self.battle.fight_frame2)%self.nframes
+                result = self.unit.get_fight_result(self.target)
+                if result < 0:
+                    self.die()
+                elif result > 0:
+                    self.target.die()
+                dx = sgn(rdx)
+                dy = sgn(rdy)
+                self.choose_direction_attack(dx,dy)
+                self.set_sprite_type(self.direction)
+            else:
+                frame = (self.frame0 + self.battle.fight_frame1)%self.nframes
+                dx,dy = self.choose_direction(rdx, rdy)
+                self.direction = DELTA_TO_KEY[(dx,dy)]
+                if self.unit.team == 1:
+                    print(rdx, rdy, "--->", dx, dy, self.direction)
+##                dx, dy =  KEY_TO_DELTA[self.direction] #if you remove this, units can move in diagonal
+                self.set_sprite_type(self.direction)
+                #
+                self.pos = (self.pos[0]+self.vel*dx, self.pos[1]+self.vel*dy)
+                self.rect.center = self.pos
         frame += self.isprite
         img = self.unit.imgs_z_t[self.z][frame]
         surface.blit(img, self.rect)
-        #
-        if not self.fighting:
-            rdx = self.target.pos[0] - self.pos[0]
-            rdy = self.target.pos[1] - self.pos[1]
-        else:
-            rdx = self.current_destination[0] - self.pos[0]
-            rdy = self.current_destination[1] - self.pos[1]
-        #update direction ######################################################
-        dx = sgn(rdx)
-        dy = sgn(rdy)
-        ########################################################################
-        if abs(rdx) < 30 and abs(rdy) < 30:
-            # print("ENTER")
-            self.vel = 0.
-            self.choose_direction_attack(dx,dy)
-            if not self.fighting: #just entered the fight
-                self.refresh_current_destination()
-            self.fighting = True
-            self.set_sprite_type(self.direction)
-            if self.unit.team < self.target.unit.team: #prevent doublons
-                self.battle.fights.append((self, self.target))
-            return
-        else:
-            # print(self.battle.fight_frame1)
-            self.vel = self.unit.max_dist * ANIM_VEL
-            self.choose_direction(dx,dy)
-            self.fighting = False
-            dx, dy =  KEY_TO_DELTA[self.direction] #if you remove it, units can move in diagonal
-            self.set_sprite_type(self.direction)
-            #
-            self.pos = (self.pos[0]+self.vel*dx, self.pos[1]+self.vel*dy)
-            self.rect.center = self.pos
 
 
 
@@ -183,6 +273,8 @@ class Battle:
     def __init__(self, u1, u2, terrain, zoom_level):
         self.game = u1.game
         self.surface = thorpy.get_screen()
+        self.W = self.surface.get_width()
+        self.H = self.surface.get_height()
         self.u1 = u1
         self.u2 = u2
         self.terrain = terrain
@@ -233,22 +325,8 @@ class Battle:
         pygame.display.flip()
         #
         self.f.sort(key=lambda x:x.pos[1]) #peut etre pas besoin selon systeme de cible
-        to_remove, deads = self.game.update_fights(self.fights)
-        self.deads += deads
-        for i in to_remove[::-1]:
-            self.fights.pop(i)
-            if u in self.f1:
-                self.f1.remove(u)
-            elif u in self.f2:
-                self.f2.remove(u)
         if len(self.f1) == 0 or len(self.f2) == 0:
             thorpy.functions.quit_menu_func()
-
-    def update_all_targets(self): #trick : faire un break si distance < 2*s
-        for u1 in self.f1:
-            u1.update_target()
-        for u2 in self.f2:
-            u2.update_target()
 
 
     def prepare_battle(self):
@@ -295,7 +373,36 @@ class Battle:
             self.f2.append(unit)
         for u1 in self.f1:
             u1.opponents = self.f2
+            u1.friends = self.f1
         for u2 in self.f2:
             u2.opponents = self.f1
-        self.update_all_targets()
+            u2.friends = self.f2
+        initialize_targets(self.f1, self.f2)
         self.f = self.f1 + self.f2
+
+
+    def update_targets(self):
+        for u1 in self.f1:
+            if not u1.target_slot:
+                nearest = u1.get_nearest_free_ennemy()
+                u1.set_target(nearest)
+        for u2 in self.f2:
+            if not u2.target_slot:
+                nearest = u2.get_nearest_free_ennemy()
+                u2.set_target(nearest)
+
+
+def initialize_targets(f1, f2):
+    for u1 in f1:
+        nearest_free = u1.get_nearest_free_ennemy()
+        if nearest_free:
+            u1.set_target(nearest_free)
+            nearest_free.set_target(u1)
+    for u1 in f1:
+        if not u1.target:
+            nearest = u1.get_nearest_ennemy()
+            u1.set_target(nearest)
+    for u2 in f2:
+        if not u2.target:
+            nearest = u2.get_nearest_ennemy()
+            u2.set_target(nearest)

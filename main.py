@@ -51,7 +51,6 @@ humans2.add_type("infantry", "sprites/human_warrior")
 # humans["archer"].max_dist = 6
 # humans["archer"].cost["cobblestone"] = 1.5
 
-
 game.add_unit((20,8), humans2["infantry"], 1, team=1)
 game.add_unit((15,7), humans2["infantry"], 60, team=1)
 
