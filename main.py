@@ -20,6 +20,7 @@ from logic.game import Game
 
 
 W,H = 1000, 700 #screen size
+##W,H = 500,500
 app = thorpy.Application((W,H))
 
 map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
@@ -51,15 +52,16 @@ humans2.add_type("infantry", "sprites/human_warrior")
 # humans["archer"].max_dist = 6
 # humans["archer"].cost["cobblestone"] = 1.5
 
-game.add_unit((20,8), humans2["infantry"], 1, team=1)
+game.add_unit((20,8), humans2["infantry"], 50, team=1)
 game.add_unit((15,7), humans2["infantry"], 60, team=1)
 
-game.add_unit((15,5), humans["infantry"], 1, team=2)
+game.add_unit((15,5), humans["infantry"], 50, team=2)
 game.add_unit((16,6), humans["wizard"], 1, team=2)
 
 
 from logic.battle import Battle
-Battle(game.units[0], game.units[2], "lolterrain", 0)
+b = Battle(game.units[0], game.units[2], "lolterrain", 0)
+b.fight()
 
 
 

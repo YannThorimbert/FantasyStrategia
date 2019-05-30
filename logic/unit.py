@@ -1,3 +1,4 @@
+import random
 import pygame, thorpy
 from PyWorld2D.mapobjects.objects import MapObject
 import PyWorld2D.constants as const
@@ -214,6 +215,8 @@ class Unit(MapObject):
         return self.get_coords_within_range(self.help_range)
 
     def get_fight_result(self, other): #-1, 0, 1
+        if random.random() < 1e-2:
+            return random.choice([-1,1])
         return 0
 
 
