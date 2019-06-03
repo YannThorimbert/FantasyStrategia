@@ -15,12 +15,10 @@ SLOW_FIGHT_FRAME1 = 4
 SLOW_FIGHT_FRAME2 = 12
 STOP_TARGET_DIST_FACTOR = 0.2
 NFRAMES_DIRECTIONS = 16
-TIME_AFTER_FINISH = 300
 
+MAX_TARGETED = 10
 
-SUBBATTLES = 4, 2
-
-DFIGHT = 16
+DFIGHT = 8
 K = 10.
 
 def sgn(x):
@@ -32,8 +30,6 @@ def sgn(x):
 
 
 #remove the assertions
-
-ID = 0
 
 
 class FightingUnit:
@@ -67,9 +63,6 @@ class FightingUnit:
         self.direction = "left"
         self.refresh_sprite_type()
         self.dead = False
-        global ID
-        self.id = ID
-        ID += 1
 
     def __lt__(self, other):
         return self.pos.y > other.pos.y
@@ -83,11 +76,8 @@ class FightingUnit:
     def __geq__(self, other):
         return self.pos.y <= other.pos.y
 
-##    def __eq__(self, other):
-##        return self.pos.y == other.pos.y
-
-##    def __hash__(self):
-##        return hash(self.id)
+    def __eq__(self, other):
+        return self.pos.y == other.pos.y
 
 
     def get_nearest_ennemy(self):
@@ -95,11 +85,12 @@ class FightingUnit:
         best_d, best_o = float("inf"), None
         dok = STOP_TARGET_DIST_FACTOR*self.battle.cell_size
         for u in self.opponents:
-            d = abs(self.pos.x-u.pos.x) + abs(self.pos.y-u.pos.y)
-            if d < dok:
-                return u
-            elif d < best_d:
-                best_d, best_o = d, u
+            if len(u.targeted_by) < MAX_TARGETED:
+                d = abs(self.pos.x-u.pos.x) + abs(self.pos.y-u.pos.y)
+                if d < dok:
+                    return u
+                elif d < best_d:
+                    best_d, best_o = d, u
         return best_o
 
     def refresh_sprite_type(self):
@@ -133,37 +124,28 @@ class FightingUnit:
         elif self.pos.y < 0:
             self.pos.y = 0
 
-    def set_target(self, other):
-        self.target = other
-        other.targeted_by.append(self)
-
     def find_pos_near_target(self):
         t = self.target
         for friend in t.targeted_by:
             if not(friend is self):
                 d = friend.pos - self.pos
                 D = d.length()
-                if 0 < D <= DFIGHT:
+                if D > 0:
                     dunit = d.normalize()
-##                    force = dunit / (1. + d.length())
-                    force = dunit
-                    print(force)
+                    force = dunit / (1. + d.length())
                     self.pos -= K * force
 
-    def draw_and_move_notarget(self, surface):
-        self.direction = DELTA_TO_KEY[self.dxdy]
-        frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
-        frame += self.isprite
-        img = self.unit.imgs_z_t[self.z][frame]
-        surface.blit(img, self.rect)
-        self.pos.x += self.vel*self.dxdy[0]
-        self.pos.y += self.vel*self.dxdy[1]
-        self.rect.center = self.pos
-
     def draw_and_move(self, surface):
-        if self.target is None or self.target.dead:
-            self.draw_and_move_notarget(surface)
+        if self.target is None:
             return
+        if self.target.dead:
+            self.find_pos_near_target()
+            self.direction = "idle"
+            self.refresh_sprite_type()
+            frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
+            frame += self.isprite
+            img = self.unit.imgs_z_t[self.z][frame]
+            surface.blit(img, self.rect)
         target_pos = V2(self.target.rect.center)
         self_pos = V2(self.rect.center)
         delta = target_pos - self_pos
@@ -184,10 +166,8 @@ class FightingUnit:
                 result = self.unit.get_fight_result(self.target)
                 if result < 0:
                     self.battle.to_remove.append(self)
-##                    self.dead = True
                 elif result > 0:
                     self.battle.to_remove.append(self.target)
-##                    self.target.dead = True
         else: #walking
             if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
                 self.direction = DELTA_TO_KEY[self.dxdy]
@@ -219,7 +199,7 @@ class Battle:
         self.W, self.H = self.surface.get_size()
         self.u1 = u1
         self.u2 = u2
-        self.terrain = pygame.Surface(self.surface.get_size())
+        self.terrain = terrain
         self.z = zoom_level
         self.cell_size = None
         self.f1 = []
@@ -260,8 +240,11 @@ class Battle:
         menu = thorpy.Menu(bckgr, fps=60)
         menu.play()
 
-    def blit_deads(self):
-         for u in self.deads:
+    def update_battle(self):
+        if not self.finished:
+            self.update_targets()
+        self.surface.blit(self.terrain, (0,0))
+        for u in self.deads:
             if u.frame == 0:
                 u.frame = self.fight_frame_attack
             frame = self.fight_frame_attack - u.frame
@@ -276,30 +259,22 @@ class Battle:
                 r = self.blood.get_rect()
                 r.center = u.rect.center
                 self.surface.blit(u.dead_img,u.rect)
-
-    def refresh_deads(self):
+        for u in self.f:
+            u.draw_and_move(self.surface)
+        pygame.display.flip()
+        #
         for u in self.to_remove:
-            if not u.dead:
+            if not u.dead: #a single battle can add a unit twice in to_remove
                 u.dead = True
                 if u.target:
                     u.target.targeted_by.remove(u)
                 self.f.remove(u)
                 u.friends.remove(u) #u.friends is u.target.opponents
                 bisect.insort(self.deads, u)
+                self.deads.append(u)
                 u.direction = "die"
                 u.refresh_sprite_type()
         self.to_remove = []
-
-    def update_battle(self):
-        if not self.finished:
-            self.update_targets()
-        self.surface.blit(self.terrain, (0,0))
-        self.blit_deads()
-        for u in self.f:
-            u.draw_and_move(self.surface)
-        pygame.display.flip()
-        #
-        self.refresh_deads()
         #
         self.fight_t += 1
         if self.fight_t % SLOW_FIGHT_FRAME1 == 0:
@@ -311,17 +286,9 @@ class Battle:
         if len(self.f1) == 0 or len(self.f2) == 0:
             if self.finished == 0:
                 self.finished = self.fight_t
-                self.finish_battle()
-            elif self.fight_t - self.finished > TIME_AFTER_FINISH:
+            elif self.fight_t - self.finished > 100:
                 thorpy.functions.quit_menu_func()
 
-    def finish_battle(self):
-        print("FINISH BATTLE")
-        for u in self.f:
-            u.target = None
-            u.refresh_dxdy(random.randint(-1,1),random.randint(-1,1))
-            u.direction = DELTA_TO_KEY[u.dxdy]
-            u.refresh_sprite_type()
 
     def prepare_battle(self):
         screen = thorpy.get_screen()
@@ -375,17 +342,17 @@ class Battle:
             u2.friends = self.f2
         self.update_targets()
         self.f = self.f1 + self.f2
-        self.build_terrain()
+##        self.build_terrain()
 
     def update_targets(self):
         for u in self.f:
             u.targeted_by = []
             u.target = None
         for u in self.f:
-            assert not u.dead
             ennemy = u.get_nearest_ennemy()
             if ennemy:
-                u.set_target(ennemy)
+                u.target = ennemy
+                ennemy.targeted_by.append(u)
 
     def build_terrain(self):
         img = self.game.me.materials["Grass"].imgs[0][0]
@@ -396,7 +363,18 @@ class Battle:
             for y in range(ny):
                 self.terrain.blit(img, (x*self.cell_size,y*self.cell_size))
 
-
+##    def circles(self):
+##        fights = []
+##        for u1 in self.f1:
+##            if u1.next_to_target:
+##                if u1.target.target is u1:
+##                    fights.append((u1,u2))
+##        for u1,u2 in fights:
+##
+##
+##            L = len(u2.targeted_by)
+##            delta_angle = 360. / L
+##            for u2 in u1.targeted_by:
 
 
 
