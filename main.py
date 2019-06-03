@@ -59,7 +59,7 @@ game.add_unit((16,6), humans["wizard"], 1, team=2)
 
 
 from logic.battle import Battle
-b = Battle(game.units[0], game.units[2], "bla", 0)
+b = Battle(top=game.units[0], bottom=game.units[2], zoom_level=0)
 b.fight()
 
 

@@ -183,7 +183,7 @@ class Unit(MapObject):
             for z in range(len(self.editor.zoom_cell_sizes)):
                 img = self.imgs_z_t[z]
                 img = img[frame]
-                e = thorpy.Image(img)
+##                e = thorpy.Image(img)
                 shad = thorpy.graphics.get_shadow(img, shadow_radius=HIGHLIGHT_BLUR, black=255,
                                     color_format="RGBA", alpha_factor=1.,
                                     decay_mode="exponential", color=rgb,

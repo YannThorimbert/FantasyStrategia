@@ -251,13 +251,24 @@ class FightingUnit:
 #cas ou terrain pas le meme dans deux units ? terrain = terrain de l'attaquant ou du defenseur ? ou plutot faire vite une map mixte ?
 class Battle:
 
-    def __init__(self, u1, u2, terrain, zoom_level):
+    def __init__(self, left=None, right=None, top=None, bottom=None, center=None, zoom_level=0):
         self.blocks = []
-        self.game = u1.game
+        for u in(left,right,top,bottom,center):
+            if u is not None:
+                self.ref_unit = u
+                self.game = u.game
+                break
+        else:
+            assert False
         self.surface = thorpy.get_screen()
         self.W, self.H = self.surface.get_size()
-        self.u1 = u1
-        self.u2 = u2
+        self.right = right
+        self.left = left
+        self.top = top
+        self.bottom = bottom
+        self.center = center
+##        self.u1 = u1
+##        self.u2 = u2
         self.terrain = pygame.Surface(self.surface.get_size())
         self.z = zoom_level
         self.cell_size = None
@@ -272,7 +283,7 @@ class Battle:
         self.fight_frame_attack = 0
         self.finished = 0
         self.blood = pygame.image.load("sprites/blood.png")
-        self.background = terrain
+        self.background = None
         self.mod_display = 1
         self.blit_this_frame = True
 
@@ -307,10 +318,11 @@ class Battle:
         bckgr.add_reaction(reac)
         menu = thorpy.Menu(bckgr, fps=60)
         self.update_battle()
-        text = thorpy.bicolor_text("Battle starts", 70, (255,0,0), (0,0,0))
-        self.surface.blit(text, (0,0))
+        text = thorpy.make_text("Battle starts", 70, (0,0,0))
+        text.center()
+        text.blit()
         pygame.display.flip()
-        thorpy.interactive_pause(5.)
+        thorpy.interactive_pause(3.)
         menu.play()
 
     def blit_deads(self):
@@ -389,15 +401,15 @@ class Battle:
 
     def get_nxny(self, side):
         W,H = self.surface.get_size()
-        s = self.u1.editor.zoom_cell_sizes[self.z]
+        s = self.game.me.zoom_cell_sizes[self.z]
         self.cell_size = s
         self.W -= self.cell_size//2
         self.H -= self.cell_size//2
         if side == "left" or side == "right":
-            max_nx = W // (2*s) - 1 - 4
+            max_nx = W // (2*s) - 1 - 8
             max_ny = H // s - 1
         elif side == "bottom" or side == "top":
-            max_ny = H // (2*s) - 1 - 4
+            max_ny = H // (2*s) - 1 - 8
             max_nx = W // s - 1
         elif side == "center":
             max_nx = W // (3*s)
@@ -406,15 +418,12 @@ class Battle:
             assert False
         nx = max_nx
         ny = max_ny
-        # print("MAX UNITS PER TEAM", nx*ny)
-        #
-##        n1 = self.u1.quantity
-##        n2 = self.u2.quantity
+        print("MAX UNITS PER TEAM", nx*ny)
         return nx,ny
 
     def get_disp_poses_x(self, side):
         nx,ny = self.get_nxny(side)
-        s = self.u1.editor.zoom_cell_sizes[self.z]
+        s = self.game.me.zoom_cell_sizes[self.z]
         disp = []
         if side == "right":
             dx = self.W-s - nx*s
@@ -430,7 +439,7 @@ class Battle:
 
     def get_disp_poses_y(self,side):
         nx,ny= self.get_nxny(side)
-        s = self.u1.editor.zoom_cell_sizes[self.z]
+        s = self.game.me.zoom_cell_sizes[self.z]
         disp = []
         if side == "bottom":
             dy = self.H-s - ny*s
@@ -446,7 +455,7 @@ class Battle:
 
     def get_disp_poses_c(self):
         nx,ny = self.get_nxny("center")
-        s = self.u1.editor.zoom_cell_sizes[self.z]
+        s = self.game.me.zoom_cell_sizes[self.z]
         disp = []
         dx = self.W//2 - nx//2*s
         dy = self.H//2 - ny//2*s
@@ -458,33 +467,42 @@ class Battle:
         return disp
 
 
+    def initialize_units(self, disp, unit):
+        if unit is None:
+            return
+        if unit.team == 1:
+            population = self.f1
+        elif unit.team == 2:
+            population = self.f2
+        positions = random.sample(disp, unit.quantity)
+        for i in range(unit.quantity):
+            ipos = random.randint(0,len(disp)-1)
+            pos = disp.pop(ipos)
+            pos[0] += random.randint(0,s//3)
+            pos[1] += random.randint(0,s//3)
+            u = FightingUnit(self, unit, "right", self.z, pos)
+            positions.append(u)
+
     def prepare_battle(self):
-        s = self.u1.editor.zoom_cell_sizes[self.z]
+        s = self.game.me.zoom_cell_sizes[self.z]
 ##        assert n1 <= nx*ny and n2 <= nx*ny
-        disp1 = self.get_disp_poses_x("left")
-        disp2 = self.get_disp_poses_c()
-        n1 = self.u1.quantity
-        n2 = self.u2.quantity
+        disp_left = self.get_disp_poses_x("left")
+        disp_right = self.get_disp_poses_x("right")
+        disp_top = self.get_disp_poses_y("top")
+        disp_bottom = self.get_disp_poses_y("bottom")
+        disp_center = self.get_disp_poses_c()
         #
         self.f1 = []
-        positions = random.sample(disp1, n1)
-        for i in range(n1):
-            ipos = random.randint(0,len(disp1)-1)
-            pos = disp1.pop(ipos)
-            pos[0] += random.randint(0,s//3)
-            pos[1] += random.randint(0,s//3)
-            unit = FightingUnit(self, self.u1, "right", self.z, pos)
-            self.f1.append(unit)
-        #
         self.f2 = []
-        positions = random.sample(disp2, n2)
-        for i in range(n2):
-            ipos = random.randint(0,len(disp2)-1)
-            pos = disp2.pop(ipos)
-            pos[0] += random.randint(0,s//3)
-            pos[1] += random.randint(0,s//3)
-            unit = FightingUnit(self, self.u2, "left", self.z, pos)
-            self.f2.append(unit)
+        #
+        self.initialize_units(disp_left, self.left)
+        self.initialize_units(disp_right, self.right)
+        self.initialize_units(disp_top, self.top)
+        self.initialize_units(disp_bottom, self.bottom)
+        self.initialize_units(disp_center, self.center)
+##        teams = [unit.team for unit in (self.left,self.right,self.top,self.bottom) if unit]
+##        if len(teams) > 1 and len(set(teams)) == 1:
+##            initialize_units(disp_center, self.center)
         for u1 in self.f1:
             u1.opponents = self.f2
             u1.friends = self.f1
