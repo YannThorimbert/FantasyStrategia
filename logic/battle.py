@@ -21,7 +21,7 @@ TIME_AFTER_FINISH = 300
 SUBBATTLES = 4, 2
 
 DFIGHT = 16
-K = 10.
+K = 4.
 
 def sgn(x):
     if x < 0:
@@ -31,7 +31,6 @@ def sgn(x):
     return 0
 
 
-#remove the assertions
 
 ID = 0
 
@@ -46,14 +45,19 @@ class FightingUnit:
         self.rect.center = pos
         self.pos = V2(pos)
         self.direction = direction
-        self.vel = self.unit.max_dist * ANIM_VEL * (0.8 + random.random()/3.)
+        self.final_vel = self.unit.max_dist * ANIM_VEL * (0.8 + random.random()/3.)
+        self.vel = self.final_vel / 3.
+        self.tandom = None
         self.target = None
         self.opponents = None
         self.friends = None
         self.targeted_by = []
         self.next_to_target = False
         self.time_frome_last_direction_change = 1000
+        self.cannot_see = random.random()
         #
+        self.dxdy = 0,0
+        self.start_to_run = random.randint(0, 1000)
         self.frame = 0
         self.frame0 = random.randint(0,12)
         self.nframes = None
@@ -62,8 +66,15 @@ class FightingUnit:
         self.direction = "die"
         self.refresh_sprite_type()
         self.dead_img = self.unit.imgs_z_t[self.z][self.isprite + self.nframes-1]
+        self.direction = "head"
+        self.refresh_sprite_type()
+        self.head = self.unit.imgs_z_t[self.z][self.isprite]
+        dhx = random.randint(self.battle.cell_size//2, self.battle.cell_size)
+        dhy = random.choice([-1,1]) * random.randint(0,self.battle.cell_size//4)
         if random.random() < 0.5:
             self.dead_img = pygame.transform.flip(self.dead_img, True, False)
+            dhx *= -1
+        self.delta_head = (dhx,dhy)
         self.direction = "left"
         self.refresh_sprite_type()
         self.dead = False
@@ -72,16 +83,16 @@ class FightingUnit:
         ID += 1
 
     def __lt__(self, other):
-        return self.pos.y > other.pos.y
-
-    def __gt__(self, other):
         return self.pos.y < other.pos.y
 
+    def __gt__(self, other):
+        return self.pos.y > other.pos.y
+
     def __leq__(self, other):
-        return self.pos.y >= other.pos.y
+        return self.pos.y <= other.pos.y
 
     def __geq__(self, other):
-        return self.pos.y <= other.pos.y
+        return self.pos.y >= other.pos.y
 
 ##    def __eq__(self, other):
 ##        return self.pos.y == other.pos.y
@@ -94,13 +105,39 @@ class FightingUnit:
         distances = []
         best_d, best_o = float("inf"), None
         dok = STOP_TARGET_DIST_FACTOR*self.battle.cell_size
-        for u in self.opponents:
+        L = int(self.cannot_see * len(self.opponents))
+        if L == 0 and self.opponents:
+            L = 1
+        for i in range(L):
+            u = self.opponents[i]
             d = abs(self.pos.x-u.pos.x) + abs(self.pos.y-u.pos.y)
             if d < dok:
                 return u
             elif d < best_d:
                 best_d, best_o = d, u
         return best_o
+
+##    def get_furthest_ennemy(self):
+##        distances = []
+##        best_d, best_o = (float("inf"),float("inf")), None
+##        dok = STOP_TARGET_DIST_FACTOR_FAR*self.battle.cell_size
+##        dok = (dok,dok)
+##        for u in self.opponents:
+##            delta = abs(self.pos.x-u.pos.x), abs(self.pos.y-u.pos.y)
+##            if delta < dok:
+##                return u
+##            elif delta < best_d:
+##                best_d, best_o = delta, u
+##        return best_o
+
+##    def get_ennemy(self):
+##        if self.strategy == 0:
+##            return self.get_nearest_ennemy()
+##        else:
+##            return self.get_furthest_ennemy()
+
+    def get_ennemy(self):
+        return self.get_nearest_ennemy()
 
     def refresh_sprite_type(self):
         i,n,t = self.unit.sprites_ref[self.direction]
@@ -160,6 +197,8 @@ class FightingUnit:
         self.rect.center = self.pos
 
     def draw_and_move(self, surface):
+        if self.battle.fight_t == self.start_to_run:
+            self.vel = self.final_vel
         if self.target is None or self.target.dead:
             self.draw_and_move_notarget(surface)
             return
@@ -213,6 +252,7 @@ class FightingUnit:
 class Battle:
 
     def __init__(self, u1, u2, terrain, zoom_level):
+        self.blocks = []
         self.game = u1.game
         self.surface = thorpy.get_screen()
         self.W, self.H = self.surface.get_size()
@@ -266,6 +306,11 @@ class Battle:
                                         {"key":pygame.K_SPACE})
         bckgr.add_reaction(reac)
         menu = thorpy.Menu(bckgr, fps=60)
+        self.update_battle()
+        text = thorpy.bicolor_text("Battle starts", 70, (255,0,0), (0,0,0))
+        self.surface.blit(text, (0,0))
+        pygame.display.flip()
+        thorpy.interactive_pause(5.)
         menu.play()
 
     def blit_deads(self):
@@ -276,8 +321,10 @@ class Battle:
             if frame == u.nframes-1:
                 r = self.blood.get_rect()
                 r.center = u.rect.center
+                r.y += self.cell_size//2
                 self.terrain.blit(self.blood,r)
                 self.surface.blit(u.dead_img,u.rect)
+                self.terrain.blit(u.head, u.rect.move(u.delta_head))
             elif frame < u.nframes:
                 self.surface.blit(u.unit.imgs_z_t[u.z][frame + u.isprite],u.rect)
             else:
@@ -293,9 +340,12 @@ class Battle:
                     u.target.targeted_by.remove(u)
                 self.f.remove(u)
                 u.friends.remove(u) #u.friends is u.target.opponents
-                bisect.insort(self.deads, u)
+##                bisect.insort(self.deads, u)
+                self.deads.append(u)
                 u.direction = "die"
                 u.refresh_sprite_type()
+##        self.deads.sort(key=lambda x:x.pos.y)
+##        print(self.deads)
         self.to_remove = []
 
     def update_battle(self):
@@ -337,30 +387,84 @@ class Battle:
             u.direction = DELTA_TO_KEY[u.dxdy]
             u.refresh_sprite_type()
 
-    def prepare_battle(self):
-        screen = thorpy.get_screen()
-        W,H = screen.get_size()
+    def get_nxny(self, side):
+        W,H = self.surface.get_size()
         s = self.u1.editor.zoom_cell_sizes[self.z]
         self.cell_size = s
         self.W -= self.cell_size//2
         self.H -= self.cell_size//2
-        #
-        max_nx = W // (2*s) - 1 - 4
-        max_ny = H // s - 1
+        if side == "left" or side == "right":
+            max_nx = W // (2*s) - 1 - 4
+            max_ny = H // s - 1
+        elif side == "bottom" or side == "top":
+            max_ny = H // (2*s) - 1 - 4
+            max_nx = W // s - 1
+        elif side == "center":
+            max_nx = W // (3*s)
+            max_ny = H // (3*s)
+        else:
+            assert False
         nx = max_nx
         ny = max_ny
         # print("MAX UNITS PER TEAM", nx*ny)
         #
-        n1 = self.u1.quantity
-        n2 = self.u2.quantity
-        assert n1 <= nx*ny and n2 <= nx*ny
-        disp1, disp2 = [], []
+##        n1 = self.u1.quantity
+##        n2 = self.u2.quantity
+        return nx,ny
+
+    def get_disp_poses_x(self, side):
+        nx,ny = self.get_nxny(side)
+        s = self.u1.editor.zoom_cell_sizes[self.z]
+        disp = []
+        if side == "right":
+            dx = self.W-s - nx*s
+        else:
+            dx = s
+        print("SIDE",s,self.W,self.H,nx,ny,dx)
         for x in range(nx):
             for y in range(ny):
                 xpos = x*s
                 ypos = y*s
-                disp1.append([xpos+s,ypos+s])
-                disp2.append([xpos+W-s - nx*s,ypos+s])
+                disp.append([xpos+dx,ypos+s])
+        return disp
+
+    def get_disp_poses_y(self,side):
+        nx,ny= self.get_nxny(side)
+        s = self.u1.editor.zoom_cell_sizes[self.z]
+        disp = []
+        if side == "bottom":
+            dy = self.H-s - ny*s
+        else:
+            dy = s
+        print("SIDE",s,self.W,self.H,nx,ny,dy)
+        for x in range(nx):
+            for y in range(ny):
+                xpos = x*s
+                ypos = y*s
+                disp.append([xpos+s, ypos+dy])
+        return disp
+
+    def get_disp_poses_c(self):
+        nx,ny = self.get_nxny("center")
+        s = self.u1.editor.zoom_cell_sizes[self.z]
+        disp = []
+        dx = self.W//2 - nx//2*s
+        dy = self.H//2 - ny//2*s
+        for x in range(nx):
+            for y in range(ny):
+                xpos = x*s
+                ypos = y*s
+                disp.append([xpos+dx, ypos+dy])
+        return disp
+
+
+    def prepare_battle(self):
+        s = self.u1.editor.zoom_cell_sizes[self.z]
+##        assert n1 <= nx*ny and n2 <= nx*ny
+        disp1 = self.get_disp_poses_x("left")
+        disp2 = self.get_disp_poses_c()
+        n1 = self.u1.quantity
+        n2 = self.u2.quantity
         #
         self.f1 = []
         positions = random.sample(disp1, n1)
@@ -396,10 +500,11 @@ class Battle:
             u.targeted_by = []
             u.target = None
         for u in self.f:
-            assert not u.dead
-            ennemy = u.get_nearest_ennemy()
+            ennemy = u.get_ennemy()
             if ennemy:
                 u.set_target(ennemy)
+
+
 
     def build_terrain(self):
         img = self.game.me.materials["Grass"].imgs[0][0]

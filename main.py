@@ -47,23 +47,20 @@ humans2 = Race("Humans 2", me, "blue")
 humans2.base_cost["forest"] = 10
 humans2.add_type("infantry", "sprites/human_warrior")
 
-
 # humans.add_type("archer", PW_PATH+"/mapobjects/images/char1.png")
 # humans["archer"].max_dist = 6
 # humans["archer"].cost["cobblestone"] = 1.5
 
-game.add_unit((20,8), humans2["infantry"], 100, team=1)
+game.add_unit((20,8), humans2["infantry"], 50, team=1)
 game.add_unit((15,7), humans2["infantry"], 60, team=1)
 
-game.add_unit((15,5), humans["infantry"], 100, team=2)
+game.add_unit((15,5), humans["infantry"], 50, team=2)
 game.add_unit((16,6), humans["wizard"], 1, team=2)
 
 
 from logic.battle import Battle
 b = Battle(game.units[0], game.units[2], "bla", 0)
 b.fight()
-
-
 
 
 ##game.get_cell_at(14,15).set_name("My left cell")
