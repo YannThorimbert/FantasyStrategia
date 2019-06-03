@@ -10,7 +10,7 @@ DELTA_TO_KEY = {(0,0):"idle", (1,0):"right", (-1,0):"left", (0,1):"down", (0,-1)
 KEY_TO_DELTA = {DELTA_TO_KEY[key]:key for key in DELTA_TO_KEY}
 DELTA_TO_KEY_A = {(0,0):"idle", (1,0):"rattack", (-1,0):"lattack", (0,1):"down", (0,-1):"up"}
 
-ANIM_VEL = 0.3
+ANIM_VEL = 0.2
 SLOW_FIGHT_FRAME1 = 4
 SLOW_FIGHT_FRAME2 = 12
 STOP_TARGET_DIST_FACTOR = 0.2
@@ -145,9 +145,7 @@ class FightingUnit:
                 D = d.length()
                 if 0 < D <= DFIGHT:
                     dunit = d.normalize()
-##                    force = dunit / (1. + d.length())
                     force = dunit
-                    print(force)
                     self.pos -= K * force
 
     def draw_and_move_notarget(self, surface):
@@ -155,7 +153,8 @@ class FightingUnit:
         frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
         frame += self.isprite
         img = self.unit.imgs_z_t[self.z][frame]
-        surface.blit(img, self.rect)
+        if self.battle.blit_this_frame:
+            surface.blit(img, self.rect)
         self.pos.x += self.vel*self.dxdy[0]
         self.pos.y += self.vel*self.dxdy[1]
         self.rect.center = self.pos
@@ -200,14 +199,14 @@ class FightingUnit:
         self.rect.center = self.pos
         frame += self.isprite
         img = self.unit.imgs_z_t[self.z][frame]
-        surface.blit(img, self.rect)
+        if self.battle.blit_this_frame:
+            surface.blit(img, self.rect)
         self.time_frome_last_direction_change += 1
 
 
 
 
 
-#accelerer batailles avec space (reduit les SLOWNESS), finir battaile avec enter (supprime fps et affichage)
 #coller sang sur la map plutot que de continuer de bliter sang a chaque frame
 #pas dans la neige et dans le sable
 #cas ou terrain pas le meme dans deux units ? terrain = terrain de l'attaquant ou du defenseur ? ou plutot faire vite une map mixte ?
@@ -232,9 +231,10 @@ class Battle:
         self.fight_frame_walk = 0
         self.fight_frame_attack = 0
         self.finished = 0
-##        self.blood = thorpy.load_image("sprites/blood.png")
         self.blood = pygame.image.load("sprites/blood.png")
         self.background = terrain
+        self.mod_display = 1
+        self.blit_this_frame = True
 
     def fight(self):
         self.prepare_battle()
@@ -242,8 +242,12 @@ class Battle:
 
 
     def accelerate(self):
-        for u in self.f:
-            u.vel *= 6.
+        self.mod_display = 10
+        thorpy.get_current_menu().fps = 500
+
+    def slow(self):
+        self.mod_display = 1
+        thorpy.get_current_menu().fps = 60
 
 
     def show(self):
@@ -255,6 +259,10 @@ class Battle:
         #
         reac = thorpy.ConstantReaction(pygame.KEYDOWN,
                                         self.accelerate,
+                                        {"key":pygame.K_SPACE})
+        bckgr.add_reaction(reac)
+        reac = thorpy.ConstantReaction(pygame.KEYUP,
+                                        self.slow,
                                         {"key":pygame.K_SPACE})
         bckgr.add_reaction(reac)
         menu = thorpy.Menu(bckgr, fps=60)
@@ -293,11 +301,13 @@ class Battle:
     def update_battle(self):
         if not self.finished:
             self.update_targets()
-        self.surface.blit(self.terrain, (0,0))
-        self.blit_deads()
+        if self.blit_this_frame:
+            self.surface.blit(self.terrain, (0,0))
+            self.blit_deads()
         for u in self.f:
             u.draw_and_move(self.surface)
-        pygame.display.flip()
+        if self.blit_this_frame:
+            pygame.display.flip()
         #
         self.refresh_deads()
         #
@@ -306,6 +316,10 @@ class Battle:
             self.fight_frame_walk += 1
         if self.fight_t % SLOW_FIGHT_FRAME2 == 0:
             self.fight_frame_attack += 1
+        if self.fight_t % self.mod_display == 0:
+            self.blit_this_frame = True
+        else:
+            self.blit_this_frame = False
         #
         self.f.sort(key=lambda x:x.rect.bottom) #peut etre pas besoin selon systeme de cible
         if len(self.f1) == 0 or len(self.f2) == 0:
@@ -395,10 +409,3 @@ class Battle:
         for x in range(nx):
             for y in range(ny):
                 self.terrain.blit(img, (x*self.cell_size,y*self.cell_size))
-
-
-
-
-
-
-
