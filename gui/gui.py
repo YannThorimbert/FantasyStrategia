@@ -2,6 +2,8 @@ import pygame, thorpy, math
 import PyWorld2D.gui.elements as elements
 import PyWorld2D.gui.parameters as guip
 
+from logic.battle import Battle
+
 
 class Gui:
 
@@ -74,33 +76,46 @@ class Gui:
     def add_alert(self, e):
         self.me.ap.add_alert(e, guip.DELAY_HELP * self.me.fps)
 
+
+    def treat_click_destination(self, cell):
+        rect = self.me.cam.get_rect_at_coord(cell.coord)
+        if rect.center in self.destinations_lmb:
+            cost, path = self.last_destination_score.get(cell.coord, None)
+            x,y = path[-1]
+            friend = self.game.get_unit_at(x,y)
+            if friend:
+                #check than same type and sum of quantities does not exceed max_quantity
+                ok = False
+                if ok:
+                    self.selected_unit.move_to_cell_animated(path[1:])
+                else:
+                    self.add_alert(self.e_cant_move)
+            else:
+                self.selected_unit.move_to_cell_animated(path[1:])
+            # self.selected_unit.move_to_cell(cell)
+            self.selected_unit = None
+
+    def treat_click_interaction(self, unit):
+        if unit in self.red_highlights:
+            self.treat_click_destination(unit.cell)
+##            b = Battle(left=game.units[0], center=game.units[1], top=game.units[2], bottom=game.units[3], right=game.units[4],  zoom_level=0)
+            b = Battle(self.selected_unit, unit)
+            b.fight()
+        elif unit in self.blue_highlights:
+            pass
+        else:
+            self.add_alert(self.e_cant_move)
+
     def lmb(self, e):
-        self.red_highlights = []
-        self.blue_highlights = []
         self.destinations_mousemotion = []
         pos = e.pos
         cell = self.me.cam.get_cell(pos)
         if cell:
             if self.destinations_lmb: #then the user may be clicking a destination
-                rect = self.me.cam.get_rect_at_coord(cell.coord)
-                if rect.center in self.destinations_lmb:
-                    if not cell.unit: #then move the unit
-                        cost, path = self.last_destination_score.get(cell.coord, None)
-                        x,y = path[-1]
-                        friend = self.game.get_unit_at(x,y)
-                        if friend:
-                            #check than same type and sum of quantities does not exceed max_quantity
-                            ok = False
-                            if ok:
-                                self.selected_unit.move_to_cell_animated(path[1:])
-                            else:
-                                self.add_alert(self.e_cant_move)
-                        else:
-                            self.selected_unit.move_to_cell_animated(path[1:])
-                        # self.selected_unit.move_to_cell(cell)
-                        self.selected_unit = None
-                    else:
-                        self.add_alert(self.e_cant_move)
+                if not cell.unit:
+                    self.treat_click_destination(cell)
+                else:
+                    self.treat_click_interaction(cell.unit)
                 self.destinations_lmb = [] #clear destinations
                 self.selected_unit = None
             elif cell: #else update destinations

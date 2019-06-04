@@ -572,6 +572,8 @@ class Battle:
                             u.set_target(ennemy)
 
     def build_terrain(self, disp, unit):
+        if not unit:
+            return
         img = unit.cell.material.imgs[self.z][0]
         for x,y in disp:
             self.terrain.blit(img, (x,y))

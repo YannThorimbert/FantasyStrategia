@@ -62,9 +62,7 @@ game.add_unit((25,5), humans["infantry"], 100, team=2)
 game.add_unit((16,6), humans["wizard"], 1, team=2)
 
 
-from logic.battle import Battle
-b = Battle(left=game.units[0], center=game.units[1], top=game.units[2], bottom=game.units[3], right=game.units[4],  zoom_level=0)
-b.fight()
+
 
 
 ##game.get_cell_at(14,15).set_name("My left cell")
