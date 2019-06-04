@@ -67,9 +67,10 @@ class FightingUnit:
         self.direction = "die"
         self.refresh_sprite_type()
         self.dead_img = self.unit.imgs_z_t[self.z][self.isprite + self.nframes-1]
-        self.direction = random.choice("head","head2")
+        self.direction = "head"
         self.refresh_sprite_type()
-        self.head = self.unit.imgs_z_t[self.z][self.isprite]
+        irand = random.randint(0, self.nframes-1)
+        self.head = self.unit.imgs_z_t[self.z][self.isprite+irand]
         dhx = random.randint(self.battle.cell_size//2, self.battle.cell_size)
         dhy = random.choice([-1,1]) * random.randint(0,self.battle.cell_size//4)
         if random.random() < 0.5:
@@ -259,11 +260,12 @@ class FightingUnit:
         self.time_frome_last_direction_change += 1
 
 
-#unites qui fuient si trop d'ennemis (>5)!!!!!
-#+ de tetes, sang sur epees des morts et choses noires et brunes
-#pas dans la neige et dans le sable ?
-#cas ou terrain pas le meme dans deux units ? terrain = terrain de l'attaquant ou du defenseur ? ou plutot faire vite une map mixte ?
+
+#impact du terrain. Comment gérer objets, riviere, forets ?
 #GUI pendant combat puis recapitulatif fin de combat. Possibilité de fuir.
+
+#unites qui fuient si trop d'ennemis (>5) !!!!!
+#pas dans la neige et dans le sable ?
 
 class Battle:
     """The rules for the engagements are the following.
@@ -506,10 +508,11 @@ class Battle:
             population = self.f1
         elif unit.team == 2:
             population = self.f2
-##        positions = random.sample(disp, unit.quantity)
+        positions = random.sample(disp, unit.quantity)
         for i in range(unit.quantity):
             ipos = random.randint(0,len(disp)-1)
-            pos = disp.pop(ipos)
+##            pos = disp.pop(ipos)
+            pos = list(positions[i])
             pos[0] += random.randint(0,s//3)
             pos[1] += random.randint(0,s//3)
             u = FightingUnit(self, unit, "right", self.z, pos)
@@ -543,7 +546,12 @@ class Battle:
             u2.friends = self.f2
         self.update_targets()
         self.f = self.f1 + self.f2
-        self.build_terrain()
+        self.build_base_terrain()
+        self.build_terrain(disp_left, self.left)
+        self.build_terrain(disp_right, self.right)
+        self.build_terrain(disp_top, self.top)
+        self.build_terrain(disp_bottom, self.bottom)
+        self.build_terrain(disp_center, self.center)
         for u in self.f:
             u.rect.center = u.pos
         self.f.sort(key=lambda x:x.rect.bottom)
@@ -563,13 +571,48 @@ class Battle:
                         if len(ennemy.targeted_by) < 6:
                             u.set_target(ennemy)
 
+    def build_terrain(self, disp, unit):
+        img = unit.cell.material.imgs[self.z][0]
+        for x,y in disp:
+            self.terrain.blit(img, (x,y))
 
-
-    def build_terrain(self):
-        img = self.game.me.materials["Grass"].imgs[0][0]
+    def build_base_terrain(self):
         W,H = self.surface.get_size()
         nx = W // self.cell_size + 1
         ny = H // self.cell_size + 1
+        cell = pygame.Rect(0, 0, self.cell_size, self.cell_size)
         for x in range(nx):
+            cell.x = x*self.cell_size
             for y in range(ny):
-                self.terrain.blit(img, (x*self.cell_size,y*self.cell_size))
+                cell.y = y*self.cell_size
+                self.build_unknown_terrain(cell)
+
+    def build_unknown_terrain(self, cell):
+        def choose(units_order):
+            for u in units_order:
+                if u is not None:
+                    return u
+            assert False
+        if cell.x < self.W//3:
+            if cell.y < self.H//3:
+                u = choose((self.top,self.left,self.center,self.right,self.bottom))
+            elif cell.y > 2*self.H//3:
+                u = choose((self.bottom,self.left,self.center,self.right,self.top))
+            else:
+                u = choose((self.left,self.center,self.top,self.bottom,self.right))
+        elif cell.x > 2*self.W//3:
+            if cell.y < self.H//3:
+                u = choose((self.top,self.right,self.center,self.left,self.bottom))
+            elif cell.y > 2*self.H//3:
+                u = choose((self.bottom,self.right,self.center,self.left,self.top))
+            else:
+                u = choose((self.right,self.center,self.top,self.bottom,self.left))
+        else:
+            if cell.y < self.H//3:
+                u = choose((self.top,self.center,self.left,self.right,self.bottom))
+            elif cell.y > 2*self.H//3:
+                u = choose((self.bottom,self.center,self.left,self.right,self.top))
+            else:
+                u = choose((self.center,self.top,self.bottom,self.left,self.right))
+        img = u.cell.material.imgs[self.z][0]
+        self.terrain.blit(img, cell.topleft)
