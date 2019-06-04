@@ -251,7 +251,6 @@ class FightingUnit:
         self.time_frome_last_direction_change += 1
 
 
-
 #probleme du tous sur 1 a la fin a regler de facon ad-hoc...
 #+ de tetes, sang sur epees des morts et choses noires et brunes
 #si + que k mecs deja sur une cible, attendre (prends cible la moins ciblee?)
@@ -259,16 +258,30 @@ class FightingUnit:
 #pas dans la neige et dans le sable
 #cas ou terrain pas le meme dans deux units ? terrain = terrain de l'attaquant ou du defenseur ? ou plutot faire vite une map mixte ?
 class Battle:
+    """The rules for the engagements are the following.
 
-    def __init__(self, left=None, right=None, top=None, bottom=None, center=None, zoom_level=0):
+        A) The defending unit can receive help from ONE friend unit, only if the
+        latter is immediately next to the defending unit (distance 1).
+
+        B) Any attacking team unit can participate to the assault, provided that
+        it is immediately next to the defending unit (distance 1).
+
+        As a consequence of A) and B), distance attacks are only possible
+        from one unit to one other unit. Unit with long range attack can
+        participate to multi-battles only if they are able to fight at distance 1.
+
+        Another consequence of A) and B) is that the maximum number of different
+        units that can be involved in a battle is 5.
+
+    """
+
+    def __init__(self, left=None, right=None, top=None, bottom=None,
+                        center=None, zoom_level=0):
         self.blocks = []
         for u in(left,right,top,bottom,center):
             if u is not None:
-                self.ref_unit = u
                 self.game = u.game
                 break
-        else:
-            assert False
         self.surface = thorpy.get_screen()
         self.W, self.H = self.surface.get_size()
         self.right = right
@@ -276,8 +289,6 @@ class Battle:
         self.top = top
         self.bottom = bottom
         self.center = center
-##        self.u1 = u1
-##        self.u2 = u2
         self.terrain = pygame.Surface(self.surface.get_size())
         self.z = zoom_level
         self.cell_size = None
