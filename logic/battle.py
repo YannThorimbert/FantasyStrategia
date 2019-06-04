@@ -43,6 +43,7 @@ class FightingUnit:
         self.rect = self.unit.imgs_z_t[self.z][0].get_rect()
         self.rect.center = pos
         self.pos = V2(pos)
+        self.init_pos = V2(pos)
         self.direction = direction
         self.final_vel = self.unit.max_dist * ANIM_VEL * (0.8 + random.random()/3.)
 ##        self.vel = self.final_vel / 3.
@@ -66,7 +67,7 @@ class FightingUnit:
         self.direction = "die"
         self.refresh_sprite_type()
         self.dead_img = self.unit.imgs_z_t[self.z][self.isprite + self.nframes-1]
-        self.direction = "head"
+        self.direction = random.choice("head","head2")
         self.refresh_sprite_type()
         self.head = self.unit.imgs_z_t[self.z][self.isprite]
         dhx = random.randint(self.battle.cell_size//2, self.battle.cell_size)
@@ -102,7 +103,6 @@ class FightingUnit:
 
 
     def get_nearest_ennemy(self):
-        distances = []
         best_d, best_o = float("inf"), None
         dok = STOP_TARGET_DIST_FACTOR*self.battle.cell_size
         L = int(self.cannot_see * len(self.opponents))
@@ -114,6 +114,14 @@ class FightingUnit:
             if d < dok:
                 return u
             elif d < best_d:
+                best_d, best_o = d, u
+        return best_o
+
+    def get_busyless_ennemy(self):
+        best_d, best_o = float("inf"), None
+        for u in self.opponents:
+            d = len(u.targeted_by)
+            if d < best_d:
                 best_d, best_o = d, u
         return best_o
 
@@ -136,8 +144,8 @@ class FightingUnit:
 ##        else:
 ##            return self.get_furthest_ennemy()
 
-    def get_ennemy(self):
-        return self.get_nearest_ennemy()
+##    def get_ennemy(self):
+##        return self.get_nearest_ennemy()
 
     def refresh_sprite_type(self):
         i,n,t = self.unit.sprites_ref[self.direction]
@@ -194,6 +202,8 @@ class FightingUnit:
             self.direction = "idle"
             self.dxdy = (0,0)
             self.refresh_sprite_type()
+        else:
+            self.vel = self.final_vel / 2.
         self.direction = DELTA_TO_KEY[self.dxdy]
         frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
         frame += self.isprite
@@ -230,10 +240,8 @@ class FightingUnit:
                 result = self.unit.get_fight_result(self.target)
                 if result < 0:
                     self.battle.to_remove.append(self)
-##                    self.dead = True
                 elif result > 0:
                     self.battle.to_remove.append(self.target)
-##                    self.target.dead = True
         else: #walking
             if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
                 self.direction = DELTA_TO_KEY[self.dxdy]
@@ -251,12 +259,12 @@ class FightingUnit:
         self.time_frome_last_direction_change += 1
 
 
-#probleme du tous sur 1 a la fin a regler de facon ad-hoc...
+#unites qui fuient si trop d'ennemis (>5)!!!!!
 #+ de tetes, sang sur epees des morts et choses noires et brunes
-#si + que k mecs deja sur une cible, attendre (prends cible la moins ciblee?)
-#coller sang sur la map plutot que de continuer de bliter sang a chaque frame
-#pas dans la neige et dans le sable
+#pas dans la neige et dans le sable ?
 #cas ou terrain pas le meme dans deux units ? terrain = terrain de l'attaquant ou du defenseur ? ou plutot faire vite une map mixte ?
+#GUI pendant combat puis recapitulatif fin de combat. Possibilité de fuir.
+
 class Battle:
     """The rules for the engagements are the following.
 
@@ -342,7 +350,7 @@ class Battle:
         text.center()
         text.blit()
         pygame.display.flip()
-        thorpy.interactive_pause(10.)
+        thorpy.interactive_pause(3.)
         menu.play()
 
     def blit_deads(self):
@@ -436,10 +444,7 @@ class Battle:
             max_ny = H // (3*s) + 2
         else:
             assert False
-        nx = max_nx
-        ny = max_ny
-        print("Max units in", side, ":", nx*ny)
-        return nx,ny
+        return max_nx, max_ny
 
     def get_disp_poses_x(self, side):
         nx,ny = self.get_nxny(side)
@@ -548,10 +553,15 @@ class Battle:
             u.targeted_by = []
             u.target = None
         for u in self.f:
-            ennemy = u.get_ennemy()
+            ennemy = u.get_nearest_ennemy()
             if ennemy:
-##                if len(ennemy.targeted_by) < 6:
-                u.set_target(ennemy)
+                if len(ennemy.targeted_by) < 10:
+                    u.set_target(ennemy)
+                else:
+                    ennemy = u.get_busyless_ennemy()
+                    if ennemy:
+                        if len(ennemy.targeted_by) < 6:
+                            u.set_target(ennemy)
 
 
 
