@@ -19,7 +19,7 @@ from logic.races import Race
 from logic.game import Game
 
 
-W,H = 1000, 700 #screen size
+W,H = 1200, 700 #screen size
 ##W,H = 500,500
 app = thorpy.Application((W,H))
 
@@ -43,7 +43,7 @@ humans.add_type("infantry", "sprites/human_warrior")
 humans["infantry"].cost["sand"] = 4
 humans.add_type("wizard", "sprites/human_wizard")
 
-humans2 = Race("Humans 2", me, "blue")
+humans2 = Race("Humans 2", me, "white")
 humans2.base_cost["forest"] = 10
 humans2.add_type("infantry", "sprites/human_warrior")
 
@@ -51,15 +51,19 @@ humans2.add_type("infantry", "sprites/human_warrior")
 # humans["archer"].max_dist = 6
 # humans["archer"].cost["cobblestone"] = 1.5
 
-game.add_unit((20,8), humans2["infantry"], 50, team=1)
-game.add_unit((15,7), humans2["infantry"], 60, team=1)
+game.add_unit((20,8), humans2["infantry"], 100, team=1)
+game.add_unit((15,7), humans2["infantry"], 100, team=1)
 
-game.add_unit((15,5), humans["infantry"], 50, team=2)
+game.add_unit((15,5), humans["infantry"], 100, team=2)
+game.add_unit((18,5), humans["infantry"], 100, team=2)
+game.add_unit((25,5), humans["infantry"], 100, team=2)
+
+
 game.add_unit((16,6), humans["wizard"], 1, team=2)
 
 
 from logic.battle import Battle
-b = Battle(top=game.units[0], bottom=game.units[2], zoom_level=0)
+b = Battle(left=game.units[0], center=game.units[1], top=game.units[2], bottom=game.units[3], right=game.units[4],  zoom_level=0)
 b.fight()
 
 
@@ -157,7 +161,7 @@ app.quit()
 #meilleur wood : taper wood texture pixel art sur google. Wooden planks?
 #nb: l'editeur permet de faire terrain (changer hauteur) (hmap), materials, objects (dyn/statics)
 #herbe animee
-#ombres des objets en mode pil
+#ombres des objets en mode pil, y compris dans bataille (si option)
 #ridged noise
 #effets: fumee villages, ronds dans l'eau, herbe dans pieds, traces dans neige et sable, precipitations
 #

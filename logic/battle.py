@@ -34,7 +34,6 @@ def sgn(x):
 
 ID = 0
 
-
 class FightingUnit:
 
     def __init__(self, battle, unit, direction, zoom_level, pos):
@@ -46,7 +45,8 @@ class FightingUnit:
         self.pos = V2(pos)
         self.direction = direction
         self.final_vel = self.unit.max_dist * ANIM_VEL * (0.8 + random.random()/3.)
-        self.vel = self.final_vel / 3.
+##        self.vel = self.final_vel / 3.
+        self.vel = self.final_vel
         self.tandom = None
         self.target = None
         self.opponents = None
@@ -161,14 +161,17 @@ class FightingUnit:
                 self.dxdy = 0,-1
 
     def stay_in_screen(self):
-        if self.pos.x > self.battle.W:
-            self.pos.x = self.battle.W
-        elif self.pos.x < 0:
-            self.pos.x = 0
-        if self.pos.y > self.battle.H:
-            self.pos.y = self.battle.H
-        elif self.pos.y < 0:
-            self.pos.y = 0
+        pass
+##        if self.pos.x > self.battle.W:
+##            self.pos.x = self.battle.W
+##        elif self.pos.x < 0:
+##            self.pos.x = 0
+##        if self.pos.y > self.battle.H:
+##            self.pos.y = self.battle.H
+##        elif self.pos.y < 0:
+##            self.pos.y = 0
+
+
 
     def set_target(self, other):
         self.target = other
@@ -180,12 +183,17 @@ class FightingUnit:
             if not(friend is self):
                 d = friend.pos - self.pos
                 D = d.length()
-                if 0 < D <= DFIGHT:
+                if 0 < D <= self.battle.cell_size:
                     dunit = d.normalize()
                     force = dunit
+##                    force = dunit / D
                     self.pos -= K * force
 
     def draw_and_move_notarget(self, surface):
+        if len(self.opponents) != 0:
+            self.direction = "idle"
+            self.dxdy = (0,0)
+            self.refresh_sprite_type()
         self.direction = DELTA_TO_KEY[self.dxdy]
         frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
         frame += self.isprite
@@ -197,8 +205,8 @@ class FightingUnit:
         self.rect.center = self.pos
 
     def draw_and_move(self, surface):
-        if self.battle.fight_t == self.start_to_run:
-            self.vel = self.final_vel
+##        if self.battle.fight_t == self.start_to_run:
+##            self.vel = self.final_vel
         if self.target is None or self.target.dead:
             self.draw_and_move_notarget(surface)
             return
@@ -244,8 +252,9 @@ class FightingUnit:
 
 
 
-
-
+#probleme du tous sur 1 a la fin a regler de facon ad-hoc...
+#+ de tetes, sang sur epees des morts et choses noires et brunes
+#si + que k mecs deja sur une cible, attendre (prends cible la moins ciblee?)
 #coller sang sur la map plutot que de continuer de bliter sang a chaque frame
 #pas dans la neige et dans le sable
 #cas ou terrain pas le meme dans deux units ? terrain = terrain de l'attaquant ou du defenseur ? ou plutot faire vite une map mixte ?
@@ -322,7 +331,7 @@ class Battle:
         text.center()
         text.blit()
         pygame.display.flip()
-        thorpy.interactive_pause(3.)
+        thorpy.interactive_pause(10.)
         menu.play()
 
     def blit_deads(self):
@@ -403,62 +412,68 @@ class Battle:
         W,H = self.surface.get_size()
         s = self.game.me.zoom_cell_sizes[self.z]
         self.cell_size = s
-        self.W -= self.cell_size//2
-        self.H -= self.cell_size//2
+##        self.W -= self.cell_size//2
+##        self.H -= self.cell_size//2
         if side == "left" or side == "right":
-            max_nx = W // (2*s) - 1 - 8
-            max_ny = H // s - 1
+            max_nx = W // (2*s) - 1 - 6
+            max_ny = H // s - 1 - 8
         elif side == "bottom" or side == "top":
-            max_ny = H // (2*s) - 1 - 8
-            max_nx = W // s - 1
+            max_ny = H // (2*s) - 1 - 6
+            max_nx = W // s - 1 - 2
         elif side == "center":
-            max_nx = W // (3*s)
-            max_ny = H // (3*s)
+            max_nx = W // (3*s) + 2
+            max_ny = H // (3*s) + 2
         else:
             assert False
         nx = max_nx
         ny = max_ny
-        print("MAX UNITS PER TEAM", nx*ny)
+        print("Max units in", side, ":", nx*ny)
         return nx,ny
 
     def get_disp_poses_x(self, side):
         nx,ny = self.get_nxny(side)
         s = self.game.me.zoom_cell_sizes[self.z]
+        space_x = nx*s
+        space_y = ny*s
+        dy = (self.H - space_y) // 2
         disp = []
         if side == "right":
-            dx = self.W-s - nx*s
+            dx = self.W - space_x
         else:
-            dx = s
-        print("SIDE",s,self.W,self.H,nx,ny,dx)
+            dx = s//2
         for x in range(nx):
+            xpos = x*s
             for y in range(ny):
-                xpos = x*s
                 ypos = y*s
-                disp.append([xpos+dx,ypos+s])
+                disp.append([xpos+dx,ypos+s+dy])
         return disp
 
     def get_disp_poses_y(self,side):
         nx,ny= self.get_nxny(side)
         s = self.game.me.zoom_cell_sizes[self.z]
+        space_y = ny*s
+        space_x = nx*s
+        dx = (self.W-space_x) // 2
         disp = []
         if side == "bottom":
-            dy = self.H-s - ny*s
+            dy = self.H - space_y
         else:
-            dy = s
-        print("SIDE",s,self.W,self.H,nx,ny,dy)
+            dy = s//2
         for x in range(nx):
+            xpos = x*s
             for y in range(ny):
-                xpos = x*s
                 ypos = y*s
-                disp.append([xpos+s, ypos+dy])
+                disp.append([xpos+dx, ypos+dy])
         return disp
 
     def get_disp_poses_c(self):
         nx,ny = self.get_nxny("center")
         s = self.game.me.zoom_cell_sizes[self.z]
         disp = []
-        dx = self.W//2 - nx//2*s
-        dy = self.H//2 - ny//2*s
+        space_y = ny*s
+        space_x = nx*s
+        dx = (self.W-space_x) // 2
+        dy = (self.H-space_y) // 2
         for x in range(nx):
             for y in range(ny):
                 xpos = x*s
@@ -468,20 +483,21 @@ class Battle:
 
 
     def initialize_units(self, disp, unit):
+        s = self.game.me.zoom_cell_sizes[self.z]
         if unit is None:
             return
         if unit.team == 1:
             population = self.f1
         elif unit.team == 2:
             population = self.f2
-        positions = random.sample(disp, unit.quantity)
+##        positions = random.sample(disp, unit.quantity)
         for i in range(unit.quantity):
             ipos = random.randint(0,len(disp)-1)
             pos = disp.pop(ipos)
             pos[0] += random.randint(0,s//3)
             pos[1] += random.randint(0,s//3)
             u = FightingUnit(self, unit, "right", self.z, pos)
-            positions.append(u)
+            population.append(u)
 
     def prepare_battle(self):
         s = self.game.me.zoom_cell_sizes[self.z]
@@ -512,6 +528,9 @@ class Battle:
         self.update_targets()
         self.f = self.f1 + self.f2
         self.build_terrain()
+        for u in self.f:
+            u.rect.center = u.pos
+        self.f.sort(key=lambda x:x.rect.bottom)
 
     def update_targets(self):
         for u in self.f:
@@ -520,6 +539,7 @@ class Battle:
         for u in self.f:
             ennemy = u.get_ennemy()
             if ennemy:
+##                if len(ennemy.targeted_by) < 6:
                 u.set_target(ennemy)
 
 
