@@ -290,6 +290,7 @@ class Battle:
         self.game = game
         self.surface = thorpy.get_screen()
         self.W, self.H = self.surface.get_size()
+        print("BATTLE", units)
         self.right = units.get("right")
         self.left = units.get("left")
         self.up = units.get("up")
@@ -645,7 +646,9 @@ def get_units_dict_from_list(units):
     if len(coords) == 2:
         assert len(relative_dict) == 1
         only_key = list(relative_dict.keys())[0]
-        relative_dict[KEY_TO_DELTA[only_key]] = center_unit
+        dx,dy = KEY_TO_DELTA[only_key]
+        otherkey = DELTA_TO_KEY[(-dx,-dy)]
+        relative_dict[otherkey] = center_unit
     else:
         relative_dict["center"] = center_unit
     return relative_dict

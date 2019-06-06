@@ -236,6 +236,9 @@ class MapInitializer:
         ##me.save_tilers(PW_PATH + "/rendering/tiles/precomputed/")
         ##import sys;app.quit();pygame.quit();sys.exit();exit()
 
+    def add_object(self, obj_name, coord):
+    !!!!!!!!!!!!!!!!!!!
+
 
     def add_static_objects(self, me):
         #1) We use another hmap to decide where we want trees (or any other object)

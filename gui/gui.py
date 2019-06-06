@@ -112,7 +112,7 @@ class Gui:
             if delta is not None:
                 units_in_battle = defender.get_all_surrounding_units()
                 units_in_battle.append(defender)
-                print("SURROUNDING", units_in_battle, defender) pk defender in units_in_battle ??? et pas tous les surroundings...
+                print("SURROUNDING", units_in_battle, defender)
                 #here, interact with user to select actual participating units among candidates to battle
                 b = Battle(self.game, units_in_battle, defender)
                 b.fight()
