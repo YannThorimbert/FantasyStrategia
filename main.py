@@ -29,11 +29,15 @@ map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
 me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
+##groupe defenseur a une vitesse nulle ! (normalement pas besoin de refaire slots) ==> meilleur animation
+##aide des defenseurs, eux, courent quand meme
+
 
 #defenseur ne court pas. IDLE directionnels = premiere frame des walk
 #impots, incendie, viols ==> depend de ce qu'on cherche a avoir, de la popularite
 #aupres de ses soldats deja existants ou bien des futurs ressortissants des villes prises
 #3 scores : score militaire, score moral, score économique
+#mettre nom de la race une bonne fois pour toutes, et fn de l'unite est deduit automatiquement du nom du type de l'unite
 
 
 #<fast> : quality a bit lower if true, loading time a bit faster.

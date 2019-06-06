@@ -16,12 +16,10 @@ SLOW_FIGHT_FRAME2 = 12
 STOP_TARGET_DIST_FACTOR = 0.2
 NFRAMES_DIRECTIONS = 16
 TIME_AFTER_FINISH = 300
-
-
-SUBBATTLES = 4, 2
+DEFENSE_START_RUNNING = 200
 
 DFIGHT = 16
-K = 4.
+K = 2.
 
 def sgn(x):
     if x < 0:
@@ -46,7 +44,6 @@ class FightingUnit:
         self.init_pos = V2(pos)
         self.direction = direction
         self.final_vel = self.unit.max_dist * ANIM_VEL * (0.8 + random.random()/3.)
-##        self.vel = self.final_vel / 3.
         self.vel = self.final_vel
         self.tandom = None
         self.target = None
@@ -217,8 +214,8 @@ class FightingUnit:
         self.rect.center = self.pos
 
     def draw_and_move(self, surface):
-##        if self.battle.fight_t == self.start_to_run:
-##            self.vel = self.final_vel
+        if self.battle.fight_t == self.start_to_run:
+            self.vel = self.final_vel
         if self.target is None or self.target.dead:
             self.draw_and_move_notarget(surface)
             return
@@ -286,7 +283,8 @@ class Battle:
 
     """
 
-    def __init__(self, game, units, zoom_level=0):
+    def __init__(self, game, units, defender, zoom_level=0):
+        self.defender = defender
         units = get_units_dict_from_list(units)
         self.blocks = []
         self.game = game
@@ -548,6 +546,9 @@ class Battle:
         self.build_terrain(disp_center, self.center)
         for u in self.f:
             u.rect.center = u.pos
+            if u.unit is self.defender:
+                u.start_to_run = DEFENSE_START_RUNNING
+                u.vel = u.final_vel / 3.
         self.f.sort(key=lambda x:x.rect.bottom)
 
     def update_targets(self):
@@ -643,7 +644,7 @@ def get_units_dict_from_list(units):
     #now build the final dict
     if len(coords) == 2:
         assert len(relative_dict) == 1
-        only_key = list(relative_dict.key())[0]
+        only_key = list(relative_dict.keys())[0]
         relative_dict[KEY_TO_DELTA[only_key]] = center_unit
     else:
         relative_dict["center"] = center_unit

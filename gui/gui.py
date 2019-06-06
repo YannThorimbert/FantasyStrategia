@@ -44,12 +44,12 @@ class Gui:
             else:
                 ref_unit = self.selected_unit
             score = cell.unit.get_possible_destinations()
+            score[cell.coord] = []
             self.last_destination_score = score
-            possible_dest = list(score.keys()) + [cell.coord]
-            for coord in possible_dest:
-                if coord != cell.coord:
-                    rect = self.me.cam.get_rect_at_coord(coord)
-                    destinations.append(rect.center)
+            for coord in score:
+##                if coord != cell.coord:
+                rect = self.me.cam.get_rect_at_coord(coord)
+                destinations.append(rect.center)
                 if ref_unit:
                     self.update_possible_interactions(ref_unit, coord)
         return destinations
@@ -110,12 +110,11 @@ class Gui:
             dy = defender.cell.coord[1] - self.selected_unit.cell.coord[1]
             delta = DELTA_TO_KEY.get((dx,dy))
             if delta is not None:
-##                delta2 = DELTA_TO_KEY[(-dx,-dy)]
-##                units = {delta:defender, delta2:self.selected_unit}
                 units_in_battle = defender.get_all_surrounding_units()
                 units_in_battle.append(defender)
+                print("SURROUNDING", units_in_battle, defender) pk defender in units_in_battle ??? et pas tous les surroundings...
                 #here, interact with user to select actual participating units among candidates to battle
-                b = Battle(self.game, units_in_battle)
+                b = Battle(self.game, units_in_battle, defender)
                 b.fight()
         elif unit in self.blue_highlights:
             pass
