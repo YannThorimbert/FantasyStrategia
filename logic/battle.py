@@ -56,6 +56,7 @@ class FightingUnit:
         self.next_to_target = False
         self.time_frome_last_direction_change = 1000
         self.cannot_see = random.random()
+        self.final_stage = False
         #
         self.dxdy = 0,0
         self.start_to_run = random.randint(0, 1000)
@@ -261,8 +262,8 @@ class FightingUnit:
 
 
 
-#impact du terrain. Comment gérer objets, riviere, forets ?
-#GUI pendant combat puis recapitulatif fin de combat. Possibilité de fuir.
+#impact du terrain. Comment gÃ©rer objets, riviere, forets ?
+#GUI pendant combat puis recapitulatif fin de combat. PossibilitÃ© de fuir.
 
 #unites qui fuient si trop d'ennemis (>5) !!!!!
 #pas dans la neige et dans le sable ?
@@ -285,20 +286,17 @@ class Battle:
 
     """
 
-    def __init__(self, left=None, right=None, top=None, bottom=None,
-                        center=None, zoom_level=0):
+    def __init__(self, game, units, zoom_level=0):
+        units = get_units_dict_from_list(units)
         self.blocks = []
-        for u in(left,right,top,bottom,center):
-            if u is not None:
-                self.game = u.game
-                break
+        self.game = game
         self.surface = thorpy.get_screen()
         self.W, self.H = self.surface.get_size()
-        self.right = right
-        self.left = left
-        self.top = top
-        self.bottom = bottom
-        self.center = center
+        self.right = units.get("right")
+        self.left = units.get("left")
+        self.up = units.get("up")
+        self.down = units.get("down")
+        self.center = units.get("center")
         self.terrain = pygame.Surface(self.surface.get_size())
         self.z = zoom_level
         self.cell_size = None
@@ -382,12 +380,9 @@ class Battle:
                     u.target.targeted_by.remove(u)
                 self.f.remove(u)
                 u.friends.remove(u) #u.friends is u.target.opponents
-##                bisect.insort(self.deads, u)
                 self.deads.append(u)
                 u.direction = "die"
                 u.refresh_sprite_type()
-##        self.deads.sort(key=lambda x:x.pos.y)
-##        print(self.deads)
         self.to_remove = []
 
     def update_battle(self):
@@ -422,7 +417,6 @@ class Battle:
                 thorpy.functions.quit_menu_func()
 
     def finish_battle(self):
-        print("FINISH BATTLE")
         for u in self.f:
             u.target = None
             u.refresh_dxdy(random.randint(-1,1),random.randint(-1,1))
@@ -532,10 +526,10 @@ class Battle:
         #
         self.initialize_units(disp_left, self.left)
         self.initialize_units(disp_right, self.right)
-        self.initialize_units(disp_top, self.top)
-        self.initialize_units(disp_bottom, self.bottom)
+        self.initialize_units(disp_top, self.up)
+        self.initialize_units(disp_bottom, self.down)
         self.initialize_units(disp_center, self.center)
-##        teams = [unit.team for unit in (self.left,self.right,self.top,self.bottom) if unit]
+##        teams = [unit.team for unit in (self.left,self.right,self.up,self.down) if unit]
 ##        if len(teams) > 1 and len(set(teams)) == 1:
 ##            initialize_units(disp_center, self.center)
         for u1 in self.f1:
@@ -549,8 +543,8 @@ class Battle:
         self.build_base_terrain()
         self.build_terrain(disp_left, self.left)
         self.build_terrain(disp_right, self.right)
-        self.build_terrain(disp_top, self.top)
-        self.build_terrain(disp_bottom, self.bottom)
+        self.build_terrain(disp_top, self.up)
+        self.build_terrain(disp_bottom, self.down)
         self.build_terrain(disp_center, self.center)
         for u in self.f:
             u.rect.center = u.pos
@@ -560,6 +554,9 @@ class Battle:
         for u in self.f:
             u.targeted_by = []
             u.target = None
+            if len(u.opponents) < 10 and not u.final_stage:
+                u.cannot_see = random.random() * 0.2
+                u.final_stage = True
         for u in self.f:
             ennemy = u.get_nearest_ennemy()
             if ennemy:
@@ -570,6 +567,8 @@ class Battle:
                     if ennemy:
                         if len(ennemy.targeted_by) < 6:
                             u.set_target(ennemy)
+
+
 
     def build_terrain(self, disp, unit):
         if not unit:
@@ -597,24 +596,58 @@ class Battle:
             assert False
         if cell.x < self.W//3:
             if cell.y < self.H//3:
-                u = choose((self.top,self.left,self.center,self.right,self.bottom))
+                u = choose((self.up,self.left,self.center,self.right,self.down))
             elif cell.y > 2*self.H//3:
-                u = choose((self.bottom,self.left,self.center,self.right,self.top))
+                u = choose((self.down,self.left,self.center,self.right,self.up))
             else:
-                u = choose((self.left,self.center,self.top,self.bottom,self.right))
+                u = choose((self.left,self.center,self.up,self.down,self.right))
         elif cell.x > 2*self.W//3:
             if cell.y < self.H//3:
-                u = choose((self.top,self.right,self.center,self.left,self.bottom))
+                u = choose((self.up,self.right,self.center,self.left,self.down))
             elif cell.y > 2*self.H//3:
-                u = choose((self.bottom,self.right,self.center,self.left,self.top))
+                u = choose((self.down,self.right,self.center,self.left,self.up))
             else:
-                u = choose((self.right,self.center,self.top,self.bottom,self.left))
+                u = choose((self.right,self.center,self.up,self.down,self.left))
         else:
             if cell.y < self.H//3:
-                u = choose((self.top,self.center,self.left,self.right,self.bottom))
+                u = choose((self.up,self.center,self.left,self.right,self.down))
             elif cell.y > 2*self.H//3:
-                u = choose((self.bottom,self.center,self.left,self.right,self.top))
+                u = choose((self.down,self.center,self.left,self.right,self.up))
             else:
-                u = choose((self.center,self.top,self.bottom,self.left,self.right))
+                u = choose((self.center,self.up,self.down,self.left,self.right))
         img = u.cell.material.imgs[self.z][0]
         self.terrain.blit(img, cell.topleft)
+
+
+def get_units_dict_from_list(units):
+    coords = [u.cell.coord for u in units]
+    assert 1 < len(coords) <= 5
+    neighbours = {}
+    for u in units:
+        x,y = u.cell.coord
+        neighbours[u] = []
+        for dx,dy in DELTAS:
+            if (x+dx,y+dy) in coords:
+                neighbours[u].append((dx,dy))
+    #now choose the units with the largest amount of neighbours
+    candidates = [(len(neighbours[u]),units.index(u),u) for u in neighbours]
+    center_unit = max(candidates)[-1]
+    game = center_unit.game
+    x,y = center_unit.cell.coord
+    #build the relative dict
+    relative_dict = {}
+    for dx,dy in neighbours[center_unit]:
+        key = DELTA_TO_KEY[(dx,dy)]
+        other = game.get_unit_at(x+dx,y+dy)
+        relative_dict[key] = other
+    #now build the final dict
+    if len(coords) == 2:
+        assert len(relative_dict) == 1
+        only_key = list(relative_dict.key())[0]
+        relative_dict[KEY_TO_DELTA[only_key]] = center_unit
+    else:
+        relative_dict["center"] = center_unit
+    return relative_dict
+
+
+

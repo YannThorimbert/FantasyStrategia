@@ -66,8 +66,8 @@ class Unit(MapObject):
             next_cell = self.editor.lm.get_cell_at(cx,cy)
             if next_cell:
                 if next_cell.unit:
-                    if next_cell.unit.team != self.team:
-                        continue
+##                    if next_cell.unit.team != self.team:
+                    continue
                 no_key_value = float("inf"), None
                 best_score, best_path = score.get((cx,cy), no_key_value)
                 #compute the cost of the current path ##########################
@@ -220,6 +220,14 @@ class Unit(MapObject):
             return random.choice([-1,1])
         return 0
 
+    def get_all_surrounding_units(self):
+        units = []
+        x,y = self.cell.coord
+        for dx,dy in DELTAS:
+            unit = self.game.get_unit_at(x+dx,y+dy)
+            if unit:
+                units.append(unit)
+        return units
 
 
 def get_unit_sprites(fn,  colors="blue", deltas=None, s=32, ckey=(255,255,255)):

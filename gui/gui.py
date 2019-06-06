@@ -3,6 +3,7 @@ import PyWorld2D.gui.elements as elements
 import PyWorld2D.gui.parameters as guip
 
 from logic.battle import Battle
+from logic.unit import DELTA_TO_KEY, DELTAS
 
 
 class Gui:
@@ -38,21 +39,23 @@ class Gui:
         if cell.unit:
             if cell.unit.anim_path:
                 return []
+            if not self.selected_unit:
+                ref_unit = self.unit_under_cursor
+            else:
+                ref_unit = self.selected_unit
             score = cell.unit.get_possible_destinations()
             self.last_destination_score = score
-            for coord in score:
+            possible_dest = list(score.keys()) + [cell.coord]
+            for coord in possible_dest:
                 if coord != cell.coord:
                     rect = self.me.cam.get_rect_at_coord(coord)
                     destinations.append(rect.center)
-                    #
-                    ref_unit = self.selected_unit
-                    if not self.selected_unit:
-                        ref_unit = self.unit_under_cursor
-                    if ref_unit:
-                        self.update_possible_interactions(ref_unit, coord)
+                if ref_unit:
+                    self.update_possible_interactions(ref_unit, coord)
         return destinations
 
     def update_possible_interactions(self, ref_unit, coord):
+        #interactions possible for <ref_unit> when located at hypothetic position <coord>
         for other in self.game.units:
             if other is not ref_unit:
                 if other.cell.coord == coord:
@@ -65,6 +68,7 @@ class Gui:
                     for dx,dy in coords:
                         if other.cell.coord == (coord[0]+dx, coord[1]+dy):
                             self.add_unit_highlight(ref_unit, other)
+                            break
 
 
     def add_unit_highlight(self, ref_unit, unit):
@@ -79,12 +83,16 @@ class Gui:
 
     def treat_click_destination(self, cell):
         rect = self.me.cam.get_rect_at_coord(cell.coord)
+        print("     clicked:", cell.coord)
+        print("     len(dest_lmb):", len(self.destinations_lmb))
         if rect.center in self.destinations_lmb:
+            print("     Correct destination")
             cost, path = self.last_destination_score.get(cell.coord, None)
             x,y = path[-1]
             friend = self.game.get_unit_at(x,y)
-            if friend:
-                #check than same type and sum of quantities does not exceed max_quantity
+            print("     friend:",friend)
+            if friend: #the user wants to fusion units
+                #check that same type and sum of quantities does not exceed max_quantity
                 ok = False
                 if ok:
                     self.selected_unit.move_to_cell_animated(path[1:])
@@ -97,31 +105,50 @@ class Gui:
 
     def treat_click_interaction(self, unit):
         if unit in self.red_highlights:
-            self.treat_click_destination(unit.cell)
-##            b = Battle(left=game.units[0], center=game.units[1], top=game.units[2], bottom=game.units[3], right=game.units[4],  zoom_level=0)
-            b = Battle(self.selected_unit, unit)
-            b.fight()
+            defender = unit
+            dx = defender.cell.coord[0] - self.selected_unit.cell.coord[0]
+            dy = defender.cell.coord[1] - self.selected_unit.cell.coord[1]
+            delta = DELTA_TO_KEY.get((dx,dy))
+            if delta is not None:
+##                delta2 = DELTA_TO_KEY[(-dx,-dy)]
+##                units = {delta:defender, delta2:self.selected_unit}
+                units_in_battle = defender.get_all_surrounding_units()
+                units_in_battle.append(defender)
+                #here, interact with user to select actual participating units among candidates to battle
+                b = Battle(self.game, units_in_battle)
+                b.fight()
         elif unit in self.blue_highlights:
             pass
         else:
             self.add_alert(self.e_cant_move)
 
+
     def lmb(self, e):
+        print("LMB", self.game.t)
         self.destinations_mousemotion = []
         pos = e.pos
         cell = self.me.cam.get_cell(pos)
         if cell:
             if self.destinations_lmb: #then the user may be clicking a destination
                 if not cell.unit:
+                    print("click destination")
                     self.treat_click_destination(cell)
                 else:
+                    print("treat interaction")
                     self.treat_click_interaction(cell.unit)
                 self.destinations_lmb = [] #clear destinations
+                self.red_highlights = []
+                self.blue_highlights = []
                 self.selected_unit = None
             elif cell: #else update destinations
-                self.destinations_lmb = self.get_destinations(cell)
                 if cell.unit:
+                    print("update destinations")
                     self.selected_unit = cell.unit
+                    self.destinations_lmb = self.get_destinations(cell)
+                else:
+                    print("nothing")
+                    self.selected_unit = None
+
 
     def rmb(self, e):
         self.destinations_mousemotion = []

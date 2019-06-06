@@ -6,6 +6,7 @@ class Game:
         self.me = me
         self.units = []
         self.objects = []
+        self.t = 0
 
 
     def add_unit(self, coord, unit, quantity, team):

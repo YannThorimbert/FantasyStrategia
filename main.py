@@ -1,4 +1,6 @@
-"""Yann Thorimbert - 2019
+"""
+Fantasy Strategia - A 2D turn-based strategy game in a fantasy universe.
+Yann Thorimbert - 2019
 yann.thorimbert@gmail.com
 """
 from __future__ import print_function, division
@@ -28,6 +30,12 @@ me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
 
+#defenseur ne court pas. IDLE directionnels = premiere frame des walk
+#impots, incendie, viols ==> depend de ce qu'on cherche a avoir, de la popularite
+#aupres de ses soldats deja existants ou bien des futurs ressortissants des villes prises
+#3 scores : score militaire, score moral, score économique
+
+
 #<fast> : quality a bit lower if true, loading time a bit faster.
 #<use_beach_tiler>: quality much better if true, loading much slower. Req. Numpy!
 #<load_tilers> : Very slow but needed if you don't have Numpy but still want hi quality.
@@ -55,7 +63,7 @@ game.add_unit((20,8), humans2["infantry"], 100, team=1)
 game.add_unit((15,7), humans2["infantry"], 100, team=1)
 
 game.add_unit((15,5), humans["infantry"], 100, team=2)
-game.add_unit((18,5), humans["infantry"], 100, team=2)
+game.add_unit((14,6), humans["infantry"], 100, team=2) #14,6
 game.add_unit((25,5), humans["infantry"], 100, team=2)
 
 
@@ -76,6 +84,7 @@ ui = gui.Gui(game)
 def func_reac_time(): #here add wathever you want
     """Function called each frame"""
     me.func_reac_time()
+    game.t += 1
     pygame.display.flip()
 thorpy.add_time_reaction(me.e_box, func_reac_time)
 
