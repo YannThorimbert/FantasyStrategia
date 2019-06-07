@@ -10,13 +10,16 @@ DELTA_TO_KEY = {(0,0):"idle", (1,0):"right", (-1,0):"left", (0,1):"down", (0,-1)
 KEY_TO_DELTA = {DELTA_TO_KEY[key]:key for key in DELTA_TO_KEY}
 DELTA_TO_KEY_A = {(0,0):"idle", (1,0):"rattack", (-1,0):"lattack", (0,1):"down", (0,-1):"up"}
 
-ANIM_VEL = 0.2
+ANIM_VEL = 1.5
 SLOW_FIGHT_FRAME1 = 4
 SLOW_FIGHT_FRAME2 = 12
 STOP_TARGET_DIST_FACTOR = 0.2
 NFRAMES_DIRECTIONS = 16
-TIME_AFTER_FINISH = 300
-DEFENSE_START_RUNNING = 200
+TIME_AFTER_FINISH = 500
+BATTLE_DURATION = 1000
+DEFENSE_START_RUNNING = BATTLE_DURATION + TIME_AFTER_FINISH + 1 #for the moment, I deactivate this feature
+
+
 
 DFIGHT = 16
 K = 2.
@@ -43,7 +46,8 @@ class FightingUnit:
         self.pos = V2(pos)
         self.init_pos = V2(pos)
         self.direction = direction
-        self.final_vel = self.unit.max_dist * ANIM_VEL * (0.8 + random.random()/3.)
+##        self.final_vel = self.unit.max_dist * ANIM_VEL * (0.8 + random.random()/3.)
+        self.final_vel = ANIM_VEL * (0.8 + random.random()/3.)
         self.vel = self.final_vel
         self.tandom = None
         self.target = None
@@ -167,18 +171,6 @@ class FightingUnit:
             else:
                 self.dxdy = 0,-1
 
-    def stay_in_screen(self):
-        pass
-##        if self.pos.x > self.battle.W:
-##            self.pos.x = self.battle.W
-##        elif self.pos.x < 0:
-##            self.pos.x = 0
-##        if self.pos.y > self.battle.H:
-##            self.pos.y = self.battle.H
-##        elif self.pos.y < 0:
-##            self.pos.y = 0
-
-
 
     def set_target(self, other):
         self.target = other
@@ -197,13 +189,21 @@ class FightingUnit:
                     self.pos -= K * force
 
     def draw_and_move_notarget(self, surface):
-        if len(self.opponents) != 0:
-            self.direction = "idle"
-            self.dxdy = (0,0)
-            self.refresh_sprite_type()
+        if self.battle.fight_t < BATTLE_DURATION:
+            if len(self.opponents) > 0:
+                self.direction = "idle"
+                self.dxdy = (0,0)
+                self.refresh_sprite_type()
+            else:
+                self.vel = self.final_vel / 2.
         else:
-            self.vel = self.final_vel / 2.
-        self.direction = DELTA_TO_KEY[self.dxdy]
+            delta = self.update_dest_end()
+            dl = delta.length()
+            if dl < self.battle.cell_size:
+                self.direction = "idle"
+                self.dxdy = (0,0)
+                self.refresh_sprite_type()
+                self.vel = 0.
         frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
         frame += self.isprite
         img = self.unit.imgs_z_t[self.z][frame]
@@ -218,6 +218,7 @@ class FightingUnit:
             self.vel = self.final_vel
         if self.target is None or self.target.dead:
             self.draw_and_move_notarget(surface)
+            self.time_frome_last_direction_change += 1
             return
         target_pos = V2(self.target.rect.center)
         self_pos = V2(self.rect.center)
@@ -249,7 +250,6 @@ class FightingUnit:
             frame = (self.frame0 + self.battle.fight_frame_walk)%self.nframes
             self.pos.x += self.vel*self.dxdy[0]
             self.pos.y += self.vel*self.dxdy[1]
-        self.stay_in_screen()
         self.rect.center = self.pos
         frame += self.isprite
         img = self.unit.imgs_z_t[self.z][frame]
@@ -257,13 +257,18 @@ class FightingUnit:
             surface.blit(img, self.rect)
         self.time_frome_last_direction_change += 1
 
+    def update_dest_end(self):
+        delta = self.init_pos - self.pos
+        self.refresh_dxdy(delta.x, delta.y)
+        if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
+            self.direction = DELTA_TO_KEY[self.dxdy]
+            self.refresh_sprite_type()
+            self.time_frome_last_direction_change = 0
+        return delta
 
 
-#impact du terrain. Comment gÃ©rer objets, riviere, forets ?
-#GUI pendant combat puis recapitulatif fin de combat. PossibilitÃ© de fuir.
 
-#unites qui fuient si trop d'ennemis (>5) !!!!!
-#pas dans la neige et dans le sable ?
+
 
 class Battle:
     """The rules for the engagements are the following.
@@ -408,19 +413,21 @@ class Battle:
             self.blit_this_frame = False
         #
         self.f.sort(key=lambda x:x.rect.bottom) #peut etre pas besoin selon systeme de cible
-        if len(self.f1) == 0 or len(self.f2) == 0:
+        extermination = len(self.f1) == 0 or len(self.f2) == 0
+        if extermination or self.fight_t > BATTLE_DURATION:
             if self.finished == 0:
                 self.finished = self.fight_t
                 self.finish_battle()
             elif self.fight_t - self.finished > TIME_AFTER_FINISH:
                 thorpy.functions.quit_menu_func()
+        if self.fight_t % 20 == 0:
+            print(self.fight_t)
 
     def finish_battle(self):
         for u in self.f:
             u.target = None
-            u.refresh_dxdy(random.randint(-1,1),random.randint(-1,1))
-            u.direction = DELTA_TO_KEY[u.dxdy]
-            u.refresh_sprite_type()
+            u.update_dest_end()
+            u.vel = u.final_vel
 
     def get_nxny(self, side):
         W,H = self.surface.get_size()
@@ -549,7 +556,7 @@ class Battle:
             u.rect.center = u.pos
             if u.unit is self.defender:
                 u.start_to_run = DEFENSE_START_RUNNING
-                u.vel = u.final_vel / 3.
+                u.vel = u.final_vel / 4.
         self.f.sort(key=lambda x:x.rect.bottom)
 
     def update_targets(self):

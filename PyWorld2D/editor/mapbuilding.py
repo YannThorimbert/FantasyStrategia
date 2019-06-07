@@ -142,8 +142,10 @@ class MapInitializer:
         self.max_river_length = 80
         self.max_number_of_rivers = 5
         ############ End of user-defined parameters
+        self.user_objects = []
         self._forest_map = None
         self._static_objs_layer = None
+        self._objects = {}
 
     def set_terrain_type(self, terrain_type, colorscale):
         for key in terrain_type:
@@ -236,13 +238,12 @@ class MapInitializer:
         ##me.save_tilers(PW_PATH + "/rendering/tiles/precomputed/")
         ##import sys;app.quit();pygame.quit();sys.exit();exit()
 
-    def add_object(self, obj_name, coord):
-    !!!!!!!!!!!!!!!!!!!
+    def add_object(self, obj_name, x, y, flip=False):
+        self.user_objects.append((obj_name, (x,y), flip))
 
 
     def add_static_objects(self, me):
         #1) We use another hmap to decide where we want trees (or any other object)
-    ##    S = len(me.lm) lerreur est ici!!!!
         S = len(me.hmap)
         self._forest_map = ng.generate_terrain(S, n_octaves=self.static_objects_n_octaves,
                                             persistance=self.static_objects_persistance,
@@ -269,24 +270,19 @@ class MapInitializer:
         village1 = MapObject(me,self.village1, "village",self.village1_size)
         village2 = MapObject(me,self.village2, "village",self.village2_size)
         village3 = MapObject(me,self.village3, "village",self.village3_size)
-##        village3 = MapObject(me,self.village3, "village",self.village3_size)
-##        village4 = MapObject(me,self.village4, "village",self.village4_size)
-        ##village5 = MapObject(me,PW_PATH + "/mapobjects/images/rgbfumes4.png","village",2.2)
-##        village1.set_same_type([village2, village3, village4]) #3 images for 1 object
-##        village1.set_same_type([village2, village3]) #3 images for 1 object
-        #
-        cobble = MapObject(me,self.cobble,"cobblestone",self.cobble_size)
-        cobble.is_ground = True
-        wood = MapObject(me,self.wood,"wooden bridge",self.wood_size)
-        wood.is_ground = True
-        #
-##        anim_tree = MapObject(me, [self.fir1]*3+[self.fir2]*3, "My animated tree",1.)
-##        anim_tree = objs.put_static_obj(anim_tree, me.lm, (12,12), self._static_objs_layer)
-        #
-##        for v in [village1,village2,village3,village4]:
         for v in [village1,village2,village3]:
             v.max_relpos = [0, 0.15]
             v.min_relpos = [0, 0.1]
+        #
+        cobble = MapObject(me,self.cobble,"cobblestone",self.cobble_size)
+        cobble.is_ground = True
+        wood = MapObject(me,self.wood,"wood",self.wood_size)
+        wood.is_ground = True
+        wood.max_relpos = [0.,0.]
+        wood.min_relpos = [0., 0.]
+        self._objects = {"oak":tree, "fir1":fir1, "fir2":fir2, "firsnow":firsnow,
+                        "palm":palm, "bush":bush, "village":village1,
+                        "cobble":cobble, "wood":wood}
         #4) we add the objects via distributors, to add them randomly in a nice way
         #normal forest
         distributor = objs.get_distributor(me, [fir1, fir2, tree],
@@ -369,6 +365,20 @@ class MapInitializer:
                                     min_length=self.min_river_length,
                                     max_length=self.max_river_length)
 
+    def add_user_objects(self, me):
+        for name,coord,flip in self.user_objects:
+            obj = self._objects[name]
+            cell = me.lm.get_cell_at(coord[0],coord[1])
+            if flip:
+                obj = obj.flip()
+            obj = obj.add_copy_on_cell(cell, first=True)
+            obj.randomize_relpos()
+            #insert at the beginning because it is the last object
+            #think e.g. of a wooden bridge over a river. What the unit sees is
+            #the wooden bridge
+##            self._static_objs_layer.static_objects.insert(0,obj)
+            self._static_objs_layer.static_objects.append(obj)
+
 
     def build_map(self, me, fast=False, use_beach_tiler=True, load_tilers=False,
                     graphical_load=True):
@@ -396,6 +406,7 @@ class MapInitializer:
         build_lm(me)
         update_loading_bar(loading_bar,"Adding static objects...",0.3,graphical_load)
         self.add_static_objects(me)
+        self.add_user_objects(me)
         #Now that we finished to add objects, we generate the pygame surface
         update_loading_bar(loading_bar, "Building surfaces", 0.9, graphical_load)
         me.build_surfaces()

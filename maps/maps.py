@@ -23,6 +23,8 @@ map1.set_terrain_type(terrain_plains, colorscale_plains)
 map1.max_number_of_roads = 1
 map1.zoom_cell_sizes = [32,16]
 ##map1.max_river_length = 100
+map1.add_object("oak", 16, 5)
+map1.add_object("wood", 18, 7)
 
 map2 = MapInitializer("Second demo map")
 map2.world_size = (256, 128) #with big maps it is better to use lower persistance

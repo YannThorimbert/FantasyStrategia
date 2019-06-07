@@ -7,6 +7,15 @@ from __future__ import print_function, division
 import pygame
 import thorpy #for GUI and other graphics - see www.thorpy.org
 
+##import os
+##from shutil import copyfile
+##
+##for fn in os.listdir("sprites/"):
+##    if "warrior" in fn:
+##        copyfile("sprites/"+fn, "sprites/"+fn.replace("warrior","infantry"))
+##
+##exit()
+
 from PyWorld2D import PW_PATH
 from PyWorld2D.mapobjects.objects import MapObject
 import PyWorld2D.saveload.io as io
@@ -22,22 +31,27 @@ from logic.game import Game
 
 
 W,H = 1200, 700 #screen size
-##W,H = 500,500
 app = thorpy.Application((W,H))
 
 map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
 me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
-##groupe defenseur a une vitesse nulle ! (normalement pas besoin de refaire slots) ==> meilleur animation
-##aide des defenseurs, eux, courent quand meme
+#BUG: infanterie attaque wizard. S'arretent...
 
+#chateaux, murailles: au niveau de l'implementation, sont des types d'unites! (static unit)
+#dans l'editeur, set_material fera en realite un set_height !
+#enlever l'altitude pour FS
+#Faire les vrais maths de batailles dans Unit
+#GUI pendant combat puis recapitulatif fin de combat.
+#Battle : pas dans la neige et dans le sable ?
 
-#defenseur ne court pas. IDLE directionnels = premiere frame des walk
 #impots, incendie, viols ==> depend de ce qu'on cherche a avoir, de la popularite
 #aupres de ses soldats deja existants ou bien des futurs ressortissants des villes prises
 #3 scores : score militaire, score moral, score économique
 #mettre nom de la race une bonne fois pour toutes, et fn de l'unite est deduit automatiquement du nom du type de l'unite
+#menus au style adapte
+#combat depuis materiaux modifies par objets (riviere, bois, foret)
 
 
 #<fast> : quality a bit lower if true, loading time a bit faster.
@@ -47,34 +61,24 @@ game = Game(me)
 map_initializer.build_map(me, fast=False, use_beach_tiler=False, load_tilers=False)
 
 
-humans = Race("Humans 1", me, "green")
+humans = Race("Green team", "human", me, "green")
 humans.base_cost["grass"] = 2
 humans.base_cost["forest"] = 5
 humans.base_max_dist = 10
-humans.add_type("infantry", "sprites/human_warrior")
 humans["infantry"].cost["sand"] = 4
-humans.add_type("wizard", "sprites/human_wizard")
 
-humans2 = Race("Humans 2", me, "white")
+humans2 = Race("White team", "human", me, "white")
 humans2.base_cost["forest"] = 10
-humans2.add_type("infantry", "sprites/human_warrior")
+humans2["wizard"].cost["wood"] = 2.
 
-# humans.add_type("archer", PW_PATH+"/mapobjects/images/char1.png")
-# humans["archer"].max_dist = 6
-# humans["archer"].cost["cobblestone"] = 1.5
-
-game.add_unit((20,8), humans2["infantry"], 100, team=1)
-game.add_unit((15,7), humans2["infantry"], 100, team=1)
-
-game.add_unit((15,5), humans["infantry"], 100, team=2)
-game.add_unit((14,6), humans["infantry"], 100, team=2) #14,6
-game.add_unit((25,5), humans["infantry"], 100, team=2)
+game.add_unit((15,5), humans["infantry"], 100, team=1)
+game.add_unit((14,6), humans["infantry"], 100, team=1) #14,6
+game.add_unit((25,5), humans["infantry"], 100, team=1)
+game.add_unit((16,6), humans["wizard"], 1, team=1)
 
 
-game.add_unit((16,6), humans["wizard"], 1, team=2)
-
-
-
+game.add_unit((20,8), humans2["infantry"], 100, team=2)
+game.add_unit((15,7), humans2["infantry"], 100, team=2)
 
 
 ##game.get_cell_at(14,15).set_name("My left cell")
@@ -147,16 +151,6 @@ app.quit()
 
 
 ###############################################################################
-#CHAQUE DYNAMIC OBJECT A UN DELTA_FRAME ALEATOIRE, COMME CA PAS TOUS SYNCHRO
-#pour FS: ajouter un info box quand on click sur material name, quand on click sur une cellule
-
-#pour fs: chateaux, murailles, units: (herite de objet dynamique)
-
-#pour fs : vu que statics prennet de la place, on considere qu'on est dans un village quand on est pres de lui ?
-# ou sinon relpos tres petit...
-
-
-#
 
 #*********************************v2:
 #editeur ==> sauver les materiaux et heights modifies

@@ -112,8 +112,8 @@ class Gui:
             if delta is not None:
                 units_in_battle = defender.get_all_surrounding_units()
                 units_in_battle.append(defender)
-                print("SURROUNDING", units_in_battle, defender)
                 #here, interact with user to select actual participating units among candidates to battle
+                print("DEFENDER", defender, defender.team, defender.quantity)
                 b = Battle(self.game, units_in_battle, defender)
                 b.fight()
         elif unit in self.blue_highlights:

@@ -28,12 +28,12 @@ std_type_cost = {'villager':1,
                 'cavalry':2,
                 'mounted archer':2,
                 'wizard':1,
-                'arch mage':1,
+                'arch_mage':1,
                 'king':1,
                 'cook':0.5,
                 'doctor':0.5,
-                'transport boat':1.5,
-                'attack boat':2}
+                'transport_boat':1.5,
+                'attack_boat':2}
 
 std_attack_range = {'villager':(1,1),
                     'infantry':(1,1),
@@ -41,12 +41,12 @@ std_attack_range = {'villager':(1,1),
                     'cavalry':(1,1),
                     'mounted archer':(2,4),
                     'wizard':(1,2),
-                    'arch mage':(1,5),
+                    'arch_mage':(1,5),
                     'king':(1,1),
                     'cook':(0,0),
                     'doctor':(0,0),
-                    'transport boat':(0,0),
-                    'attack boat':(1,3)}
+                    'transport_boat':(0,0),
+                    'attack_boat':(1,3)}
 
 std_help_range = {  'villager':(1,1),
                     'infantry':(1,1),
@@ -54,26 +54,30 @@ std_help_range = {  'villager':(1,1),
                     'cavalry':(1,1),
                     'mounted archer':(1,1),
                     'wizard':(1,2),
-                    'arch mage':(1,5),
+                    'arch_mage':(1,5),
                     'king':(1,1),
                     'cook':(1,1),
                     'doctor':(1,1),
-                    'transport boat':(1,1),
-                    'attack boat':(1,1)}
+                    'transport_boat':(1,1),
+                    'attack_boat':(1,1)}
 
 std_distance = 5
 
-
+units_type_to_load = ["infantry", "wizard"]
 
 
 class Race:
-    def __init__(self, name, me, color="blue"):
+    def __init__(self, name, baserace, me, color="blue"):
         self.name = name
+        self.baserace = baserace
         self.base_cost = std_cost_material.copy()
         self.base_max_dist = std_distance
         self.unit_types = {}
         self.me = me
         self.color = color
+        for unit_type in units_type_to_load:
+            self.add_type(unit_type, "sprites/"+baserace+"_"+unit_type)
+
 
     def add_type(self, type_name, imgs_fn, factor=1.):
         imgs = unit.load_sprites(imgs_fn, self.color)

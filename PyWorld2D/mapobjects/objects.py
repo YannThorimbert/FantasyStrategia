@@ -198,10 +198,13 @@ class MapObject:
                 obj.imgs_z_t[frame][scale] = pygame.transform.flip(obj.imgs_z_t[frame][scale], x, y)
         return obj
 
-    def add_copy_on_cell(self, cell):
+    def add_copy_on_cell(self, cell, first=False):
         copy = self.copy()
         copy.cell = cell
-        cell.objects.append(copy)
+        if first:
+            cell.objects.insert(0,copy)
+        else:
+            cell.objects.append(copy)
         return copy
 
     def add_unit_on_cell(self, cell):
