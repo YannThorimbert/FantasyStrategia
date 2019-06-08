@@ -1,5 +1,5 @@
-from PyWorld2D.editor.mapbuilding import MapInitializer, terrain_plains, terrain_flat
-from PyWorld2D.thornoise.purepython.noisegen import colorscale_plains, colorscale_flat
+from PyWorld2D.editor.mapbuilding import MapInitializer, terrain_plains, terrain_flat, terrain_small
+from PyWorld2D.thornoise.purepython.noisegen import colorscale_plains, colorscale_flat, colorscale_normal
 
 #Here I simply define some properties of differnt maps. No programmation, just
 #configuration.
@@ -11,15 +11,21 @@ map0 = MapInitializer("Map0")
 map0.chunk = (1400,0)
 map0.world_size = (16,16)
 ##map0.set_terrain_type(terrain_flat, colorscale_flat)
-map0.set_terrain_type(terrain_plains, colorscale_plains)
+##map0.set_terrain_type(terrain_plains, colorscale_plains)
+map0.set_terrain_type(terrain_small, colorscale_normal)
 map0.max_number_of_rivers = 1
 map0.max_number_of_roads = 1
+##map0.h(12,12,"sand")
+##for x in range(10):
+##    for y in range(10):
+##        map0.h(x,y,"sand")
 
 map1 = MapInitializer("First demo map")
 map1.chunk = (0,0)
 map1.reverse_hmap = True
 map1.world_size = (32,32)
-map1.set_terrain_type(terrain_plains, colorscale_plains)
+##map1.set_terrain_type(terrain_plains, colorscale_plains)
+map1.set_terrain_type(terrain_small, colorscale_normal)
 map1.max_number_of_roads = 1
 map1.zoom_cell_sizes = [32,16]
 ##map1.max_river_length = 100

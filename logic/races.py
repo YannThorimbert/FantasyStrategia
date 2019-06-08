@@ -1,3 +1,5 @@
+import os
+import pygame
 from . import unit
 
 std_cost_material = {'Deep water': float("inf"),
@@ -89,7 +91,21 @@ class Race:
         u.help_range = std_help_range.get(type_name, 1)
         u.cost = self.base_cost.copy()
         self.unit_types[type_name] = u
+                #
+        if os.path.exists(imgs_fn+"_footprint.png"):
+            u.footprint = pygame.image.load(imgs_fn+"_footprint.png")
+        else:
+            u.footprint = pygame.image.load("sprites/footprint.png")
         return u
+
+    def update_stats(self):
+        for type_name in self.unit_types:
+            u = self.unit_types[type_name]
+            u.max_dist = self.base_max_dist * std_type_cost.get(type_name, 1.)
+            u.attack_range = std_attack_range.get(type_name, 1)
+            u.help_range = std_help_range.get(type_name, 1)
+            u.cost = self.base_cost.copy()
+            self.unit_types[type_name] = u
 
     def __getitem__(self, key):
         return self.unit_types[key]

@@ -56,6 +56,7 @@ class Unit(MapObject):
         self.team = None
         self.attack_range = None
         self.help_range = None
+        self.footprint = None
 
 
 
@@ -118,6 +119,7 @@ class Unit(MapObject):
         obj.team = self.team
         obj.help_range = self.help_range
         obj.attack_range = self.attack_range
+        obj.footprint = self.footprint
         return obj
 
     def deep_copy(self):
@@ -151,6 +153,7 @@ class Unit(MapObject):
         obj.highlights = {}
         for color in self.highlights:
             obj.highlights[color] = [i.copy() for i in self.highlights[color]]
+        obj.footprint = self.footprint.copy()
         return obj
 
     def get_current_highlight(self, color):

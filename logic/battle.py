@@ -1,4 +1,5 @@
 import random, thorpy
+import numpy as np
 import pygame
 from pygame.math import Vector2 as V2
 import bisect
@@ -187,7 +188,7 @@ class FightingUnit:
                     force = d / D
                     self.pos -= K * force
 
-    def draw_and_move_notarget(self, surface):
+    def draw_and_move_notarget(self):
         if self.battle.fight_t < BATTLE_DURATION:
             if len(self.opponents) > 0:
                 self.direction = "idle"
@@ -196,6 +197,7 @@ class FightingUnit:
             else:
                 delta = self.update_dest_end()
 ##                self.vel = self.final_vel / 2.
+            frame = (self.frame0 + self.battle.fight_frame_walk)%self.nframes
         else:
             delta = self.update_dest_end()
             dl = delta.length()
@@ -204,20 +206,21 @@ class FightingUnit:
                 self.dxdy = (0,0)
                 self.refresh_sprite_type()
                 self.vel = 0.
-        frame = (self.frame0 + self.battle.fight_frame_walk)%self.nframes
+            frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
         frame += self.isprite
         img = self.unit.imgs_z_t[self.z][frame]
-        if self.battle.blit_this_frame:
-            surface.blit(img, self.rect)
+        self.blit(img)
+##        if self.battle.blit_this_frame:
+##            surface.blit(img, self.rect)
         self.pos.x += self.vel*self.dxdy[0]
         self.pos.y += self.vel*self.dxdy[1]
         self.rect.center = self.pos
 
-    def draw_and_move(self, surface):
+    def draw_and_move(self):
         if self.battle.fight_t == self.start_to_run:
             self.vel = self.final_vel
         if self.target is None or self.target.dead:
-            self.draw_and_move_notarget(surface)
+            self.draw_and_move_notarget()
             self.time_frome_last_direction_change += 1
             return
         target_pos = V2(self.target.rect.center)
@@ -253,8 +256,7 @@ class FightingUnit:
         self.rect.center = self.pos
         frame += self.isprite
         img = self.unit.imgs_z_t[self.z][frame]
-        if self.battle.blit_this_frame:
-            surface.blit(img, self.rect)
+        self.blit(img)
         self.time_frome_last_direction_change += 1
 
     def update_dest_end(self):
@@ -265,6 +267,22 @@ class FightingUnit:
             self.refresh_sprite_type()
             self.time_frome_last_direction_change = 0
         return delta
+
+    def blit(self, img):
+         if self.battle.blit_this_frame:
+            if self.battle.show_footprints:
+                if self.battle.fight_frame_walk % 4 == 0:
+                    cx,cy = self.battle.get_cell_coord(self.pos[0], self.pos[1])
+                    if self.battle.is_footprint[cx,cy]:
+                        x = self.rect.centerx
+                        y = self.rect.bottom - 4
+                        self.battle.terrain.blit(self.unit.footprint, (x,y))
+            self.battle.surface.blit(img, self.rect)
+            if self.battle.show_splash:
+                cx,cy = self.battle.get_cell_coord(self.pos[0], self.pos[1])
+                if self.battle.is_splash[cx,cy]:
+                    self.battle.surface.blit(self.battle.splash, self.rect.move(0,-4).bottomleft)
+
 
 
 
@@ -318,6 +336,15 @@ class Battle:
         self.background = None
         self.mod_display = 1
         self.blit_this_frame = True
+        self.show_footprints = True
+        self.splashes = [pygame.image.load("sprites/splash.png")]
+        self.splashes.append(pygame.transform.flip(self.splashes[0], True, False))
+        self.splash = self.splashes[0]
+        self.show_splash = True
+        self.is_splash = None
+        self.is_footprint = None
+        self.nx = None
+        self.ny = None
 
     def fight(self):
         self.prepare_battle()
@@ -396,7 +423,7 @@ class Battle:
             self.surface.blit(self.terrain, (0,0))
             self.blit_deads()
         for u in self.f:
-            u.draw_and_move(self.surface)
+            u.draw_and_move()
         if self.blit_this_frame:
             pygame.display.flip()
         #
@@ -405,6 +432,7 @@ class Battle:
         self.fight_t += 1
         if self.fight_t % SLOW_FIGHT_FRAME1 == 0:
             self.fight_frame_walk += 1
+            self.splash = self.splashes[self.fight_frame_walk%2]
         if self.fight_t % SLOW_FIGHT_FRAME2 == 0:
             self.fight_frame_attack += 1
         if self.fight_t % self.mod_display == 0:
@@ -421,8 +449,8 @@ class Battle:
                 self.finish_battle()
             elif self.fight_t - self.finished > TIME_AFTER_FINISH:
                 thorpy.functions.quit_menu_func()
-        if self.fight_t % 20 == 0:
-            print(self.fight_t)
+##        if self.fight_t % 20 == 0:
+##            print(self.fight_t)
 
     def finish_battle(self):
         print("FINISH BATTLE")
@@ -435,6 +463,8 @@ class Battle:
         W,H = self.surface.get_size()
         s = self.game.me.zoom_cell_sizes[self.z]
         self.cell_size = s
+        self.nx = W//self.cell_size
+        self.ny = H//self.cell_size
 ##        self.W -= self.cell_size//2
 ##        self.H -= self.cell_size//2
         if side == "left" or side == "right":
@@ -548,6 +578,8 @@ class Battle:
             u2.friends = self.f2
         self.update_targets()
         self.f = self.f1 + self.f2
+        self.is_footprint = np.zeros((self.nx, self.ny), dtype=bool)
+        self.is_splash = np.zeros((self.nx, self.ny), dtype=bool)
         self.build_base_terrain()
         self.build_terrain(disp_left, self.left)
         self.build_terrain(disp_right, self.right)
@@ -558,7 +590,7 @@ class Battle:
             u.rect.center = u.pos
             if u.unit is self.defender:
                 u.start_to_run = DEFENSE_START_RUNNING
-                u.vel = u.final_vel / 4.
+                u.vel = u.final_vel / 2.
         self.f.sort(key=lambda x:x.rect.bottom)
 
 ##    def update_targets(self):
@@ -596,9 +628,12 @@ class Battle:
     def build_terrain(self, disp, unit):
         if not unit:
             return
-        img = unit.cell.material.imgs[self.z][0]
+        img, splash, footprint = get_img(unit.cell, self.z)
         for x,y in disp:
             self.terrain.blit(img, (x,y))
+            x,y = self.get_cell_coord(x,y)
+            self.is_splash[x,y] = splash
+            self.is_footprint[x,y] = footprint
 
     def build_base_terrain(self):
         W,H = self.surface.get_size()
@@ -638,8 +673,15 @@ class Battle:
                 u = choose((self.down,self.center,self.left,self.right,self.up))
             else:
                 u = choose((self.center,self.up,self.down,self.left,self.right))
-        img = u.cell.material.imgs[self.z][0]
+##        img = u.cell.material.imgs[self.z][0]
+        img, splash, footprint = get_img(u.cell, self.z)
         self.terrain.blit(img, cell.topleft)
+        x,y = self.get_cell_coord(cell.x,cell.y)
+        self.is_splash[x,y] = splash
+        self.is_footprint[x,y] = footprint
+
+    def get_cell_coord(self, x, y):
+        return int((x * self.nx) // self.W), int((y * self.ny) // self.H)
 
 
 def get_units_dict_from_list(units):
@@ -675,4 +717,17 @@ def get_units_dict_from_list(units):
     return relative_dict
 
 
-
+def get_img(cell, z):
+    splash = False
+    footprint = False
+    for obj in cell.objects:
+        if obj.name == "river":
+            img = obj.imgs_z_t[z][0]
+            splash = True
+            break
+    else:
+        img = cell.material.imgs[z][0]
+        n = cell.material.name.lower()
+        if "sand" in n or "snow" in n:
+            footprint = True
+    return img, splash, footprint

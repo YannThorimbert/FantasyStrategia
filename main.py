@@ -25,48 +25,54 @@ import gui.gui as gui
 from logic.unit import Unit
 from logic.races import Race
 from logic.game import Game
+import gui.theme as theme
 
+theme.set_theme()
 
 W,H = 1200, 700 #screen size
 app = thorpy.Application((W,H))
 
-map_initializer = maps.map0 #go in mymaps.py and PLAY with PARAMS !!!
+map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
 me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
-#BUG: infanterie attaque wizard. S'arretent...
 
-#chateaux, murailles: au niveau de l'implementation, sont des types d'unites! (static unit)
-#dans l'editeur, set_material fera en realite un set_height !
-#enlever l'altitude pour FS
+#BUG quand unite se croisent (statiquement ou en route les 2?)
+
+#quand bataille finie, utilisateur n'a qu'a presser enter. Sinon bataille dure toujours
+#combat depuis materiaux modifies par objets (riviere, bois, foret)
 #Faire les vrais maths de batailles dans Unit
 #GUI pendant combat puis recapitulatif fin de combat.
-#Battle : pas dans la neige et dans le sable ?
+
+#murailles: au niveau de l'implementation, sont des types d'unites! (static unit)
+#       Les chateaux sont juste des villages entoures de murailles
+#dans l'editeur, set_material fera en realite un set_height !
 
 #impots, incendie, viols ==> depend de ce qu'on cherche a avoir, de la popularite
-#aupres de ses soldats deja existants ou bien des futurs ressortissants des villes prises
+#       aupres de ses soldats deja existants ou bien des futurs ressortissants des villes prises
 #3 scores : score militaire, score moral, score économique
-#mettre nom de la race une bonne fois pour toutes, et fn de l'unite est deduit automatiquement du nom du type de l'unite
-#menus au style adapte
-#combat depuis materiaux modifies par objets (riviere, bois, foret)
+
 
 
 #<fast> : quality a bit lower if true, loading time a bit faster.
 #<use_beach_tiler>: quality much better if true, loading much slower. Req. Numpy!
 #<load_tilers> : Very slow but needed if you don't have Numpy but still want hi quality.
-##map_initializer.build_map(me, fast=False, use_beach_tiler=True, load_tilers=False)
-map_initializer.build_map(me, fast=False, use_beach_tiler=False, load_tilers=False)
+map_initializer.build_map(me, fast=False, use_beach_tiler=True, load_tilers=False)
+##map_initializer.build_map(me, fast=False, use_beach_tiler=False, load_tilers=False)
 
 
 humans = Race("Green team", "human", me, "green")
 humans.base_cost["grass"] = 2
 humans.base_cost["forest"] = 5
-humans.base_max_dist = 10
+humans.base_max_dist = 100
 humans["infantry"].cost["sand"] = 4
+humans.update_stats() #indicate that one race's stats must be recomputed
 
 humans2 = Race("White team", "human", me, "white")
 humans2.base_cost["forest"] = 10
 humans2["wizard"].cost["wood"] = 2.
+humans2.base_max_dist = 100
+humans2.update_stats()
 
 ##game.add_unit((15,5), humans["infantry"], 100, team=1)
 ##game.add_unit((14,6), humans["infantry"], 100, team=1) #14,6
@@ -78,12 +84,12 @@ humans2["wizard"].cost["wood"] = 2.
 ##game.add_unit((15,7), humans2["infantry"], 100, team=2)
 
 game.add_unit((10,6), humans["wizard"], 1, team=1)
-game.add_unit((11,6), humans2["infantry"], 100, team=2)
-game.add_unit((12,6), humans["infantry"], 100, team=1)
+game.add_unit((14,10), humans2["infantry"], 100, team=2)
+game.add_unit((15,10), humans["infantry"], 10, team=1)
 
 from logic.battle import Battle
 ##b = Battle(game, game.units, game.units[1])
-b = Battle(game, game.units[0:-1], game.units[0])
+b = Battle(game, game.units[1:3], game.units[0])
 b.fight()
 
 
@@ -134,6 +140,9 @@ reac_click = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, ui.rmb,{"button":2})
 me.e_box.add_reaction(reac_click)
 reac_motion = thorpy.Reaction(pygame.MOUSEMOTION, ui.mousemotion)
 me.e_box.add_reaction(reac_motion)
+
+
+print("0,0 ======= ", game.get_cell_at(0,0).h)
 
 me.set_zoom(level=0)
 m = thorpy.Menu(me.e_box,fps=me.fps)

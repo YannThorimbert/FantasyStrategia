@@ -239,7 +239,7 @@ def get_couple(h, couples):
         return couples[0]
     else:
         for couple in couples:
-            if couple.grass.hmax > h:
+            if couple.grass.hmax >= h:
                 return couple
     return couples[-1]
 

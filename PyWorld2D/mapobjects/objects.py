@@ -356,6 +356,8 @@ def add_random_road(lm, layer,
                     max_length):
     """Computes and draw a random road between two random villages."""
     villages = [o for o in layer.static_objects if "village" in o.name]
+    if not villages:
+        return
     v1 = random.choice(villages)
     c1 = find_free_next_to(lm, v1.cell.coord)
     # c1 = v1.cell

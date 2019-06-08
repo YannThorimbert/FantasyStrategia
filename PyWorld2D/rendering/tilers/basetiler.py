@@ -172,6 +172,7 @@ class BaseTiler(object):
         corners = self.get_corners(radius, background)
         anticorners = self.get_anticorners(radius, background)
         self.imgs["c"] = self.c
+##        self.imgs["s"] = self.c.copy()
         # 0th order (no corners)
         self.imgs["t"] = self.cut_side("top", radius, background)
         self.imgs["b"] = self.cut_side("bottom", radius, background)

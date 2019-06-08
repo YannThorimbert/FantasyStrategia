@@ -202,7 +202,11 @@ class LogicalMap(BaseGrid):
             else:
                 cell.type = "s"
             for zoom, gm in enumerate(self.graphical_maps):
-                gm[x,y].imgs = cell.couple.get_all_frames(zoom, cell.type)
+                if cell.type == "s":
+                    type = "c"
+                else:
+                    type = cell.type
+                gm[x,y].imgs = cell.couple.get_all_frames(zoom, type)
 
 
     def get_img_at_zoom(self, coord, zoom):

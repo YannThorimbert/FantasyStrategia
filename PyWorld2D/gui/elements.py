@@ -96,7 +96,8 @@ class CellInfo:
         self.em_mat_img.fit_children()
         self.em_mat_name = guip.get_text("")
         self.em_mat = thorpy.make_group([self.em_mat_img, self.em_mat_name])
-        self.em_elements = [self.em_title, thorpy.Line.make(100), self.em_mat, self.em_coord, self.em_altitude, self.em_name_rename]
+##        self.em_elements = [self.em_title, thorpy.Line.make(100), self.em_mat, self.em_coord, self.em_altitude, self.em_name_rename]
+        self.em_elements = [self.em_title, thorpy.Line.make(100), self.em_mat, self.em_coord, self.em_name_rename]
         self.em = thorpy.Box.make(self.em_elements)
         self.em.set_main_color((200,200,200,150))
         self.launched = False
@@ -137,7 +138,7 @@ class CellInfo:
         self.em_mat_name.set_text(text)
         thorpy.store(self.em_mat, mode="h")
         self.em_coord.set_text("Coordinates: "+str(cell.coord))
-        self.em_altitude.set_text("Altitude: "+str(round(cell.get_altitude()))+"m")
+##        self.em_altitude.set_text("Altitude: "+str(round(cell.get_altitude()))+"m")
         if not cell.name:
             cellname = "This location has no name"
         else:
@@ -213,10 +214,11 @@ class CellInfo:
         self.e_mat_img.set_image(new_img)
         thorpy.store(self.e_mat, mode="h")
         #
-        altitude = round(cell.get_altitude())
-        alt_text = str(altitude) + "m"
+##        altitude = round(cell.get_altitude())
+##        alt_text = str(altitude) + "m"
         coord_text = str(cell.coord) + "     "
-        self.e_coordalt.set_text(coord_text+alt_text)
+##        self.e_coordalt.set_text(coord_text+alt_text)
+        self.e_coordalt.set_text(coord_text)
         self.e_coordalt.recenter()
 
     def can_be_launched(self, cell, me):

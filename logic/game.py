@@ -23,5 +23,7 @@ class Game:
         return self.me.lm.get_cell_at(x,y)
 
     def get_unit_at(self, x, y):
-        return self.me.lm.get_cell_at(x,y).unit
+        cell = self.get_cell_at(x,y)
+        if cell:
+            return cell.unit
 

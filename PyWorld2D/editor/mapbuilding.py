@@ -6,6 +6,14 @@ import PyWorld2D.mapobjects.objects as objs
 from PyWorld2D.editor.mapeditor import MapEditor
 from PyWorld2D import PW_PATH
 
+terrain_small = {  "hdeepwater": 0.3, #deep water only below 0.4
+                    "hwater": 0.4, #normal water between 0.4 and 0.55
+                    "hshore": 0.5, #shore water between 0.55 and 0.6
+                    "hsand": 0.6, #and so on...
+                    "hgrass": 0.7,
+                    "hrock": 0.8,
+                    "hthinsnow": 0.9}
+
 terrain_normal = {  "hdeepwater": 0.4, #deep water only below 0.4
                     "hwater": 0.55, #normal water between 0.4 and 0.55
                     "hshore": 0.6, #shore water between 0.55 and 0.6
@@ -146,6 +154,7 @@ class MapInitializer:
         self._forest_map = None
         self._static_objs_layer = None
         self._objects = {}
+        self.heights = []
 
     def set_terrain_type(self, terrain_type, colorscale):
         for key in terrain_type:
@@ -397,6 +406,8 @@ class MapInitializer:
             loading_bar.center(element="screen")
             update_loading_bar(loading_bar, "Building height map...", 0., graphical_load)
         build_hmap(me)
+        for x,y,h in self.heights:
+            me.hmap[x][y] = h
         if graphical_load:
             img = thorpy.get_resized_image(me.original_img_hmap, screen.get_size(), max)
             screen.blit(img, (0,0))
@@ -411,6 +422,11 @@ class MapInitializer:
         update_loading_bar(loading_bar, "Building surfaces", 0.9, graphical_load)
         me.build_surfaces()
         me.build_gui_elements()
+
+    def h(self, x,y,h):
+        if isinstance(h,str):
+            h = getattr(self, "h"+h) - 0.001
+        self.heights.append((x,y,h))
 
 def update_loading_bar(loading_bar, text, progress, on):
     print(text)
