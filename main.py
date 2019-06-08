@@ -4,17 +4,12 @@ Yann Thorimbert - 2019
 yann.thorimbert@gmail.com
 """
 from __future__ import print_function, division
+
+import dependenciescheck
+
 import pygame
 import thorpy #for GUI and other graphics - see www.thorpy.org
 
-##import os
-##from shutil import copyfile
-##
-##for fn in os.listdir("sprites/"):
-##    if "warrior" in fn:
-##        copyfile("sprites/"+fn, "sprites/"+fn.replace("warrior","infantry"))
-##
-##exit()
 
 from PyWorld2D import PW_PATH
 from PyWorld2D.mapobjects.objects import MapObject
