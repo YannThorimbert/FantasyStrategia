@@ -5,7 +5,9 @@ yann.thorimbert@gmail.com
 """
 from __future__ import print_function, division
 
-import dependenciescheck
+import dependenciescheck as dc
+dc.check_console("thorpy")
+dc.check_gui("numpy")
 
 import pygame
 import thorpy #for GUI and other graphics - see www.thorpy.org
@@ -52,8 +54,8 @@ game = Game(me)
 #<fast> : quality a bit lower if true, loading time a bit faster.
 #<use_beach_tiler>: quality much better if true, loading much slower. Req. Numpy!
 #<load_tilers> : Very slow but needed if you don't have Numpy but still want hi quality.
-##map_initializer.build_map(me, fast=False, use_beach_tiler=True, load_tilers=False)
-map_initializer.build_map(me, fast=False, use_beach_tiler=False, load_tilers=False)
+map_initializer.build_map(me, fast=False, use_beach_tiler=True, load_tilers=False)
+##map_initializer.build_map(me, fast=False, use_beach_tiler=False, load_tilers=False)
 
 
 humans = Race("Green team", "human", me, "green")

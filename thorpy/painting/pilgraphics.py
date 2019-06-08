@@ -2,6 +2,8 @@
 By convention, all the functions return PIL images, unless the name of the
 function indicates that this is not the case.
 """
+##import dependenciescheck as dc
+##dc.check_gui("PIL")
 
 try:
     from PIL import Image, ImageFilter
