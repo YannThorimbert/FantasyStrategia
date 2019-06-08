@@ -19,7 +19,8 @@ TIME_AFTER_FINISH = 500
 BATTLE_DURATION = 1000
 DEFENSE_START_RUNNING = BATTLE_DURATION + TIME_AFTER_FINISH + 1 #for the moment, I deactivate this feature
 
-
+MAX_TARGETED_BY = 10
+MAX_TARGETED_BY2 = 6
 
 DFIGHT = 16
 K = 2.
@@ -183,9 +184,7 @@ class FightingUnit:
                 d = friend.pos - self.pos
                 D = d.length()
                 if 0 < D <= self.battle.cell_size:
-                    dunit = d.normalize()
-                    force = dunit
-##                    force = dunit / D
+                    force = d / D
                     self.pos -= K * force
 
     def draw_and_move_notarget(self, surface):
@@ -195,7 +194,8 @@ class FightingUnit:
                 self.dxdy = (0,0)
                 self.refresh_sprite_type()
             else:
-                self.vel = self.final_vel / 2.
+                delta = self.update_dest_end()
+##                self.vel = self.final_vel / 2.
         else:
             delta = self.update_dest_end()
             dl = delta.length()
@@ -204,7 +204,7 @@ class FightingUnit:
                 self.dxdy = (0,0)
                 self.refresh_sprite_type()
                 self.vel = 0.
-        frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
+        frame = (self.frame0 + self.battle.fight_frame_walk)%self.nframes
         frame += self.isprite
         img = self.unit.imgs_z_t[self.z][frame]
         if self.battle.blit_this_frame:
@@ -354,7 +354,7 @@ class Battle:
         text.center()
         text.blit()
         pygame.display.flip()
-        thorpy.interactive_pause(3.)
+##        thorpy.interactive_pause(3.)
         menu.play()
 
     def blit_deads(self):
@@ -414,6 +414,7 @@ class Battle:
         #
         self.f.sort(key=lambda x:x.rect.bottom) #peut etre pas besoin selon systeme de cible
         extermination = len(self.f1) == 0 or len(self.f2) == 0
+
         if extermination or self.fight_t > BATTLE_DURATION:
             if self.finished == 0:
                 self.finished = self.fight_t
@@ -424,6 +425,7 @@ class Battle:
             print(self.fight_t)
 
     def finish_battle(self):
+        print("FINISH BATTLE")
         for u in self.f:
             u.target = None
             u.update_dest_end()
@@ -559,6 +561,24 @@ class Battle:
                 u.vel = u.final_vel / 4.
         self.f.sort(key=lambda x:x.rect.bottom)
 
+##    def update_targets(self):
+##        for u in self.f:
+##            u.targeted_by = []
+##            u.target = None
+##            if len(u.opponents) < 10 and not u.final_stage:
+##                u.cannot_see = random.random() * 0.2
+##                u.final_stage = True
+##        for u in self.f:
+##            ennemy = u.get_nearest_ennemy()
+##            if ennemy:
+##                if len(ennemy.targeted_by) < MAX_TARGETED_BY:
+##                    u.set_target(ennemy)
+##                else:
+##                    ennemy = u.get_busyless_ennemy()
+##                    if ennemy:
+##                        if len(ennemy.targeted_by) < MAX_TARGETED_BY2:
+##                            u.set_target(ennemy)
+
     def update_targets(self):
         for u in self.f:
             u.targeted_by = []
@@ -569,13 +589,7 @@ class Battle:
         for u in self.f:
             ennemy = u.get_nearest_ennemy()
             if ennemy:
-                if len(ennemy.targeted_by) < 10:
-                    u.set_target(ennemy)
-                else:
-                    ennemy = u.get_busyless_ennemy()
-                    if ennemy:
-                        if len(ennemy.targeted_by) < 6:
-                            u.set_target(ennemy)
+                u.set_target(ennemy)
 
 
 

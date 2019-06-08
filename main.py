@@ -30,7 +30,7 @@ from logic.game import Game
 W,H = 1200, 700 #screen size
 app = thorpy.Application((W,H))
 
-map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
+map_initializer = maps.map0 #go in mymaps.py and PLAY with PARAMS !!!
 me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
@@ -68,14 +68,23 @@ humans2 = Race("White team", "human", me, "white")
 humans2.base_cost["forest"] = 10
 humans2["wizard"].cost["wood"] = 2.
 
-game.add_unit((15,5), humans["infantry"], 100, team=1)
-game.add_unit((14,6), humans["infantry"], 100, team=1) #14,6
-game.add_unit((25,5), humans["infantry"], 100, team=1)
-game.add_unit((16,6), humans["wizard"], 1, team=1)
+##game.add_unit((15,5), humans["infantry"], 100, team=1)
+##game.add_unit((14,6), humans["infantry"], 100, team=1) #14,6
+##game.add_unit((25,5), humans["infantry"], 100, team=1)
+##game.add_unit((16,6), humans["wizard"], 1, team=1)
+##
+##
+##game.add_unit((20,8), humans2["infantry"], 100, team=2)
+##game.add_unit((15,7), humans2["infantry"], 100, team=2)
 
+game.add_unit((10,6), humans["wizard"], 1, team=1)
+game.add_unit((11,6), humans2["infantry"], 100, team=2)
+game.add_unit((12,6), humans["infantry"], 100, team=1)
 
-game.add_unit((20,8), humans2["infantry"], 100, team=2)
-game.add_unit((15,7), humans2["infantry"], 100, team=2)
+from logic.battle import Battle
+##b = Battle(game, game.units, game.units[1])
+b = Battle(game, game.units[0:-1], game.units[0])
+b.fight()
 
 
 ##game.get_cell_at(14,15).set_name("My left cell")
