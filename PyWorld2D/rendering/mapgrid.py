@@ -13,6 +13,7 @@ GRASS = 0
 ##from thorpy import Monitor
 ##monitor = Monitor()
 
+SUBMAP_FACTOR = 200
 
 class LogicalCell:
 
@@ -249,13 +250,13 @@ class LogicalMap(BaseGrid):
     def build_surfaces(self):
         for gm in self.graphical_maps:
             print("     Building graphicalmap for size ", gm.cell_size)
-            gm.generate_submaps_parameters(factor=200)
+            gm.generate_submaps_parameters(factor=SUBMAP_FACTOR)
             gm.build_surfaces(self.colorkey)
 
     def build_surfaces_fast(self):
         """Not that fast..."""
         ref = self.graphical_maps[0]
-        ref.generate_submaps_parameters(factor=200)
+        ref.generate_submaps_parameters(factor=SUBMAP_FACTOR)
         ref.build_surfaces(self.colorkey)
         if len(self.graphical_maps) > 1:
             for gm in self.graphical_maps[1:]:
