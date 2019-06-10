@@ -37,7 +37,8 @@ me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
 
-#BUG quand unite se croisent (statiquement ou en route les 2?)
+#BUG quand unite se croisent (en route les 2)
+# ==> simplement interdire nouveau deplacement tant que unite bouge... (tout via gui)
 
 #quand bataille finie, utilisateur n'a qu'a presser enter. Sinon bataille dure toujours
 #combat depuis materiaux modifies par objets (riviere, bois, foret)
@@ -50,7 +51,7 @@ game = Game(me)
 
 #impots, incendie, viols ==> depend de ce qu'on cherche a avoir, de la popularite
 #       aupres de ses soldats deja existants ou bien des futurs ressortissants des villes prises
-#3 scores : score militaire, score moral, score économique
+#3 scores : score militaire, score moral, score Ã©conomique
 
 
 
@@ -64,14 +65,14 @@ map_initializer.build_map(me, fast=False, use_beach_tiler=True, load_tilers=Fals
 humans = Race("Green team", "human", me, "green")
 humans.base_cost["grass"] = 2
 humans.base_cost["forest"] = 5
-humans.base_max_dist = 100
+##humans.base_max_dist = 100
 humans["infantry"].cost["sand"] = 4
 humans.update_stats() #indicate that one race's stats must be recomputed
 
 humans2 = Race("White team", "human", me, "white")
 humans2.base_cost["forest"] = 10
 humans2["wizard"].cost["wood"] = 2.
-humans2.base_max_dist = 100
+##humans2.base_max_dist = 100
 humans2.update_stats()
 
 ##game.add_unit((15,5), humans["infantry"], 100, team=1)

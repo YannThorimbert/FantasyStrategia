@@ -7,6 +7,7 @@ from PyWorld2D.thornoise.purepython.noisegen import colorscale_plains, colorscal
 #For a description of each parameter, please go the file PyWorld2D/editor/mapbuilding.py
 #and have a look at the MapInitializer constructor
 
+# ##############################################################################
 map0 = MapInitializer("Map0")
 map0.chunk = (1400,0)
 map0.world_size = (16,16)
@@ -20,24 +21,27 @@ map0.max_number_of_roads = 1
 ##    for y in range(10):
 ##        map0.h(x,y,"sand")
 
+# ##############################################################################
 map1 = MapInitializer("First demo map")
 map1.chunk = (0,0)
 map1.reverse_hmap = True
 map1.world_size = (32,32)
-##map1.set_terrain_type(terrain_plains, colorscale_plains)
-map1.set_terrain_type(terrain_small, colorscale_normal)
+map1.set_terrain_type(terrain_plains, colorscale_plains)
+##map1.set_terrain_type(terrain_small, colorscale_normal)
 map1.max_number_of_roads = 1
 map1.zoom_cell_sizes = [32,16]
 ##map1.max_river_length = 100
 map1.add_object("oak", 16, 5)
 map1.add_object("wood", 18, 7)
 
+# ##############################################################################
 map2 = MapInitializer("Second demo map")
 map2.world_size = (256, 128) #with big maps it is better to use lower persistance
 map2.persistance = 1.3 #The higher, the bigger are the "continents"
 map2.palm_homogeneity = 0.9
 map2.chunk = (12345,0)
 
+# ##############################################################################
 map3 = MapInitializer("Third demo map")
 map3.chunk = (6666,6666)
 map3.world_size = (128,128)
