@@ -22,13 +22,13 @@ terrain_normal = {  "hdeepwater": 0.4, #deep water only below 0.4
                     "hrock": 0.83,
                     "hthinsnow": 0.9}
 
-terrain_plains = {  "hdeepwater": 0.2, #deep water only below 0.4
-                    "hwater": 0.35, #normal water between 0.4 and 0.55
-                    "hshore": 0.4, #shore water between 0.55 and 0.6
-                    "hsand": 0.42, #and so on...
-                    "hgrass": 0.6,
-                    "hrock": 0.84,
-                    "hthinsnow": 0.88}
+terrain_plains = {  "hdeepwater": 0.2, #deep water only below 0.2
+                    "hwater": 0.3, #normal water between 0.2 and 0.35
+                    "hshore": 0.4, #shore water between 0.3 and 0.4
+                    "hsand": 0.48, #and so on...
+                    "hgrass": 0.68,
+                    "hrock": 0.78,
+                    "hthinsnow": 0.9}
 
 terrain_flat = {    "hdeepwater": 0.2, #deep water only below 0.4
                     "hwater": 0.35, #normal water between 0.4 and 0.55
