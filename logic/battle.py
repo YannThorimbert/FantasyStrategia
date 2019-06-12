@@ -59,7 +59,7 @@ class FightingUnit:
         self.opponents = None
         self.friends = None
         self.targeted_by = []
-        self.next_to_target = False
+        # self.next_to_target = False
         self.time_frome_last_direction_change = 1000
         self.cannot_see = random.random()
         self.final_stage = False
@@ -231,15 +231,15 @@ class FightingUnit:
         delta = target_pos - self_pos
         self.refresh_dxdy(delta.x, delta.y)
         ########################################################################
-        self.next_to_target = False
+        # self.next_to_target = False
         near_target = abs(delta.x) < DFIGHT and abs(delta.y) < DFIGHT
         if near_target: #fighting
             if self.battle.game.hit_sounds and random.random() < P_HIT_SOUND:
                 random.choice(self.battle.game.hit_sounds).play()
-            self.next_to_target = True
-            if not(self.target.target is self):
-                self.find_pos_near_target()
+            # self.next_to_target = True
             if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
+                if not(self.target.target is self):
+                    self.find_pos_near_target()
                 self.direction = DELTA_TO_KEY_A[self.dxdy]
                 self.refresh_sprite_type()
                 self.time_frome_last_direction_change = 0
