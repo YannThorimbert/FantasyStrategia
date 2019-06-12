@@ -1,4 +1,17 @@
-import random
+import os, random, thorpy
+
+
+
+def get_sounds(root, sc):
+    sounds = []
+    for fn in os.listdir(root):
+        if fn.endswith(".wav") or fn.endswith(".mp3"):
+            sound, fake = sc.add(os.path.join(root,fn))
+            if not fake:
+                sounds.append(sound)
+    return sounds
+
+
 
 class Game:
 
@@ -7,6 +20,15 @@ class Game:
         self.units = []
         self.objects = []
         self.t = 0
+        #
+        self.sounds = thorpy.SoundCollection()
+        self.death_sounds = get_sounds("sounds/death/", self.sounds)
+        self.hit_sounds = get_sounds("sounds/hits/", self.sounds)
+        self.walk_sounds = get_sounds("sounds/footsteps/", self.sounds)
+        self.outdoor_sound = self.sounds.add("sounds/atmosphere/nature.wav")[0]
+        for s in self.death_sounds:
+            s.set_volume(0.5)
+
 
 
     def add_unit(self, coord, unit, quantity, team):
@@ -26,4 +48,3 @@ class Game:
         cell = self.get_cell_at(x,y)
         if cell:
             return cell.unit
-

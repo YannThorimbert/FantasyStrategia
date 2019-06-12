@@ -30,7 +30,8 @@ map1.set_terrain_type(terrain_plains, colorscale_plains)
 ##map1.set_terrain_type(terrain_small, colorscale_normal)
 map1.max_number_of_roads = 1
 map1.zoom_cell_sizes = [32,16]
-map1.max_number_of_rivers = 3
+map1.max_number_of_rivers = 1
+map1.seed_static_objects = 110
 map1.add_object("oak", 16, 5)
 map1.add_object("wood", 18, 7)
 

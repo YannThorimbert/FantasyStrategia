@@ -16,8 +16,9 @@ class SoundCollection:
         pygame.mixer.pre_init(44100, 16, 2, 4096) #frequency, size, channels, buffersize
         pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=512)
 
-    def add(self,filename,name):
+    def add(self,filename,name=None):
         pygame.mixer.init()
+        fake = False
         try:
             sound = pygame.mixer.Sound(filename)
             sound.play()
@@ -25,8 +26,11 @@ class SoundCollection:
             print("Loaded", filename, name)
         except:
             sound = FakeSound()
+            fake = True
             print("Couldn't load", filename, name)
-        setattr(self, name, sound)
+        if name:
+            setattr(self, name, sound)
+        return sound, fake
 
 
 def play_music(name, n=0):

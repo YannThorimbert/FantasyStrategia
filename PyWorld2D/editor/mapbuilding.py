@@ -1,10 +1,11 @@
-import pygame, thorpy
+import random, pygame, thorpy
 import PyWorld2D.thornoise.purepython.noisegen as ng
 import PyWorld2D.rendering.tilers.tilemanager as tm
 from PyWorld2D.mapobjects.objects import MapObject
 import PyWorld2D.mapobjects.objects as objs
 from PyWorld2D.editor.mapeditor import MapEditor
 from PyWorld2D import PW_PATH
+
 
 terrain_small = {  "hdeepwater": 0.3, #deep water only below 0.4
                     "hwater": 0.4, #normal water between 0.4 and 0.55
@@ -155,6 +156,7 @@ class MapInitializer:
         self._static_objs_layer = None
         self._objects = {}
         self.heights = []
+        self.seed_static_objects = self.chunk
 
     def set_terrain_type(self, terrain_type, colorscale):
         for key in terrain_type:
@@ -368,6 +370,7 @@ class MapInitializer:
         #Objects allowed
         possible_objects=[]
         river_img = me.get_material_image("Shallow water")
+        random.seed(self.seed_static_objects)
         for i in range(self.max_number_of_rivers): #try to add 5 rivers
             objs.add_random_river(me, me.lm, river_img, costs_materials, costs_objects,
                                     possible_materials, possible_objects,

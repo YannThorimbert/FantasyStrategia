@@ -10,11 +10,11 @@ CURSOR_COLOR_SELECT = (255,0,0)
 CURSOR_COLOR_NORMAL = (255,255,0)
 
 #titles
-TFS = thorpy.style.TITLE_FONT_SIZE
+TFS = thorpy.style.TITLE_FONT_SIZE + 4
 TFC = thorpy.style.TITLE_FONT_COLOR
 
 #normal
-NFS = thorpy.style.FONT_SIZE
+NFS = thorpy.style.FONT_SIZE + 4
 NFC = thorpy.style.FONT_COLOR
 
 #small

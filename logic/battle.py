@@ -23,6 +23,9 @@ DEFENSE_START_RUNNING = BATTLE_DURATION + TIME_AFTER_FINISH + 1 #for the moment,
 MAX_TARGETED_BY = 10
 MAX_TARGETED_BY2 = 6
 
+P_DEAD_SOUND = 0.1
+P_HIT_SOUND = 0.005
+
 DFIGHT = 16
 K = 2.
 
@@ -231,6 +234,8 @@ class FightingUnit:
         self.next_to_target = False
         near_target = abs(delta.x) < DFIGHT and abs(delta.y) < DFIGHT
         if near_target: #fighting
+            if self.battle.game.hit_sounds and random.random() < P_HIT_SOUND:
+                random.choice(self.battle.game.hit_sounds).play()
             self.next_to_target = True
             if not(self.target.target is self):
                 self.find_pos_near_target()
@@ -345,6 +350,8 @@ class Battle:
         self.is_footprint = None
         self.nx = None
         self.ny = None
+        self.walk_sounds = []
+        self.screams = []
 
     def fight(self):
         self.prepare_battle()
@@ -382,7 +389,32 @@ class Battle:
         text.blit()
         pygame.display.flip()
 ##        thorpy.interactive_pause(3.)
+        #######################################################################
+        self.game.outdoor_sound.stop()
+        self.add_walk_sounds()
         menu.play()
+        for s in self.walk_sounds:
+            s.stop()
+        self.game.outdoor_sound.play(-1)
+
+
+
+    def add_walk_sounds(self):
+        counter = 0
+        max_n = min(10, len(self.f)//7 + 1)
+        for s in self.game.walk_sounds:
+            if counter < max_n:
+                pygame.time.wait(10)
+                s.play(-1)
+                self.walk_sounds.append(s)
+                counter += 1
+
+    def refresh_walk_sounds(self):
+        max_n = min(10, len(self.f)//7 + 1)
+        while len(self.walk_sounds) > max_n:
+            s = self.walk_sounds.pop()
+            s.stop()
+
 
     def blit_deads(self):
          for u in self.deads:
@@ -406,6 +438,8 @@ class Battle:
     def refresh_deads(self):
         for u in self.to_remove:
             if not u.dead:
+                if self.game.death_sounds and random.random() < P_DEAD_SOUND:
+                    random.choice(self.game.death_sounds).play()
                 u.dead = True
                 if u.target:
                     u.target.targeted_by.remove(u)
@@ -435,6 +469,7 @@ class Battle:
             self.splash = self.splashes[self.fight_frame_walk%2]
         if self.fight_t % SLOW_FIGHT_FRAME2 == 0:
             self.fight_frame_attack += 1
+            self.refresh_walk_sounds()
         if self.fight_t % self.mod_display == 0:
             self.blit_this_frame = True
         else:
@@ -458,6 +493,7 @@ class Battle:
             u.target = None
             u.update_dest_end()
             u.vel = u.final_vel
+
 
     def get_nxny(self, side):
         W,H = self.surface.get_size()

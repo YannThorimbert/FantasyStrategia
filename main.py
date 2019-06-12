@@ -37,13 +37,20 @@ me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
 
-#BUG quand unite se croisent (en route les 2)
-# ==> simplement interdire nouveau deplacement tant que unite bouge... (tout via gui)
+
+#a tout prix empecher les tremblements pendant bataille...
+
+#alertes textes + visibles et ajouter son deny
+
+#sons: cris de guerre.
 
 #quand bataille finie, utilisateur n'a qu'a presser enter. Sinon bataille dure toujours
-#combat depuis materiaux modifies par objets (riviere, bois, foret)
 #Faire les vrais maths de batailles dans Unit
 #GUI pendant combat puis recapitulatif fin de combat.
+
+
+#combat depuis materiaux modifies par objets (pont, foret, villages, PAS murailles (archers derriere))
+
 
 #murailles: au niveau de l'implementation, sont des types d'unites! (static unit)
 #       Les chateaux sont juste des villages entoures de murailles
@@ -65,14 +72,14 @@ map_initializer.build_map(me, fast=False, use_beach_tiler=True, load_tilers=Fals
 humans = Race("Green team", "human", me, "green")
 humans.base_cost["grass"] = 2
 humans.base_cost["forest"] = 5
-##humans.base_max_dist = 100
+humans.base_max_dist = 10
 humans["infantry"].cost["sand"] = 4
 humans.update_stats() #indicate that one race's stats must be recomputed
 
 humans2 = Race("White team", "human", me, "white")
 humans2.base_cost["forest"] = 10
 humans2["wizard"].cost["wood"] = 2.
-##humans2.base_max_dist = 100
+humans2.base_max_dist = 10
 humans2.update_stats()
 
 ##game.add_unit((15,5), humans["infantry"], 100, team=1)
@@ -86,10 +93,9 @@ humans2.update_stats()
 
 game.add_unit((10,6), humans["wizard"], 1, team=1)
 game.add_unit((14,10), humans2["infantry"], 100, team=2)
-game.add_unit((15,10), humans["infantry"], 10, team=1)
+game.add_unit((15,10), humans["infantry"], 100, team=1)
 
 from logic.battle import Battle
-##b = Battle(game, game.units, game.units[1])
 b = Battle(game, game.units[1:3], game.units[0])
 b.fight()
 
@@ -147,6 +153,7 @@ print("0,0 ======= ", game.get_cell_at(0,0).h)
 
 me.set_zoom(level=0)
 m = thorpy.Menu(me.e_box,fps=me.fps)
+game.outdoor_sound.play(-1)
 m.play()
 
 app.quit()

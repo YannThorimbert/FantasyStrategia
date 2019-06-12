@@ -31,6 +31,9 @@ class Gui:
         self.dest_omega = 2. * math.pi / self.dest_period
         #
         self.e_cant_move = guip.get_highlight_text("Can't go there")
+        self.e_cant_move_another = guip.get_highlight_text("Another unit is already going there")
+        #
+        self.moving_units = []
 
     def get_destinations(self, cell):
         destinations = []
@@ -91,15 +94,28 @@ class Gui:
             x,y = path[-1]
             friend = self.game.get_unit_at(x,y)
             print("     friend:",friend)
-            if friend: #the user wants to fusion units
-                #check that same type and sum of quantities does not exceed max_quantity
-                ok = False
-                if ok:
-                    self.selected_unit.move_to_cell_animated(path[1:])
+            #control that the path is not crossing another moving unit's path..
+            can_move = True
+            for u in self.moving_units:
+                if not(u is self.selected_unit):
+                    for planned_coord in u.anim_path:
+                        if planned_coord in path:
+                            can_move = False
+                            break
+            if can_move:
+                if friend: #the user wants to fusion units
+                    #check that same type and sum of quantities does not exceed max_quantity
+                    ok = False
+                    if ok:
+                        self.selected_unit.move_to_cell_animated(path[1:])
+                        self.moving_units.append(self.selected_unit)
+                    else:
+                        self.add_alert(self.e_cant_move)
                 else:
-                    self.add_alert(self.e_cant_move)
+                    self.selected_unit.move_to_cell_animated(path[1:])
+                    self.moving_units.append(self.selected_unit)
             else:
-                self.selected_unit.move_to_cell_animated(path[1:])
+                self.add_alert(self.e_cant_move_another)
             # self.selected_unit.move_to_cell(cell)
             self.selected_unit = None
 
