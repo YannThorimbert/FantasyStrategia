@@ -37,12 +37,11 @@ me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
 
-
-#a tout prix empecher les tremblements pendant bataille...
-
+#sons de marceh fin de bataille
 #alertes textes + visibles et ajouter son deny
+#son de marche dans la carte
+#sons: cris de guerre. SoundSnap, acheter quand meme ?
 
-#sons: cris de guerre.
 
 #quand bataille finie, utilisateur n'a qu'a presser enter. Sinon bataille dure toujours
 #Faire les vrais maths de batailles dans Unit
