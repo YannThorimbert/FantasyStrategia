@@ -51,8 +51,7 @@ class Unit(MapObject):
         #
         self.walk_img = {}
         self.set_frame_refresh_type(2) #type fast
-        # self.vel = 0.07
-        self.vel = 0.01
+        self.vel = 0.07
         self.current_isprite = 0
         self.team = None
         self.attack_range = None

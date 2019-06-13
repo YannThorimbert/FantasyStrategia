@@ -16,15 +16,17 @@ SLOW_FIGHT_FRAME1 = 4
 SLOW_FIGHT_FRAME2 = 12
 STOP_TARGET_DIST_FACTOR = 0.2
 NFRAMES_DIRECTIONS = 16
-TIME_AFTER_FINISH = 500
+TIME_AFTER_FINISH = 1000
 BATTLE_DURATION = 1000
 DEFENSE_START_RUNNING = BATTLE_DURATION + TIME_AFTER_FINISH + 1 #for the moment, I deactivate this feature
 
 MAX_TARGETED_BY = 10
 MAX_TARGETED_BY2 = 6
 
-P_DEAD_SOUND = 0.1
-P_HIT_SOUND = 0.005
+SUMMARY_LIFEBAR_SIZE = (150,25)
+
+P_DEAD_SOUND = 0.5
+P_HIT_SOUND = 0.04
 
 DFIGHT = 16
 K = 2.
@@ -197,10 +199,11 @@ class FightingUnit:
                 self.direction = "idle"
                 self.dxdy = (0,0)
                 self.refresh_sprite_type()
+                self.vel = 0.
+                frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
             else:
                 delta = self.update_dest_end()
-##                self.vel = self.final_vel / 2.
-            frame = (self.frame0 + self.battle.fight_frame_walk)%self.nframes
+                frame = (self.frame0 + self.battle.fight_frame_walk)%self.nframes
         else:
             delta = self.update_dest_end()
             dl = delta.length()
@@ -209,12 +212,14 @@ class FightingUnit:
                 self.dxdy = (0,0)
                 self.refresh_sprite_type()
                 self.vel = 0.
-            frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
-        frame += self.isprite
-        img = self.unit.imgs_z_t[self.z][frame]
-        self.blit(img)
-##        if self.battle.blit_this_frame:
-##            surface.blit(img, self.rect)
+                frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
+            else:
+                frame = (self.frame0 + self.battle.fight_frame_walk)%self.nframes
+        #
+        if self.battle.blit_this_frame:
+            frame += self.isprite
+            img = self.unit.imgs_z_t[self.z][frame]
+            self.blit(img)
         self.pos.x += self.vel*self.dxdy[0]
         self.pos.y += self.vel*self.dxdy[1]
         self.rect.center = self.pos
@@ -352,11 +357,22 @@ class Battle:
         self.ny = None
         self.walk_sounds = []
         self.screams = []
+        self.text_finish = thorpy.Element("Press enter to finish battle")
+        self.text_finish.set_font_size(70)
+        self.text_finish.set_main_color((255,255,255,100))
+        self.text_finish.scale_to_title()
+        self.text_finish.center()
+        self.before_f1 = None
+        self.before_f2 = None
+
+    def press_enter(self):
+        if self.finished:
+            self.fight_t = 100000000000
 
     def fight(self):
         self.prepare_battle()
         self.show()
-
+        self.show_summary()
 
     def accelerate(self):
         self.mod_display = 10
@@ -382,6 +398,11 @@ class Battle:
                                         self.slow,
                                         {"key":pygame.K_SPACE})
         bckgr.add_reaction(reac)
+        reac = thorpy.ConstantReaction(pygame.KEYUP,
+                                        self.press_enter,
+                                        {"key":pygame.K_RETURN})
+        bckgr.add_reaction(reac)
+        #
         menu = thorpy.Menu(bckgr, fps=60)
         self.update_battle()
         text = thorpy.make_text("Battle starts", 70, (0,0,0))
@@ -404,13 +425,19 @@ class Battle:
         max_n = min(10, len(self.f)//7 + 1)
         for s in self.game.walk_sounds:
             if counter < max_n:
-                pygame.time.wait(10)
+                pygame.time.wait(random.randint(10,100))
                 s.play(-1)
                 self.walk_sounds.append(s)
                 counter += 1
 
     def refresh_walk_sounds(self):
-        max_n = min(10, len(self.f)//7 + 1)
+        L = len([u for u in self.f if u.vel > 0.])
+        if L == 0:
+            for s in self.walk_sounds:
+                s.stop()
+            self.walk_sounds = []
+            return
+        max_n = min(10, L//7 + 1)
         while len(self.walk_sounds) > max_n:
             s = self.walk_sounds.pop()
             s.stop()
@@ -459,6 +486,8 @@ class Battle:
         for u in self.f:
             u.draw_and_move()
         if self.blit_this_frame:
+            if self.finished:
+                self.text_finish.blit()
             pygame.display.flip()
         #
         self.refresh_deads()
@@ -628,24 +657,10 @@ class Battle:
                 u.start_to_run = DEFENSE_START_RUNNING
                 u.vel = u.final_vel / 2.
         self.f.sort(key=lambda x:x.rect.bottom)
+        #
+##        self.before_f1 = len(self.f1), self.f1[0].unit
+##        self.before_f2 = len(self.f2), self.f2[0].unit
 
-##    def update_targets(self):
-##        for u in self.f:
-##            u.targeted_by = []
-##            u.target = None
-##            if len(u.opponents) < 10 and not u.final_stage:
-##                u.cannot_see = random.random() * 0.2
-##                u.final_stage = True
-##        for u in self.f:
-##            ennemy = u.get_nearest_ennemy()
-##            if ennemy:
-##                if len(ennemy.targeted_by) < MAX_TARGETED_BY:
-##                    u.set_target(ennemy)
-##                else:
-##                    ennemy = u.get_busyless_ennemy()
-##                    if ennemy:
-##                        if len(ennemy.targeted_by) < MAX_TARGETED_BY2:
-##                            u.set_target(ennemy)
 
     def update_targets(self):
         for u in self.f:
@@ -718,6 +733,49 @@ class Battle:
 
     def get_cell_coord(self, x, y):
         return int((x * self.nx) // self.W), int((y * self.ny) // self.H)
+
+    def refresh_unit_quantities(self, side):
+        after = {}
+        uside = getattr(self, side)
+        for u in self.deads:
+            if u.unit is uside:
+                uside.quantity -= 1
+
+
+    def show_summary(self):
+        #
+        e1 = thorpy.make_text("Battle summary", 36)
+        e2 = thorpy.Line(2*e1.get_rect().width // 3, "h")
+        els = {}
+        names = {"left":"west", "right":"east", "up":"north", "down":"south", "center":"center"}
+        for side in ("left", "center", "right", "up", "down"):
+            u = getattr(self, side)
+            if u:
+                engaged = thorpy.LifeBar("Before battle: "+str(u.quantity),
+                                            size=SUMMARY_LIFEBAR_SIZE)
+                before = u.quantity
+                self.refresh_unit_quantities(side)
+                dead = thorpy.LifeBar("After battle: "+str(u.quantity),
+                                        size=SUMMARY_LIFEBAR_SIZE)
+                dead.set_life(u.quantity/before)
+                #
+                side = names[side]
+                eside = thorpy.make_text(side.capitalize()+" unit")
+                line = thorpy.Line(eside.get_rect().width, "h")
+                race = thorpy.make_text(u.race.name)
+                utype = thorpy.make_text(u.name.capitalize())
+                race_type = thorpy.make_group([race, utype])
+                els[side] = thorpy.Box([eside,line,race_type,engaged,dead])
+            else:
+                side = names[side]
+                els[side] = thorpy.Box([thorpy.make_text("No "+side+" unit")])
+        group_center = thorpy.make_group([els["west"], els["center"], els["east"]])
+        e = thorpy.make_ok_box([e1,e2,els["north"],group_center,els["south"]])
+        e.set_main_color((255,255,255,100))
+        e.center()
+        b = self.game.me.draw()
+        pygame.display.flip()
+        thorpy.launch_blocking(e)
 
 
 def get_units_dict_from_list(units):

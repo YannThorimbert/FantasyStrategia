@@ -22,6 +22,7 @@ class Game:
         self.t = 0
         #
         self.sounds = thorpy.SoundCollection()
+        self.deny_sound = self.sounds.add("sounds/ui/deny.wav")[0]
         self.death_sounds = get_sounds("sounds/death/", self.sounds)
         self.hit_sounds = get_sounds("sounds/hits/", self.sounds)
         self.walk_sounds = get_sounds("sounds/footsteps/", self.sounds)

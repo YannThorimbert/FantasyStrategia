@@ -37,15 +37,11 @@ me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
 
-#sons de marceh fin de bataille
-#alertes textes + visibles et ajouter son deny
 #son de marche dans la carte
 #sons: cris de guerre. SoundSnap, acheter quand meme ?
 
-
-#quand bataille finie, utilisateur n'a qu'a presser enter. Sinon bataille dure toujours
 #Faire les vrais maths de batailles dans Unit
-#GUI pendant combat puis recapitulatif fin de combat.
+#GUI pendant combat puis recapitulatif fin de combat. LifeBar pour duree combat
 
 
 #combat depuis materiaux modifies par objets (pont, foret, villages, PAS murailles (archers derriere))
@@ -57,7 +53,7 @@ game = Game(me)
 
 #impots, incendie, viols ==> depend de ce qu'on cherche a avoir, de la popularite
 #       aupres de ses soldats deja existants ou bien des futurs ressortissants des villes prises
-#3 scores : score militaire, score moral, score Ã©conomique
+#3 scores : score militaire, score moral, score ÃƒÂ©conomique
 
 
 
@@ -90,12 +86,14 @@ humans2.update_stats()
 ##game.add_unit((20,8), humans2["infantry"], 100, team=2)
 ##game.add_unit((15,7), humans2["infantry"], 100, team=2)
 
-game.add_unit((10,6), humans["wizard"], 1, team=1)
-game.add_unit((14,10), humans2["infantry"], 100, team=2)
-game.add_unit((15,10), humans["infantry"], 100, team=1)
+game.add_unit((14,9), humans["infantry"], 10, team=1)
+game.add_unit((14,10), humans2["infantry"], 40, team=2)
+game.add_unit((15,10), humans["infantry"], 10, team=1)
+game.add_unit((13,10), humans["infantry"], 10, team=1)
+game.add_unit((14,11), humans["infantry"], 10, team=1)
 
 from logic.battle import Battle
-b = Battle(game, game.units[1:3], game.units[0])
+b = Battle(game, game.units, game.units[0])
 b.fight()
 
 
@@ -195,5 +193,3 @@ app.quit()
 #couples additionnels (ex: shallow_water with all the others...) ajoute au moment de la creation de riviere ?
 #comment gerer brulage d'arbres ? Si ca doit changer l'architecture, y penser maintenant...
 ### ==> reconstruire localement le layer concerne
-#quand res + grande, nb de couples peut augmenter! ==> automatiser sur la base des materiaux existants
-#info sur material/unit quand on click dessus dans cell/unit_info.em

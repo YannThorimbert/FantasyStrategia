@@ -111,11 +111,13 @@ class Gui:
                         self.moving_units.append(self.selected_unit)
                     else:
                         self.add_alert(self.e_cant_move)
+                        self.game.deny_sound.play()
                 else:
                     self.selected_unit.move_to_cell_animated(path[1:])
                     self.moving_units.append(self.selected_unit)
             else:
                 self.add_alert(self.e_cant_move_another)
+                self.game.deny_sound.play()
             # self.selected_unit.move_to_cell(cell)
             self.selected_unit = None
 
