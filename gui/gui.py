@@ -83,6 +83,20 @@ class Gui:
     def add_alert(self, e):
         self.me.ap.add_alert(e, guip.DELAY_HELP * self.me.fps)
 
+    def go_to_cell(self, u, path):
+        u.move_to_cell_animated(path)
+        self.moving_units.append(u)
+        self.game.walk_sounds[0].play(-1)
+
+    def refresh_moving_units(self):
+        to_remove = []
+        for u in self.moving_units:
+            if not u.anim_path:
+                to_remove.append(u)
+        for u in to_remove:
+            self.moving_units.remove(u)
+            self.game.walk_sounds[0].stop()
+
 
     def treat_click_destination(self, cell):
         rect = self.me.cam.get_rect_at_coord(cell.coord)
@@ -107,14 +121,12 @@ class Gui:
                     #check that same type and sum of quantities does not exceed max_quantity
                     ok = False
                     if ok:
-                        self.selected_unit.move_to_cell_animated(path[1:])
-                        self.moving_units.append(self.selected_unit)
+                        self.go_to_cell(self.selected_unit, path[1:])
                     else:
                         self.add_alert(self.e_cant_move)
                         self.game.deny_sound.play()
                 else:
-                    self.selected_unit.move_to_cell_animated(path[1:])
-                    self.moving_units.append(self.selected_unit)
+                    self.go_to_cell(self.selected_unit, path[1:])
             else:
                 self.add_alert(self.e_cant_move_another)
                 self.game.deny_sound.play()
@@ -202,6 +214,7 @@ class Gui:
         self.surface.blit(img, rect.topleft)
 
     def draw_before_objects(self, s):
+        self.refresh_moving_units()
         if self.unit_under_cursor:
             self.draw_highlight(self.unit_under_cursor, "yellow", s)
         if self.selected_unit:

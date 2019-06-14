@@ -36,12 +36,13 @@ map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
 me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
+#GUI pendant combat puis recapitulatif fin de combat. LifeBar pour duree combat
 
-#son de marche dans la carte
 #sons: cris de guerre. SoundSnap, acheter quand meme ?
 
 #Faire les vrais maths de batailles dans Unit
-#GUI pendant combat puis recapitulatif fin de combat. LifeBar pour duree combat
+
+#meilleur wood : taper wood texture pixel art sur google. Wooden planks?
 
 
 #combat depuis materiaux modifies par objets (pont, foret, villages, PAS murailles (archers derriere))
@@ -53,10 +54,10 @@ game = Game(me)
 
 #impots, incendie, viols ==> depend de ce qu'on cherche a avoir, de la popularite
 #       aupres de ses soldats deja existants ou bien des futurs ressortissants des villes prises
-#3 scores : score militaire, score moral, score ÃƒÂ©conomique
+#3 scores : score militaire, score moral, score economique
 
 
-
+################################################################################
 #<fast> : quality a bit lower if true, loading time a bit faster.
 #<use_beach_tiler>: quality much better if true, loading much slower. Req. Numpy!
 #<load_tilers> : Very slow but needed if you don't have Numpy but still want hi quality.
@@ -92,9 +93,9 @@ game.add_unit((15,10), humans["infantry"], 10, team=1)
 game.add_unit((13,10), humans["infantry"], 10, team=1)
 game.add_unit((14,11), humans["infantry"], 10, team=1)
 
-from logic.battle import Battle
-b = Battle(game, game.units, game.units[0])
-b.fight()
+##from logic.battle import Battle
+##b = Battle(game, game.units, game.units[0])
+##b.fight()
 
 
 ##game.get_cell_at(14,15).set_name("My left cell")
@@ -150,7 +151,7 @@ print("0,0 ======= ", game.get_cell_at(0,0).h)
 
 me.set_zoom(level=0)
 m = thorpy.Menu(me.e_box,fps=me.fps)
-game.outdoor_sound.play(-1)
+##game.outdoor_sound.play(-1)
 m.play()
 
 app.quit()
@@ -177,19 +178,10 @@ app.quit()
 #riviere : si mer est trop loin, va a max length puis fait un lac
 ###quand meme tester sans numpy, parce que bcp de modules l'importent (surfarray)
 ###tester python2
-#proposer un ciel + nuages (cf perigeo) au lieu de mer ; le mettre par defaut dans le noir ?
 
-#quand curseur passe au dessus d'un village, ajouter (village) a cote du material dans la description de fenetre de droite
 
-#alert pour click droit sur units quand click gauche sur units, et pour click gauche sur terrain quand click droit sur terrain
-
-#meilleur wood : taper wood texture pixel art sur google. Wooden planks?
 #nb: l'editeur permet de faire terrain (changer hauteur) (hmap), materials, objects (dyn/statics)
 #herbe animee
 #ombres des objets en mode pil, y compris dans bataille (si option)
 #ridged noise
 #effets: fumee villages, ronds dans l'eau, herbe dans pieds, traces dans neige et sable, precipitations
-#
-#couples additionnels (ex: shallow_water with all the others...) ajoute au moment de la creation de riviere ?
-#comment gerer brulage d'arbres ? Si ca doit changer l'architecture, y penser maintenant...
-### ==> reconstruire localement le layer concerne
