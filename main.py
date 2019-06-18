@@ -8,6 +8,7 @@ from __future__ import print_function, division
 import dependenciescheck as dc
 dc.check_console("thorpy")
 dc.check_gui("numpy")
+dc.check_gui("PIL")
 
 import pygame
 import thorpy #for GUI and other graphics - see www.thorpy.org
