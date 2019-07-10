@@ -21,6 +21,26 @@ COLORS = {"blue":((160,195,210), (110,160,185), (76,95,128)), #SRC_COLOR
           "black":((130,)*3, (90,)*3, (75,)*3),
           "white":((245,)*3, (220,)*3, (200,)*3)}
 
+NEUTRAL = 0
+SUBTLE = 1
+BRUTAL = 2
+DISCIPLINED = 3
+
+SOLAR = 1
+LUNAR = 2
+STELLAR = 3
+
+SPECIALIZATIONS = {(a,b)}
+
+def get_specialization_factor(spec1, spec2):
+
+
+FIGHT_RANDOMNESS = 0.5
+FIGHT_R0 = 1. - FIGHT_RANDOMNESS/2.
+def get_random_factor_fight():
+    r = random.random() * FIGHT_RANDOMNESS
+    return FIGHT_R0 + r
+
 class Unit(MapObject):
 
     @staticmethod
@@ -49,6 +69,11 @@ class Unit(MapObject):
         self.race = None
         self.game = None
         #
+        self.strength = 1.
+        self.defense = 1.
+        self.terrains_bonus = {}
+        self.specialization = "none"
+        #
         self.walk_img = {}
         self.set_frame_refresh_type(2) #type fast
         self.vel = 0.07
@@ -57,8 +82,6 @@ class Unit(MapObject):
         self.attack_range = None
         self.help_range = None
         self.footprint = None
-
-
 
 
     def _spawn_possible_destinations(self, x, y, tot_cost, path_to_here, score):
@@ -218,9 +241,25 @@ class Unit(MapObject):
     def get_coords_in_help_range(self):
         return self.get_coords_within_range(self.help_range)
 
-    def get_fight_result(self, other): #-1, 0, 1
-        if random.random() < 1e-2:
-            return random.choice([-1,1])
+##    def get_fight_result(self, other): #-1, 0, 1
+##        if random.random() < 1e-2:
+##            return random.choice([-1,1])
+##        return 0
+
+    def get_fight_result(self, other, terrain): #-1, 0, 1
+        """-1: self looses, 0: draw, 1: self wins"""
+        f1, f2 = get_specializations_factor(self.specialization,
+                                            other.specialization)
+        terrain_bonus1 = self.terrains_bonus.get(terrain, 1.)
+        r = get_random_factor_fight()
+        damage_to_other = terrain_bonus1 * r * f1 * self.strength / other.defense
+        if damage_to_other > 1.:
+            return 1
+        else:
+            terrain_bonus2 = other.terrains_bonus.get(terrain, 1.)
+            damage_from_other = terrain_bonus2 * r * f2 * other.strength / self.defense
+            if damage_from_other > 1.:
+                return -1
         return 0
 
     def get_all_surrounding_units(self):

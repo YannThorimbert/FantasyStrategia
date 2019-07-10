@@ -45,7 +45,6 @@ game = Game(me)
 
 #meilleur wood : taper wood texture pixel art sur google. Wooden planks?
 
-
 #combat depuis materiaux modifies par objets (pont, foret, villages, PAS murailles (archers derriere))
 
 
