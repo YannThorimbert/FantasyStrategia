@@ -61,7 +61,7 @@ game = Game(me)
 #<fast> : quality a bit lower if true, loading time a bit faster.
 #<use_beach_tiler>: quality much better if true, loading much slower. Req. Numpy!
 #<load_tilers> : Very slow but needed if you don't have Numpy but still want hi quality.
-map_initializer.build_map(me, fast=False, use_beach_tiler=False, load_tilers=False)
+map_initializer.build_map(me, fast=False, use_beach_tiler=True, load_tilers=False)
 ##map_initializer.build_map(me, fast=False, use_beach_tiler=False, load_tilers=False)
 
 

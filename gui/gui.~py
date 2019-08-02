@@ -3,7 +3,7 @@ import PyWorld2D.gui.elements as elements
 import PyWorld2D.gui.parameters as guip
 
 from logic.battle import Battle
-from logic.unit import DELTA_TO_KEY, DELTAS
+##from logic.unit import DELTA_TO_KEY, DELTAS
 
 
 class Gui:

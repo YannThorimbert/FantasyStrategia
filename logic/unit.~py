@@ -35,7 +35,7 @@ SOLAR = 1
 LUNAR = 2
 STELLAR = 3
 
-##SPECIALIZATIONS = {(a,b)}
+SPECIALIZATIONS = {(a,b)}
 
 def get_specialization_factor(spec1, spec2):
     ...

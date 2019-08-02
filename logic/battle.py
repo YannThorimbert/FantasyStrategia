@@ -364,6 +364,10 @@ class Battle:
         self.text_finish.center()
         self.before_f1 = None
         self.before_f2 = None
+        #GUI
+        self.timebar = thorpy.LifeBar("Remaining time", size=(self.W//2, 25))
+        self.timebar.set_main_color((220,220,220,100))
+        self.timebar.stick_to("screen","top", "top")
 
     def press_enter(self):
         if self.finished:
@@ -477,6 +481,12 @@ class Battle:
                 u.refresh_sprite_type()
         self.to_remove = []
 
+    def refresh_timebar(self):
+        life = 1. - self.fight_t / BATTLE_DURATION
+        if life < 0:
+            life = 0.
+        self.timebar.set_life(life)
+
     def update_battle(self):
         if not self.finished:
             self.update_targets()
@@ -488,6 +498,8 @@ class Battle:
         if self.blit_this_frame:
             if self.finished:
                 self.text_finish.blit()
+            self.refresh_timebar()
+            self.timebar.blit()
             pygame.display.flip()
         #
         self.refresh_deads()
@@ -748,6 +760,7 @@ class Battle:
         e2 = thorpy.Line(2*e1.get_rect().width // 3, "h")
         els = {}
         names = {"left":"west", "right":"east", "up":"north", "down":"south", "center":"center"}
+        show_death = []
         for side in ("left", "center", "right", "up", "down"):
             u = getattr(self, side)
             if u:
@@ -766,6 +779,8 @@ class Battle:
                 utype = thorpy.make_text(u.name.capitalize())
                 race_type = thorpy.make_group([race, utype])
                 els[side] = thorpy.Box([eside,line,race_type,engaged,dead])
+                if u.quantity <= 0:
+                    show_death.append(u)
             else:
                 side = names[side]
                 els[side] = thorpy.Box([thorpy.make_text("No "+side+" unit")])
@@ -776,6 +791,15 @@ class Battle:
         b = self.game.me.draw()
         pygame.display.flip()
         thorpy.launch_blocking(e)
+        #manual animation is simpler in this case
+        for unit in show_death:
+            unit.die_after(2.)
+##            self.game.me.dynamic_objects.remove(unit)
+##        for frame in range(10):
+##            for unit in show_death:
+##                if frame < len(unit.imgs_z_t[zoom]):
+##                    self.game.me.cam.draw_objects(self.surface, self.game.me.dynamic_objects)
+##            pygame.display.flip()
 
 
 def get_units_dict_from_list(units):
