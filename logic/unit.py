@@ -2,6 +2,7 @@ import random, os
 import pygame, thorpy
 from PyWorld2D.mapobjects.objects import MapObject
 import PyWorld2D.constants as const
+from .races import RACE_FIGHT_FACTOR
 
 
 
@@ -26,25 +27,15 @@ ANIM_LOOP = 0
 ANIM_ONCE = 1
 
 
-NEUTRAL = 0
-SUBTLE = 1
-BRUTAL = 2
-DISCIPLINED = 3
-
-SOLAR = 1
-LUNAR = 2
-STELLAR = 3
-
-##SPECIALIZATIONS = {(a,b)}
-
-def get_specialization_factor(spec1, spec2):
-    ...
-
-FIGHT_RANDOMNESS = 0.5
+BASE_FIGHT_FACTOR = 1.5
+ATTACKING_DAMAGE_FACTOR = 1.2
+FIGHT_AMPLITUDE = 0.8 #control the length of the fights
+FIGHT_RANDOMNESS = 0.4
 FIGHT_R0 = 1. - FIGHT_RANDOMNESS/2.
 def get_random_factor_fight():
+    """Returns a float in [1-FIGHT_RANDOMNESS/2, 1+FIGHT_RANDOMNESS/2]."""
     r = random.random() * FIGHT_RANDOMNESS
-    return FIGHT_R0 + r
+    return FIGHT_AMPLITUDE*(FIGHT_R0 + r)
 
 class Unit(MapObject):
     unit_id = 0
@@ -74,23 +65,23 @@ class Unit(MapObject):
             imgs = [""]
         MapObject.__init__(self, editor, imgs, type_name, factor, relpos, build, new_type)
         self.type_name = type_name
-        self.cost = None
-        self.max_dist = None
-        self.race = None
-        self.game = None
         #
+        self.max_dist = None
+        self.attack_range = {}
+        self.help_range = {}
+        self.cost = {}
+        self.terrain_attack = {}
         self.strength = 1.
         self.defense = 1.
-        self.terrains_bonus = {}
-        self.specialization = "none"
+        #
+        self.race = None
+        self.game = None
         #
         self.walk_img = {}
         self.set_frame_refresh_type(2) #type fast
         self.vel = 0.07
         self.current_isprite = 0
         self.team = None
-        self.attack_range = None
-        self.help_range = None
         self.footprint = None
         self.id = Unit.unit_id
         Unit.unit_id += 1
@@ -295,26 +286,42 @@ class Unit(MapObject):
     def get_coords_in_help_range(self):
         return self.get_coords_within_range(self.help_range)
 
-    def get_fight_result(self, other): #-1, 0, 1
-        if random.random() < 1e-2:
-            return random.choice([-1,1])
-        return 0
 
-##    def get_fight_result(self, other, terrain): #-1, 0, 1
-##        """-1: self looses, 0: draw, 1: self wins"""
-##        f1, f2 = get_specializations_factor(self.specialization,
-##                                            other.specialization)
-##        terrain_bonus1 = self.terrains_bonus.get(terrain, 1.)
-##        r = get_random_factor_fight()
-##        damage_to_other = terrain_bonus1 * r * f1 * self.strength / other.defense
-##        if damage_to_other > 1.:
-##            return 1
-##        else:
-##            terrain_bonus2 = other.terrains_bonus.get(terrain, 1.)
-##            damage_from_other = terrain_bonus2 * r * f2 * other.strength / self.defense
-##            if damage_from_other > 1.:
-##                return -1
+    def get_terrain_name_for_fight(self): #ajouter forest et compagnie
+        for obj in self.cell.objects:
+            if obj.name == "river":
+                return "river"
+        return self.cell.material.name.lower()
+
+    def get_terrain_bonus(self):
+        terrain = self.get_terrain_name_for_fight()
+        print(terrain)
+        return self.terrain_attack.get(terrain, 1.)
+
+##    def get_fight_result(self, other): #-1, 0, 1
+##        if random.random() < 1e-2:
+##            return random.choice([-1,1])
 ##        return 0
+
+    def get_fight_result(self, other, terrain_bonus1, terrain_bonus2, self_is_defending): #-1, 0, 1
+        """-1: self looses, 0: draw, 1: self wins"""
+        if not self_is_defending:
+            print("heee", terrain_bonus1)
+        self_race = self.race.racetype
+        other_race = other.race.racetype
+        f = RACE_FIGHT_FACTOR.get((self_race, other_race), 1.)
+        r = get_random_factor_fight()
+        damage_to_other = terrain_bonus1 * r * f * self.strength / other.defense
+        if damage_to_other > 1.:
+            return 1
+        else:
+            f = RACE_FIGHT_FACTOR.get((other_race, self_race), 1.)
+            damage_from_other = terrain_bonus2 * r * f * other.strength / self.defense
+            if self_is_defending:
+                damage_from_other *= ATTACKING_DAMAGE_FACTOR
+            if damage_from_other > 1.:
+                return -1
+        return 0
 
     def get_all_surrounding_units(self):
         units = []

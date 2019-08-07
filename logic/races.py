@@ -63,13 +63,30 @@ units_type_to_load = ["infantry", "wizard"]
 
 assert set(std_help_range.keys()) == set(std_attack_range.keys()) == set(std_type_cost.keys())
 
+##NEUTRAL = 0
+##SUBTLE = 1
+##BRUTAL = 2
+##DISCIPLINED = 3
+
+SOLAR = 1
+LUNAR = 2
+STELLAR = 3
+
+BASE_RACE_FACTOR = 0.2
+RACE_FIGHT_FACTOR = {   (SOLAR,LUNAR):1.+BASE_RACE_FACTOR,
+                            (LUNAR,STELLAR):1.+BASE_RACE_FACTOR,
+                            (STELLAR,SOLAR):1.+BASE_RACE_FACTOR}
+##for a,b in SPECIALIZATIONS_FACTORS:
+##    SPECIALIZATIONS_FACTORS[(b,a)] = 1. - BASE_RACE_FACTOR
 
 class Race:
-    def __init__(self, name, baserace, me, color="blue"):
+    def __init__(self, name, baserace, racetype, me, color="blue"):
         self.name = name
         self.baserace = baserace
+        self.racetype = racetype
         self.base_cost = std_cost_material.copy()
         self.base_max_dist = std_distance
+        self.base_terrain_attack = {}
         self.unit_types = {}
         self.me = me
         self.color = color
@@ -82,26 +99,36 @@ class Race:
         assert type_name not in self.unit_types
         u = unit.Unit(type_name, self.me, imgs, type_name, factor)
         u.race = self
-        u.max_dist = self.base_max_dist * std_type_cost.get(type_name, 1.)
-        u.attack_range = std_attack_range.get(type_name, 1)
-        u.help_range = std_help_range.get(type_name, 1)
-        u.cost = self.base_cost.copy()
+        #the following properties will be computed during the finalisation:
+##        u.max_dist = self.base_max_dist * std_type_cost.get(type_name, 1.)
+##        u.attack_range = std_attack_range.get(type_name, 1)
+##        u.help_range = std_help_range.get(type_name, 1)
+##        u.cost = self.base_cost.copy()
+##        u.terrain_attack = self.base_terrain_attack.copy()
         self.unit_types[type_name] = u
-                #
         if os.path.exists(imgs_fn+"_footprint.png"):
             u.footprint = pygame.image.load(imgs_fn+"_footprint.png")
         else:
             u.footprint = pygame.image.load("sprites/footprint.png")
         return u
 
-    def update_stats(self):
+    def finalize(self):
         for type_name in self.unit_types:
-            u = self.unit_types[type_name]
-            u.max_dist = self.base_max_dist * std_type_cost.get(type_name, 1.)
-            u.attack_range = std_attack_range.get(type_name, 1)
-            u.help_range = std_help_range.get(type_name, 1)
-            u.cost = self.base_cost.copy()
-            self.unit_types[type_name] = u
+            u = self[type_name]
+            if u.max_dist is None:
+                u.max_dist = self.base_max_dist * std_type_cost.get(type_name, 1.)
+            #handling of dictionaries is more complex:
+            if not u.attack_range:
+                u.attack_range = std_attack_range.get(type_name, 1)
+            else: #fusion dicts
+                u.attack_range = fusion_dicts(u.attack_range, std_attack_range, 1.)
+            #
+            if not u.help_range:
+                u.help_range = std_help_range.get(type_name, 1)
+            if not u.cost:
+                u.cost = self.base_cost.copy()
+            if not u.terrain_attack:
+                u.terrain_attack = self.base_terrain_attack.copy()
 
     def __getitem__(self, key):
         return self.unit_types[key]

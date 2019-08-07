@@ -46,6 +46,7 @@ class FightingUnit:
 
     def __init__(self, battle, unit, direction, zoom_level, pos):
         self.battle = battle
+        self.terrain_bonus = unit.get_terrain_bonus()
         self.unit = unit
         self.z = zoom_level
         self.rect = self.unit.imgs_z_t[self.z][0].get_rect()
@@ -250,7 +251,12 @@ class FightingUnit:
                 self.time_frome_last_direction_change = 0
             frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
             if not self.target.dead and not self.dead:
-                result = self.unit.get_fight_result(self.target)
+                terrain = self.unit.cell.material.name
+                self_is_defending = self.battle.defender is self.unit
+                result = self.unit.get_fight_result(self.target.unit,
+                                                    self.terrain_bonus,
+                                                    self.target.terrain_bonus,
+                                                    self_is_defending)
                 if result < 0:
                     self.battle.to_remove.append(self)
                 elif result > 0:
@@ -319,7 +325,10 @@ class Battle:
     def __init__(self, game, units, defender, zoom_level=0):
         self.defender = defender
         units = get_units_dict_from_list(units)
-        self.blocks = []
+        assert defender in units.values()
+        nb_defender = len([u for u in units.values() if u.team==defender.team])
+        assert nb_defender == 1
+        #
         self.game = game
         self.surface = thorpy.get_screen()
         self.W, self.H = self.surface.get_size()
