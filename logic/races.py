@@ -86,6 +86,8 @@ class Race:
         self.racetype = racetype
         self.base_cost = std_cost_material.copy()
         self.base_max_dist = std_distance
+        self.base_attack_range = std_attack_range.copy()
+        self.base_help_range = std_help_range.copy()
         self.base_terrain_attack = {}
         self.unit_types = {}
         self.me = me
@@ -117,18 +119,23 @@ class Race:
             u = self[type_name]
             if u.max_dist is None:
                 u.max_dist = self.base_max_dist * std_type_cost.get(type_name, 1.)
-            #handling of dictionaries is more complex:
-            if not u.attack_range:
-                u.attack_range = std_attack_range.get(type_name, 1)
-            else: #fusion dicts
-                u.attack_range = fusion_dicts(u.attack_range, std_attack_range, 1.)
+            if u.attack_range is None:
+                u.attack_range = self.base_attack_range.get(type_name, 1)
+            if u.help_range is None:
+                u.help_range = self.base_help_range.get(type_name, 1)
             #
-            if not u.help_range:
-                u.help_range = std_help_range.get(type_name, 1)
-            if not u.cost:
-                u.cost = self.base_cost.copy()
-            if not u.terrain_attack:
-                u.terrain_attack = self.base_terrain_attack.copy()
+            u.cost = fusion_dicts(u.cost, self.base_cost)
+            u.terrain_attack = fusion_dicts(u.terrain_attack, self.base_terrain_attack)
 
     def __getitem__(self, key):
         return self.unit_types[key]
+
+
+def fusion_dicts(primary, secondary):
+    d = {}
+    for key in primary:
+        d[key] = primary[key]
+    for key in secondary:
+        if not(key in primary):
+            d[key] = secondary[key]
+    return d
