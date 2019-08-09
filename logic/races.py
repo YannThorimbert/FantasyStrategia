@@ -2,7 +2,7 @@ import os
 import pygame
 from . import unit
 
-std_cost_material = {'Deep water': float("inf"),
+std_material_cost = {'Deep water': float("inf"),
                      'Grass': 1.5,
                      'Rock': 3.5,
                      'Sand': 3.5,
@@ -18,7 +18,7 @@ std_cost_material = {'Deep water': float("inf"),
                      'river':6,
                      'bush':5}
 
-std_type_cost = {'villager':1,
+std_max_dist = {'villager':1,
                 'infantry':1,
                 'archer':1,
                 'cavalry':2,
@@ -83,11 +83,11 @@ std_defense =  {'villager':0.3,
                 'transport_boat':1,
                 'attack_boat':1} #attack boat only attack other boats
 
-std_distance = 5
+std_distance_factor = 5
 
 units_type_to_load = ["infantry", "wizard"]
 
-assert set(std_help_range.keys()) == set(std_attack_range.keys()) == set(std_type_cost.keys())
+assert set(std_help_range.keys()) == set(std_attack_range.keys()) == set(std_max_dist.keys())
 
 ##NEUTRAL = 0
 ##SUBTLE = 1
@@ -106,21 +106,21 @@ BASE_RACE_FACTOR = 0.2
 RACE_FIGHT_FACTOR = {   (SOLAR,LUNAR):1.+BASE_RACE_FACTOR,
                         (LUNAR,STELLAR):1.+BASE_RACE_FACTOR,
                         (STELLAR,SOLAR):1.+BASE_RACE_FACTOR}
-for a,b in SPECIALIZATIONS_FACTORS:
-    SPECIALIZATIONS_FACTORS[(b,a)] = 1. - BASE_RACE_FACTOR
+##for a,b in RACE_FIGHT_FACTOR:
+##    RACE_FIGHT_FACTOR[(b,a)] = 1. - BASE_RACE_FACTOR
 
 class Race:
     def __init__(self, name, baserace, racetype, me, color="blue"):
         self.name = name
         self.baserace = baserace
         self.racetype = racetype
-        self.base_material_cost = std_cost_material.copy()
-        self.base_max_dist = std_distance
-        self.base_attack_range = std_attack_range.copy()
-        self.base_help_range = std_help_range.copy()
+        #
+        self.base_material_cost = std_material_cost.copy()
+        self.dist_factor = std_distance_factor
         self.base_terrain_attack = {}
-        self.base_strength = std_strength.copy()
-        self.base_defense = std_defense.copy()
+        self.strength_factor = 1.
+        self.defense_factor = 1.
+        #
         self.unit_types = {}
         self.me = me
         self.color = color
@@ -133,12 +133,6 @@ class Race:
         assert type_name not in self.unit_types
         u = unit.Unit(type_name, self.me, imgs, type_name, factor)
         u.race = self
-        #the following properties will be computed during the finalisation:
-##        u.max_dist = self.base_max_dist * std_type_cost.get(type_name, 1.)
-##        u.attack_range = std_attack_range.get(type_name, 1)
-##        u.help_range = std_help_range.get(type_name, 1)
-##        u.cost = self.base_material_cost.copy()
-##        u.terrain_attack = self.base_terrain_attack.copy()
         self.unit_types[type_name] = u
         if os.path.exists(imgs_fn+"_footprint.png"):
             u.footprint = pygame.image.load(imgs_fn+"_footprint.png")
@@ -150,27 +144,20 @@ class Race:
         for type_name in self.unit_types:
             u = self[type_name]
             if u.max_dist is None:
-                u.max_dist = self.base_max_dist * std_type_cost.get(type_name, 1.)
+                u.max_dist = self.dist_factor * std_max_dist[type_name]
             if u.attack_range is None:
-                u.attack_range = self.base_attack_range.get(type_name, 1)
+                u.attack_range = std_attack_range[type_name]
             if u.help_range is None:
-                u.help_range = self.base_help_range.get(type_name, 1)
+                u.help_range = std_help_range[type_name]
             if u.strength is None:
-                u.strength = self.base_strength.get(type_name)
+                u.strength = self.strength_factor * std_strength[type_name]
             if u.defense is None:
-                u.defense = self.base_defense.get(type_name)
+                u.defense = self.defense_factor * std_defense[type_name]
             #
-            u.cost = fusion_dicts(u.cost, self.base_cost)
-            u.terrain_attack = fusion_dicts(u.terrain_attack, self.base_terrain_attack)
-        self.make_consistant()
-
-    def make_consistant(self): !!
-        for type_name in self.unit_types:
-            u = self[type_name]
-            if u.strength != self.base_strength.get(type_name):
-                self.base_strength = u.strength
-            if u.defense != self.base_defense.get(type_name):
-                self.base_defense = u.defense
+            u.material_cost = fusion_dicts(u.material_cost,
+                                            self.base_material_cost)
+            u.terrain_attack = fusion_dicts(u.terrain_attack,
+                                            self.base_terrain_attack)
 
     def __getitem__(self, key):
         return self.unit_types[key]

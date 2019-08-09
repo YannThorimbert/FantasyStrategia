@@ -63,13 +63,14 @@ class Unit(MapObject):
                 isprite += n
         else:
             imgs = [""]
-        MapObject.__init__(self, editor, imgs, type_name, factor, relpos, build, new_type)
+        MapObject.__init__(self, editor, imgs, type_name, factor, relpos, build,
+                            new_type)
         self.type_name = type_name
         #
         self.max_dist = None
         self.attack_range = {}
         self.help_range = {}
-        self.cost = {}
+        self.material_cost = {}
         self.terrain_attack = {}
         self.strength = None
         self.defense = None
@@ -102,10 +103,10 @@ class Unit(MapObject):
                 #compute the cost of the current path ##########################
                 for obj in next_cell.objects:
                     if not isinstance(obj, Unit):
-                        this_tot_cost = self.cost[obj.name]
+                        this_tot_cost = self.material_cost[obj.name]
                         break
                 else: #if break is never reached
-                    this_tot_cost = self.cost[next_cell.material.name]
+                    this_tot_cost = self.material_cost[next_cell.material.name]
                 this_tot_cost += tot_cost #+ cost so far
                 ################################################################
                 if this_tot_cost <= self.max_dist: #should update the best
@@ -144,7 +145,7 @@ class Unit(MapObject):
         obj.highlights = self.highlights
         obj.team = self.team
         #
-        obj.cost = self.cost.copy()
+        obj.material_cost = self.material_cost.copy()
         obj.max_dist = self.max_dist
         obj.help_range = self.help_range
         obj.attack_range = self.attack_range
@@ -180,7 +181,7 @@ class Unit(MapObject):
         obj.is_ground = self.is_ground
         obj.team = self.team
         #
-        obj.cost = self.cost.copy()
+        obj.material_cost = self.material_cost.copy()
         obj.max_dist = self.max_dist
         obj.help_range = self.help_range
         obj.attack_range = self.attack_range

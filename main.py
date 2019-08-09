@@ -33,18 +33,19 @@ theme.set_theme()
 W,H = 1200, 700 #screen size
 app = thorpy.Application((W,H))
 
-map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
+map_initializer = maps.map0 #go in mymaps.py and PLAY with PARAMS !!!
 me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
 
-#ajouter strength et defense de base des unites (std_strength, std_defense)
 #donner avantage de base a toutes les troupes assaillantes !
 #tester terrain attack sur riviere
 #faire mages/archers dans les deux types d'attaques, car bcp de trucs en dependant, bcp d'ajustements !!!!
 #rappel : il n'y a pas de haches/epees/lances etc ; c'est la race qui change ca dans sa propre infanterie !!!
 
 #sons: cris de guerre. SoundSnap, acheter quand meme ?
+
+#pas dans le sable et ecume dans l'eau dans la map comme dans combat
 
 #meilleur wood : taper wood texture pixel art sur google. Wooden planks?
 
@@ -68,19 +69,19 @@ map_initializer.build_map(me, fast=False, use_beach_tiler=False, load_tilers=Fal
 
 
 humans = Race("Green team", "human", LUNAR, me, "green")
-humans.base_cost["grass"] = 2
-humans.base_cost["forest"] = 5
-humans.base_max_dist = 10
+humans.base_material_cost["grass"] = 2
+humans.base_material_cost["forest"] = 5
+humans.dist_factor = 10
 humans.base_terrain_attack["grass"] = 2.
-humans["infantry"].cost["sand"] = 4
+humans["infantry"].material_cost["sand"] = 4
 humans["infantry"].terrain_attack["snow"] = 0.8
 humans.finalize() #always call this function to finish initialize a race !!!
 
 humans2 = Race("White team", "human", SOLAR, me, "white")
-humans2.base_cost["forest"] = 10
+humans2.base_material_cost["forest"] = 10
 humans2.base_terrain_attack["grass"] = 0.8
-humans2["wizard"].cost["wood"] = 2.
-humans2.base_max_dist = 10
+humans2["wizard"].material_cost["wood"] = 2.
+humans2.dist_factor = 10
 humans2.finalize()
 
 ##game.add_unit((15,5), humans["infantry"], 100, team=1)
@@ -92,11 +93,11 @@ humans2.finalize()
 ##game.add_unit((20,8), humans2["infantry"], 100, team=2)
 ##game.add_unit((15,7), humans2["infantry"], 100, team=2)
 
-game.add_unit((14,9), humans["infantry"], 10, team=1)
-game.add_unit((14,10), humans2["infantry"], 40, team=2)
-game.add_unit((15,10), humans["infantry"], 10, team=1)
-game.add_unit((13,10), humans["infantry"], 10, team=1)
-game.add_unit((14,11), humans["infantry"], 10, team=1)
+game.add_unit((14,9-8), humans["infantry"], 10, team=1)
+game.add_unit((14,10-8), humans2["infantry"], 40, team=2)
+game.add_unit((15,10-8), humans["infantry"], 10, team=1)
+game.add_unit((13,10-8), humans["infantry"], 10, team=1)
+game.add_unit((14,11-8), humans["infantry"], 10, team=1)
 
 
 
