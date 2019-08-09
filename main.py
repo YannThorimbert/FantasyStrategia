@@ -43,8 +43,6 @@ game = Game(me)
 
 #sons: cris de guerre. SoundSnap, acheter quand meme ?
 
-#pas dans le sable et ecume dans l'eau dans la map comme dans combat
-
 #meilleur wood : taper wood texture pixel art sur google. Wooden planks?
 
 #combat depuis materiaux modifies par objets (pont, foret, villages, PAS murailles (archers derriere, pas dessus.))

@@ -299,8 +299,10 @@ class Unit(MapObject):
 
     def get_terrain_name_for_fight(self): #ajouter forest et compagnie
         for obj in self.cell.objects:
+            if obj.name == "wood":
+                return obj.name
             if obj.name == "river":
-                return "river"
+                return obj.name
         return self.cell.material.name.lower()
 
     def get_terrain_bonus(self):

@@ -5,9 +5,25 @@ import PyWorld2D.gui.parameters as guip
 from logic.battle import Battle
 from logic.unit import DELTA_TO_KEY, DELTAS
 
+class Footprint:
+
+    def __init__(self, unit, age, pos):
+        self.unit = unit
+        dx = self.unit.footprint.get_size()[0]
+        self.age = age
+        self.pos = (pos[0]-dx,pos[1]-dx)
+        self.pos2 = (pos[0]+dx, pos[1]+dx)
+
+    def blit_and_increment(self, surface):
+        surface.blit(self.unit.footprint, self.pos)
+        surface.blit(self.unit.footprint, self.pos2)
+        self.age += 1
+
+
 class GuiGraphicsEnhancement:
 
-    def __init__(self, gui, splashes=True, footprints=True):
+    def __init__(self, gui, zoom, splashes=True, footprints=True):
+        self.zoom = zoom
         self.gui = gui
         self.surface = self.gui.surface
         #
@@ -21,31 +37,52 @@ class GuiGraphicsEnhancement:
             self.splash = self.splashes[0]
         #
         self.show_footprints = footprints
-        self.footprints = []
-        self.units_footprints = []
+        self.footprints = {}
+        self.max_footprint_age = 100
 
     def draw_splashes(self):
+        if self.gui.game.me.zoom_level != self.zoom:
+            return
         self.splash = self.splashes[self.gui.game.me.lm.t%len(self.splashes)]
-        zoom = self.gui.game.me.zoom_level
         for u in self.units_splashes:
-            rect = u.get_current_rect(zoom)
+            rect = u.get_current_rect(self.zoom)
             self.surface.blit(self.splash, rect.move(0,-6).bottomleft)
 
     def draw_footprints(self):
-        zoom = self.gui.game.me.zoom_level
-        for u in self.units_footprints:
-            rect = u.get_current_rect(zoom)
-            coord = (rect.centerx, rect.bottom-4)
-            self.footprints.append((coord, u.footprint))
-        for coord, img in self.footprints:
-            self.surface.blit(img, coord)
+        if self.gui.game.me.zoom_level != self.zoom:
+            return
+        to_remove = []
+        for coord, footprint in self.footprints.items():
+            if footprint.age > self.max_footprint_age:
+                to_remove.append(coord)
+            else:
+                footprint.blit_and_increment(self.surface)
+        for coord in to_remove:
+            self.footprints.pop(coord)
+
 
     def refresh(self):
-        if self.splash:
+        if self.gui.game.me.zoom_level != self.zoom:
+            return
+        if self.splash or self.show_footprints:
             self.units_splashes = []
             for u in self.gui.game.units:
-                if u.get_terrain_name_for_fight() == "river":
-                    self.units_splashes.append(u)
+                t = u.get_terrain_name_for_fight()
+                ############################ Splashes ##########################
+                if self.splash:
+                    if t == "river" or "water" in t:
+                        self.units_splashes.append(u)
+                ################### Footprints #################################
+                if self.show_footprints:
+                    if t == "sand" or "snow" in t:
+                        rect = u.get_current_rect(self.zoom)
+                        footprint = Footprint(u, 0, rect.center)
+                        self.footprints[u.cell.coord] = footprint
+
+
+
+
+
 
 
 class Gui:
@@ -56,7 +93,9 @@ class Gui:
         game.me.cam.ui_manager = self
         self.me = game.me
         self._debug = True
-        self.enhancer = GuiGraphicsEnhancement(gui=self, splashes=True)
+        self.enhancer = GuiGraphicsEnhancement( self, zoom=0, #work only for a given zoom level
+                                                splashes=True,
+                                                footprints=True)
         #
         self.last_destination_score = {}
         self.destinations_mousemotion = []
@@ -258,6 +297,7 @@ class Gui:
         self.surface.blit(img, rect.topleft)
 
     def draw_before_objects(self, s):
+        self.enhancer.draw_footprints()
         self.refresh_moving_units()
         if self.unit_under_cursor:
             self.draw_highlight(self.unit_under_cursor, "yellow", s)
@@ -297,8 +337,6 @@ class Gui:
 
     def draw_after_objects(self, s):
         self.enhancer.draw_splashes()
-        self.enhancer.units_footprints = self.game.units
-        self.enhancer.draw_footprints()
 
     def refresh(self):
         self.enhancer.refresh()
