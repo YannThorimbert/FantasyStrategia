@@ -71,8 +71,8 @@ class Unit(MapObject):
         self.help_range = {}
         self.cost = {}
         self.terrain_attack = {}
-        self.strength = 1.
-        self.defense = 1.
+        self.strength = None
+        self.defense = None
         #
         self.race = None
         self.game = None
@@ -149,6 +149,8 @@ class Unit(MapObject):
         obj.help_range = self.help_range
         obj.attack_range = self.attack_range
         obj.terrain_attack = self.terrain_attack
+        obj.strength = self.strength
+        obj.defense = self.defense
         #
         obj.footprint = self.footprint
         return obj
@@ -183,6 +185,8 @@ class Unit(MapObject):
         obj.help_range = self.help_range
         obj.attack_range = self.attack_range
         obj.terrain_attack = self.terrain_attack.copy()
+        obj.strength = self.strength
+        obj.defense = self.defense
         #
         obj.highlights = {}
         for color in self.highlights:

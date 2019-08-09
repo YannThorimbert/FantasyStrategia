@@ -57,6 +57,32 @@ std_help_range = {  'villager':(1,1),
                     'transport_boat':(1,1),
                     'attack_boat':(1,1)}
 
+std_strength = {'villager':0.3,
+                'infantry':1,
+                'archer':0.6,
+                'cavalry':2,
+                'mounted archer':1,
+                'wizard':1,
+                'arch_mage':2,
+                'king':2,
+                'cook':0.3,
+                'doctor':0.3,
+                'transport_boat':0,
+                'attack_boat':1} #attack boat only attack other boats
+
+std_defense =  {'villager':0.3,
+                'infantry':1,
+                'archer':0.6,
+                'cavalry':2,
+                'mounted archer':1,
+                'wizard':1,
+                'arch_mage':2,
+                'king':5,
+                'cook':0.3,
+                'doctor':0.3,
+                'transport_boat':1,
+                'attack_boat':1} #attack boat only attack other boats
+
 std_distance = 5
 
 units_type_to_load = ["infantry", "wizard"]
@@ -68,27 +94,33 @@ assert set(std_help_range.keys()) == set(std_attack_range.keys()) == set(std_typ
 ##BRUTAL = 2
 ##DISCIPLINED = 3
 
+#INTELLIGENCE = 1
+#AGILITY = 2
+#FORCE = 3
+
 SOLAR = 1
 LUNAR = 2
 STELLAR = 3
 
 BASE_RACE_FACTOR = 0.2
 RACE_FIGHT_FACTOR = {   (SOLAR,LUNAR):1.+BASE_RACE_FACTOR,
-                            (LUNAR,STELLAR):1.+BASE_RACE_FACTOR,
-                            (STELLAR,SOLAR):1.+BASE_RACE_FACTOR}
-##for a,b in SPECIALIZATIONS_FACTORS:
-##    SPECIALIZATIONS_FACTORS[(b,a)] = 1. - BASE_RACE_FACTOR
+                        (LUNAR,STELLAR):1.+BASE_RACE_FACTOR,
+                        (STELLAR,SOLAR):1.+BASE_RACE_FACTOR}
+for a,b in SPECIALIZATIONS_FACTORS:
+    SPECIALIZATIONS_FACTORS[(b,a)] = 1. - BASE_RACE_FACTOR
 
 class Race:
     def __init__(self, name, baserace, racetype, me, color="blue"):
         self.name = name
         self.baserace = baserace
         self.racetype = racetype
-        self.base_cost = std_cost_material.copy()
+        self.base_material_cost = std_cost_material.copy()
         self.base_max_dist = std_distance
         self.base_attack_range = std_attack_range.copy()
         self.base_help_range = std_help_range.copy()
         self.base_terrain_attack = {}
+        self.base_strength = std_strength.copy()
+        self.base_defense = std_defense.copy()
         self.unit_types = {}
         self.me = me
         self.color = color
@@ -105,7 +137,7 @@ class Race:
 ##        u.max_dist = self.base_max_dist * std_type_cost.get(type_name, 1.)
 ##        u.attack_range = std_attack_range.get(type_name, 1)
 ##        u.help_range = std_help_range.get(type_name, 1)
-##        u.cost = self.base_cost.copy()
+##        u.cost = self.base_material_cost.copy()
 ##        u.terrain_attack = self.base_terrain_attack.copy()
         self.unit_types[type_name] = u
         if os.path.exists(imgs_fn+"_footprint.png"):
@@ -123,9 +155,22 @@ class Race:
                 u.attack_range = self.base_attack_range.get(type_name, 1)
             if u.help_range is None:
                 u.help_range = self.base_help_range.get(type_name, 1)
+            if u.strength is None:
+                u.strength = self.base_strength.get(type_name)
+            if u.defense is None:
+                u.defense = self.base_defense.get(type_name)
             #
             u.cost = fusion_dicts(u.cost, self.base_cost)
             u.terrain_attack = fusion_dicts(u.terrain_attack, self.base_terrain_attack)
+        self.make_consistant()
+
+    def make_consistant(self): !!
+        for type_name in self.unit_types:
+            u = self[type_name]
+            if u.strength != self.base_strength.get(type_name):
+                self.base_strength = u.strength
+            if u.defense != self.base_defense.get(type_name):
+                self.base_defense = u.defense
 
     def __getitem__(self, key):
         return self.unit_types[key]
