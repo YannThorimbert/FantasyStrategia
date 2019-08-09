@@ -136,8 +136,6 @@ class Unit(MapObject):
         obj.quantity = self.quantity
         obj.fns = self.fns
         #
-        obj.cost = self.cost.copy()
-        obj.max_dist = self.max_dist
         obj.race = self.race
         obj.vel = self.vel
         obj.set_frame_refresh_type(self._refresh_frame_type)
@@ -145,8 +143,13 @@ class Unit(MapObject):
         obj.is_ground = self.is_ground
         obj.highlights = self.highlights
         obj.team = self.team
+        #
+        obj.cost = self.cost.copy()
+        obj.max_dist = self.max_dist
         obj.help_range = self.help_range
         obj.attack_range = self.attack_range
+        obj.terrain_attack = self.terrain_attack
+        #
         obj.footprint = self.footprint
         return obj
 
@@ -168,16 +171,19 @@ class Unit(MapObject):
         obj.max_relpos = list(self.max_relpos)
         obj.object_type = self.object_type
         #
-        obj.cost = self.cost.copy()
-        obj.max_dist = self.max_dist
         obj.race = self.race
         obj.vel = self.vel
         obj.set_frame_refresh_type(self._refresh_frame_type)
         obj.sprites_ref = self.sprites_ref.copy()
         obj.is_ground = self.is_ground
         obj.team = self.team
+        #
+        obj.cost = self.cost.copy()
+        obj.max_dist = self.max_dist
         obj.help_range = self.help_range
         obj.attack_range = self.attack_range
+        obj.terrain_attack = self.terrain_attack.copy()
+        #
         obj.highlights = {}
         for color in self.highlights:
             obj.highlights[color] = [i.copy() for i in self.highlights[color]]
@@ -295,7 +301,6 @@ class Unit(MapObject):
 
     def get_terrain_bonus(self):
         terrain = self.get_terrain_name_for_fight()
-        print(terrain)
         return self.terrain_attack.get(terrain, 1.)
 
 ##    def get_fight_result(self, other): #-1, 0, 1
@@ -305,8 +310,6 @@ class Unit(MapObject):
 
     def get_fight_result(self, other, terrain_bonus1, terrain_bonus2, self_is_defending): #-1, 0, 1
         """-1: self looses, 0: draw, 1: self wins"""
-        if not self_is_defending:
-            print("heee", terrain_bonus1)
         self_race = self.race.racetype
         other_race = other.race.racetype
         f = RACE_FIGHT_FACTOR.get((self_race, other_race), 1.)

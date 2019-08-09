@@ -98,6 +98,8 @@ game.add_unit((15,10), humans["infantry"], 10, team=1)
 game.add_unit((13,10), humans["infantry"], 10, team=1)
 game.add_unit((14,11), humans["infantry"], 10, team=1)
 
+
+
 from logic.battle import Battle
 b = Battle(game, game.units, game.units[1])
 b.fight()

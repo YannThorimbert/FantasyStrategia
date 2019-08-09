@@ -251,7 +251,6 @@ class FightingUnit:
                 self.time_frome_last_direction_change = 0
             frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
             if not self.target.dead and not self.dead:
-                terrain = self.unit.cell.material.name
                 self_is_defending = self.battle.defender is self.unit
                 result = self.unit.get_fight_result(self.target.unit,
                                                     self.terrain_bonus,
