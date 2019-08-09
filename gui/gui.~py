@@ -3,7 +3,49 @@ import PyWorld2D.gui.elements as elements
 import PyWorld2D.gui.parameters as guip
 
 from logic.battle import Battle
-##from logic.unit import DELTA_TO_KEY, DELTAS
+from logic.unit import DELTA_TO_KEY, DELTAS
+
+class GuiGraphicsEnhancement:
+
+    def __init__(self, gui, splashes=True, footprints=True):
+        self.gui = gui
+        self.surface = self.gui.surface
+        #
+        self.splashes = []
+        self.splash = None
+        self.units_splashes = []
+        if splashes:
+            self.splashes = [pygame.image.load("sprites/splash.png")]
+            self.splashes.append(pygame.transform.flip(self.splashes[0],
+                                    True, False))
+            self.splash = self.splashes[0]
+        #
+        self.show_footprints = footprints
+        self.footprints = []
+        self.units_footprints = []
+
+    def draw_splashes(self):
+        self.splash = self.splashes[self.gui.game.me.lm.t%len(self.splashes)]
+        zoom = self.gui.game.me.zoom_level
+        for u in self.units_splashes:
+            rect = u.get_current_rect(zoom)
+            self.surface.blit(self.splash, rect.move(0,-6).bottomleft)
+
+    def draw_footprints(self):
+        zoom = self.gui.game.me.zoom_level
+        for u in self.units_footprints:
+            rect = u.get_current_rect(zoom)
+            coord = (rect.centerx, rect.bottom-4)
+            self.footprints.append((coord, u.footprint))
+        for coord, img in self.footprints:
+            self.surface.blit(img, coord)
+
+    def refresh(self):
+        if self.splash:
+            self.units_splashes = []
+            for u in self.gui.game.units:
+                if u.get_terrain_name_for_fight() == "river":
+                    self.units_splashes.append(u)
 
 
 class Gui:
@@ -14,6 +56,7 @@ class Gui:
         game.me.cam.ui_manager = self
         self.me = game.me
         self._debug = True
+        self.enhancer = GuiGraphicsEnhancement(gui=self, splashes=True)
         #
         self.last_destination_score = {}
         self.destinations_mousemotion = []
@@ -253,7 +296,11 @@ class Gui:
             self.draw_highlight(unit, "blue", s)
 
     def draw_after_objects(self, s):
-        pass
+        self.enhancer.draw_splashes()
+        self.enhancer.draw_footprints()
+
+    def refresh(self):
+        self.enhancer.refresh()
 
     def add_reactions(self):
         reac_click = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, self.lmb,{"button":1})

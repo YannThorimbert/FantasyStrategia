@@ -333,6 +333,9 @@ class MapObject:
         y = self.relpos[1]*cell_size+r.centery
         return x,y
 
+    def get_current_rect(self, cell_size):
+        return self.editor.cam.get_rect_at_coord(self.cell.coord)
+
     def set_same_type(self, objs):
         for o in objs:
             o.object_type = self.object_type

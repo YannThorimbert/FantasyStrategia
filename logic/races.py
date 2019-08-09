@@ -148,6 +148,7 @@ class Race:
             if u.attack_range is None:
                 u.attack_range = std_attack_range[type_name]
             if u.help_range is None:
+                print("adding help range", type_name, std_help_range[type_name])
                 u.help_range = std_help_range[type_name]
             if u.strength is None:
                 u.strength = self.strength_factor * std_strength[type_name]

@@ -218,6 +218,7 @@ class MapObject:
 
     def remove_from_cell(self):
         self.cell.objects.remove(self)
+        self.cell.unit = None
 
     def move_to_cell(self, dest_cell):
 ##        assert dest_cell.unit is None

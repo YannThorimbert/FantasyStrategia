@@ -68,8 +68,8 @@ class Unit(MapObject):
         self.type_name = type_name
         #
         self.max_dist = None
-        self.attack_range = {}
-        self.help_range = {}
+        self.attack_range = None
+        self.help_range = None
         self.material_cost = {}
         self.terrain_attack = {}
         self.strength = None
@@ -296,7 +296,6 @@ class Unit(MapObject):
 
     def get_coords_in_help_range(self):
         return self.get_coords_within_range(self.help_range)
-
 
     def get_terrain_name_for_fight(self): #ajouter forest et compagnie
         for obj in self.cell.objects:

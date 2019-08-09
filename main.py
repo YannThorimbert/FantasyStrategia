@@ -33,13 +33,11 @@ theme.set_theme()
 W,H = 1200, 700 #screen size
 app = thorpy.Application((W,H))
 
-map_initializer = maps.map0 #go in mymaps.py and PLAY with PARAMS !!!
+map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
 me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
 
-#donner avantage de base a toutes les troupes assaillantes !
-#tester terrain attack sur riviere
 #faire mages/archers dans les deux types d'attaques, car bcp de trucs en dependant, bcp d'ajustements !!!!
 #rappel : il n'y a pas de haches/epees/lances etc ; c'est la race qui change ca dans sa propre infanterie !!!
 
@@ -93,17 +91,17 @@ humans2.finalize()
 ##game.add_unit((20,8), humans2["infantry"], 100, team=2)
 ##game.add_unit((15,7), humans2["infantry"], 100, team=2)
 
-game.add_unit((14,9-8), humans["infantry"], 10, team=1)
-game.add_unit((14,10-8), humans2["infantry"], 40, team=2)
-game.add_unit((15,10-8), humans["infantry"], 10, team=1)
-game.add_unit((13,10-8), humans["infantry"], 10, team=1)
-game.add_unit((14,11-8), humans["infantry"], 10, team=1)
+game.add_unit((14,9), humans["infantry"], 10, team=1)
+game.add_unit((14,10), humans2["infantry"], 40, team=2)
+game.add_unit((15,10), humans["infantry"], 10, team=1)
+game.add_unit((13,10), humans["infantry"], 10, team=1)
+game.add_unit((14,11), humans["infantry"], 10, team=1)
 
 
 
-from logic.battle import Battle
-b = Battle(game, game.units, game.units[1])
-b.fight()
+##from logic.battle import Battle
+##b = Battle(game, game.units, game.units[1])
+##b.fight()
 
 
 ##game.get_cell_at(14,15).set_name("My left cell")
@@ -116,6 +114,7 @@ ui = gui.Gui(game)
 
 def func_reac_time(): #here add wathever you want
     """Function called each frame"""
+    ui.refresh()
     me.func_reac_time()
     game.t += 1
     pygame.display.flip()
