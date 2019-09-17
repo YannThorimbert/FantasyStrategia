@@ -14,6 +14,7 @@ DELTA_TO_KEY_A = {(0,0):"idle", (1,0):"rattack", (-1,0):"lattack", (0,1):"down",
 ANIM_VEL = 1.5
 SLOW_FIGHT_FRAME1 = 4
 SLOW_FIGHT_FRAME2 = 12
+SLOW_FIGHT_FRAME3 = 50
 STOP_TARGET_DIST_FACTOR = 0.2
 NFRAMES_DIRECTIONS = 16
 TIME_AFTER_FINISH = 1000
@@ -225,6 +226,42 @@ class FightingUnit:
         self.pos.y += self.vel*self.dxdy[1]
         self.rect.center = self.pos
 
+    def refresh_direction_target(self):
+        if not(self.target.target is self):
+            self.find_pos_near_target()
+        self.direction = DELTA_TO_KEY_A[self.dxdy]
+        self.refresh_sprite_type()
+        self.time_frome_last_direction_change = 0
+
+    def refresh_direction_notarget(self):
+        self.direction = DELTA_TO_KEY[self.dxdy]
+        self.refresh_sprite_type()
+        self.time_frome_last_direction_change = 0
+
+    def fight_against_target_near(self):
+        self_is_defending = self.battle.defender is self.unit
+        result = self.unit.get_fight_result(self.target.unit,
+                                            self.terrain_bonus,
+                                            self.target.terrain_bonus,
+                                            self_is_defending)
+        if result < 0:
+            self.battle.to_remove.append(self)
+        elif result > 0:
+            self.battle.to_remove.append(self.target)
+
+    def fight_against_target_distant(self, i):
+        pass
+
+    def refresh_not_near_target(self):
+        if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
+            self.refresh_direction_notarget()
+        self.pos.x += self.vel*self.dxdy[0]
+        self.pos.y += self.vel*self.dxdy[1]
+        return (self.frame0 + self.battle.fight_frame_walk)%self.nframes
+
+    def get_frame_near_target(self):
+        return (self.frame0 + self.battle.fight_frame_attack)%self.nframes
+
     def draw_and_move(self):
         if self.battle.fight_t == self.start_to_run:
             self.vel = self.final_vel
@@ -237,42 +274,24 @@ class FightingUnit:
         delta = target_pos - self_pos
         self.refresh_dxdy(delta.x, delta.y)
         ########################################################################
-        # self.next_to_target = False
         near_target = abs(delta.x) < DFIGHT and abs(delta.y) < DFIGHT
-        if near_target: #fighting
+        if near_target: #fighting (unit doesnt move)
             if self.battle.game.hit_sounds and random.random() < P_HIT_SOUND:
                 random.choice(self.battle.game.hit_sounds).play()
-            # self.next_to_target = True
             if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
-                if not(self.target.target is self):
-                    self.find_pos_near_target()
-                self.direction = DELTA_TO_KEY_A[self.dxdy]
-                self.refresh_sprite_type()
-                self.time_frome_last_direction_change = 0
-            frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
+                self.refresh_direction_target()
+            frame = self.get_frame_near_target()
             if not self.target.dead and not self.dead:
-                self_is_defending = self.battle.defender is self.unit
-                result = self.unit.get_fight_result(self.target.unit,
-                                                    self.terrain_bonus,
-                                                    self.target.terrain_bonus,
-                                                    self_is_defending)
-                if result < 0:
-                    self.battle.to_remove.append(self)
-                elif result > 0:
-                    self.battle.to_remove.append(self.target)
-        else: #walking
-            if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
-                self.direction = DELTA_TO_KEY[self.dxdy]
-                self.refresh_sprite_type()
-                self.time_frome_last_direction_change = 0
-            frame = (self.frame0 + self.battle.fight_frame_walk)%self.nframes
-            self.pos.x += self.vel*self.dxdy[0]
-            self.pos.y += self.vel*self.dxdy[1]
+                self.fight_against_target_near()
+        else: #walking (so we have to move the unit)
+            frame = self.refresh_not_near_target()
+        self.fight_against_target_distant(frame)
         self.rect.center = self.pos
         frame += self.isprite
         img = self.unit.imgs_z_t[self.z][frame]
         self.blit(img)
         self.time_frome_last_direction_change += 1
+
 
     def update_dest_end(self):
         delta = self.init_pos - self.pos
@@ -349,6 +368,7 @@ class Battle:
         self.fight_t = 0
         self.fight_frame_walk = 0
         self.fight_frame_attack = 0
+        self.fight_frame_attack_slow = 0
         self.finished = 0
         self.blood = pygame.image.load("sprites/blood.png")
         self.background = None
@@ -365,6 +385,7 @@ class Battle:
         self.ny = None
         self.walk_sounds = []
         self.screams = []
+        self.projectiles = []
         self.text_finish = thorpy.Element("Press enter to finish battle")
         self.text_finish.set_font_size(70)
         self.text_finish.set_main_color((255,255,255,100))
@@ -454,6 +475,19 @@ class Battle:
             s = self.walk_sounds.pop()
             s.stop()
 
+    def add_projectile(self, img, pos, target):
+        self.projectiles.append((img, pos, target))
+
+    def blit_and_update_projectiles(self):
+        for i,p in enumerate(self.projectiles):
+            img, pos, target = p
+            self.surface.blit(img, pos) NON ! on veut update pos ici ==> ne pas faire des tuples mais des objets Projectile
+            dx = abs(p[0]-t.pos[0])
+            dy = abs(p[1]-t.pos[1])
+            if dx + dy < 5:
+                print("TOUCHE")
+            to_remove.append()
+
 
     def blit_deads(self):
          for u in self.deads:
@@ -519,6 +553,8 @@ class Battle:
         if self.fight_t % SLOW_FIGHT_FRAME2 == 0:
             self.fight_frame_attack += 1
             self.refresh_walk_sounds()
+        if self.fight_t % SLOW_FIGHT_FRAME3 == 0:
+            self.fight_frame_attack_slow += 1
         if self.fight_t % self.mod_display == 0:
             self.blit_this_frame = True
         else:
@@ -632,7 +668,13 @@ class Battle:
             pos = list(positions[i])
             pos[0] += random.randint(0,s//3)
             pos[1] += random.randint(0,s//3)
-            u = FightingUnit(self, unit, "right", self.z, pos)
+            if unit.attack_range[0] > 1 or not(unit.can_fight()):
+                u = CannotFightUnit(self, unit, "right", self.z, pos)
+            elif unit.attack_range[1] > 1:
+                print("distant fighting unit", unit.name)
+                u = DistantFightingUnit(self, unit, "right", self.z, pos)
+            else:
+                u = FightingUnit(self, unit, "right", self.z, pos)
             population.append(u)
 
     def prepare_battle(self):
@@ -808,6 +850,44 @@ class Battle:
 ##                if frame < len(unit.imgs_z_t[zoom]):
 ##                    self.game.me.cam.draw_objects(self.surface, self.game.me.dynamic_objects)
 ##            pygame.display.flip()
+
+
+class DistantFightingUnit(FightingUnit):
+
+    def get_frame_near_target(self):
+        return (self.frame0 + self.battle.fight_frame_attack_slow)%self.nframes
+
+    def refresh_not_near_target(self):
+        if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
+            self.refresh_direction_notarget()
+        return (self.frame0 + self.battle.fight_frame_attack_slow)%self.nframes
+
+    def refresh_direction_notarget(self):
+        self.direction = DELTA_TO_KEY_A[self.dxdy]
+        self.refresh_sprite_type()
+        self.time_frome_last_direction_change = 0
+
+    def fight_against_target_distant(self, i):
+        self_is_defending = self.battle.defender is self.unit
+        result = self.unit.get_distant_attack_result(self.target.unit,
+                                            self.terrain_bonus,
+                                            self.target.terrain_bonus,
+                                            self_is_defending)
+        if result > 0:
+            battle.add_projectile((self.projectile, self.pos, self.target))
+
+
+class CannotFightUnit(DistantFightingUnit):
+
+    def fight_against_target_distant(self, i):
+        pass
+
+    def refresh_direction_notarget(self):
+        self.direction = DELTA_TO_KEY[self.dxdy]
+        self.refresh_sprite_type()
+        self.time_frome_last_direction_change = 0
+
+
 
 
 def get_units_dict_from_list(units):

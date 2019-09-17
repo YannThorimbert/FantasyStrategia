@@ -38,10 +38,7 @@ me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
 
-#faire mages/archers dans les deux types d'attaques, car bcp de trucs en dependant, bcp d'ajustements !!!!
-#rappel : il n'y a pas de haches/epees/lances etc ; c'est la race qui change ca dans sa propre infanterie !!!
-
-#sons: cris de guerre. SoundSnap, acheter quand meme ?
+#faire MAINTENANT mages/archers dans les deux types d'attaques, car bcp de trucs en dependent, bcp d'ajustements !!!!
 
 #meilleur wood : taper wood texture pixel art sur google. Wooden planks?
 
@@ -50,6 +47,12 @@ game = Game(me)
 #murailles: au niveau de l'implementation, sont des types d'unites! (static unit)
 #       Les chateaux sont juste des villages entoures de murailles
 #dans l'editeur, set_material fera en realite un set_height !
+
+#rappel : il n'y a pas de haches/epees/lances etc ; c'est la race qui change ca dans sa propre infanterie !!!
+
+#sons: cris de guerre. SoundSnap, acheter quand meme ?
+
+#tester !!!
 
 #impots, incendie, viols ==> depend de ce qu'on cherche a avoir, de la popularite
 #       aupres de ses soldats deja existants ou bien des futurs ressortissants des villes prises
@@ -89,8 +92,8 @@ humans2.finalize()
 ##game.add_unit((20,8), humans2["infantry"], 100, team=2)
 ##game.add_unit((15,7), humans2["infantry"], 100, team=2)
 
+game.add_unit((14,10), humans2["wizard"], 10, team=2)
 game.add_unit((14,9), humans["infantry"], 10, team=1)
-game.add_unit((14,10), humans2["infantry"], 40, team=2)
 game.add_unit((15,10), humans["infantry"], 10, team=1)
 game.add_unit((13,10), humans["infantry"], 10, team=1)
 game.add_unit((14,11), humans["infantry"], 10, team=1)

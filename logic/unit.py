@@ -122,6 +122,9 @@ class Unit(MapObject):
         self._spawn_possible_destinations(x, y, 0., [self.cell.coord], score)
         return score
 
+    def can_fight(self):
+        return self.attack_range[0] > 0
+
 
     def copy(self):
         """The copy references the same images as the original !"""
@@ -330,6 +333,17 @@ class Unit(MapObject):
                 damage_from_other *= ATTACKING_DAMAGE_FACTOR
             if damage_from_other > 1.:
                 return -1
+        return 0
+
+    def get_distant_attack_result(self, other, terrain_bonus1, terrain_bonus2, self_is_defending): #-1, 0, 1
+        """-1: self looses, 0: draw, 1: self wins"""
+        self_race = self.race.racetype
+        other_race = other.race.racetype
+        f = RACE_FIGHT_FACTOR.get((self_race, other_race), 1.)
+        r = get_random_factor_fight()
+        damage_to_other = terrain_bonus1 * r * f * self.strength / other.defense
+        if damage_to_other > 0.75:
+            return 1
         return 0
 
     def get_all_surrounding_units(self):
