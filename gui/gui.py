@@ -227,7 +227,11 @@ class Gui:
                 units_in_battle.append(defender)
                 #here, interact with user to select actual participating units among candidates to battle
                 print("DEFENDER", defender, defender.team, defender.quantity)
-                b = Battle(self.game, units_in_battle, defender)
+                print(dx+dy)
+                if dx + dy > 1: #distant attack
+                    b = DistantBattle(self.game, units_in_battle, defender, dx+dy)
+                else:
+                    b = Battle(self.game, units_in_battle, defender)
                 b.fight()
         elif unit in self.blue_highlights:
             pass

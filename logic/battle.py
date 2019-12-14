@@ -1,4 +1,4 @@
-import random, thorpy
+import random, math, thorpy
 import numpy as np
 import pygame
 from pygame.math import Vector2 as V2
@@ -350,12 +350,13 @@ class Battle:
         self.game = game
         self.surface = thorpy.get_screen()
         self.W, self.H = self.surface.get_size()
-        print("BATTLE", units)
+        print("BATTLE", [unit.name for unit in units.values()])
         self.right = units.get("right")
         self.left = units.get("left")
         self.up = units.get("up")
         self.down = units.get("down")
         self.center = units.get("center")
+
         self.terrain = pygame.Surface(self.surface.get_size())
         self.z = zoom_level
         self.cell_size = None
@@ -475,18 +476,6 @@ class Battle:
             s = self.walk_sounds.pop()
             s.stop()
 
-    def add_projectile(self, img, pos, target):
-        self.projectiles.append((img, pos, target))
-
-    def blit_and_update_projectiles(self):
-        for i,p in enumerate(self.projectiles):
-            img, pos, target = p
-            self.surface.blit(img, pos) NON ! on veut update pos ici ==> ne pas faire des tuples mais des objets Projectile
-            dx = abs(p[0]-t.pos[0])
-            dy = abs(p[1]-t.pos[1])
-            if dx + dy < 5:
-                print("TOUCHE")
-            to_remove.append()
 
 
     def blit_deads(self):
@@ -852,6 +841,15 @@ class Battle:
 ##            pygame.display.flip()
 
 
+class DistantBattle(Battle):
+    def __init__(self, game, units, defender, distance, zoom_level=0):
+        Battle.__init__(self, game, units, defender, zoom_level)
+        self.distance = distance
+
+
+
+
+
 class DistantFightingUnit(FightingUnit):
 
     def get_frame_near_target(self):
@@ -874,7 +872,7 @@ class DistantFightingUnit(FightingUnit):
                                             self.target.terrain_bonus,
                                             self_is_defending)
         if result > 0:
-            battle.add_projectile((self.projectile, self.pos, self.target))
+            battle.add_projectile(self.projectile_img, self.pos, self.target.pos)) #NON ! les targets devraient etre attribues de facon globale par Battle (pas dans l'immediat)
 
 
 class CannotFightUnit(DistantFightingUnit):
@@ -888,6 +886,35 @@ class CannotFightUnit(DistantFightingUnit):
         self.time_frome_last_direction_change = 0
 
 
+class Projectile:
+    def __init__(self, fired_by, target, rect1, rect2):
+        self.fired_by = fired_by
+        self.target = target
+        self.img = self.fired_by.projectile_img
+        self.pos = V2(self.fired_by.pos)
+        self.rect1 = rect1 #battle zone rect of the source unit
+        self.rect2 = rect2 #battle zone of the target unit
+##        self.D = abs(self.fired_by.pos - self.target.pos)
+
+class Arrow(Projectile):
+    def __init__(self, fired_by, target, angle, dx):
+        Projectile.__init__(self, fired_by, target)
+        self.dx = dx
+        self.dy = math.atan(angle) * self.dx
+        self.y_direction = 1.
+        self.img_down = pygame.transform.flip(self.img, False, True) #toujours right-left !!!!
+
+    def update_pos(self):
+        if not self.rect1.collidepoint(self.pos):
+            self.y_direction = -1.
+        self.pos += (self.dx,self.y_direction*self.dy)
+        return (self.pos - self.target.pos).length()
+
+    def get_img(self):
+        if self.y_direction > 0:
+            return self.img
+        else:
+            return self.img_down
 
 
 def get_units_dict_from_list(units):

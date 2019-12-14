@@ -1,5 +1,5 @@
 """
-Fantasy Strategia - A 2D turn-based strategy game in a fantasy universe.
+Fantasy Strategia - A 2D, turn-based strategy game in a fantasy universe.
 Yann Thorimbert - 2019
 yann.thorimbert@gmail.com
 """
@@ -20,7 +20,6 @@ import PyWorld2D.saveload.io as io
 from PyWorld2D.editor.mapeditor import MapEditor #base structure for a map
 from PyWorld2D.editor.mapbuilding import MapInitializer #configuration structure of a map
 
-
 import maps.maps as maps
 import gui.gui as gui
 from logic.unit import Unit
@@ -39,6 +38,11 @@ game = Game(me)
 
 
 #faire MAINTENANT mages/archers dans les deux types d'attaques, car bcp de trucs en dependent, bcp d'ajustements !!!!
+#battle avec projectiles de loin PAS PAREIL que battle projectiles de pres
+#de loin : toujours rectangles separes, et tj 2 units à la fois max, donc tj sur axe droite-gauche, toujours unites immobiles !
+##  ==> DistantBattle
+#de pres : fleches non paraboliques
+##  ==> Battle appellant des fonctions differentes
 
 #meilleur wood : taper wood texture pixel art sur google. Wooden planks?
 

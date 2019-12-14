@@ -227,7 +227,10 @@ class Gui:
                 units_in_battle.append(defender)
                 #here, interact with user to select actual participating units among candidates to battle
                 print("DEFENDER", defender, defender.team, defender.quantity)
-                b = Battle(self.game, units_in_battle, defender)
+                if dx + dy > 1: #distant attack
+                    b = DistantBattle(self.game, units_in_battle, defender, dx+dy)
+                else:
+                    b = Battle(self.game, units_in_battle, defender)
                 b.fight()
         elif unit in self.blue_highlights:
             pass
@@ -297,7 +300,7 @@ class Gui:
         self.surface.blit(img, rect.topleft)
 
     def draw_before_objects(self, s):
-##        self.enhancer.draw_footprints()
+        self.enhancer.draw_footprints()
         self.refresh_moving_units()
         if self.unit_under_cursor:
             self.draw_highlight(self.unit_under_cursor, "yellow", s)
