@@ -41,8 +41,13 @@ game = Game(me)
 #battle avec projectiles de loin PAS PAREIL que battle projectiles de pres
 #de loin : toujours rectangles separes, et tj 2 units à la fois max, donc tj sur axe droite-gauche, toujours unites immobiles !
 ##  ==> DistantBattle
+
 #de pres : fleches non paraboliques
 ##  ==> Battle appellant des fonctions differentes
+
+
+#Finir tous les sprites relatifs aux batailles
+#Valider le jeu sur 3 types d'units : fermier, fantassin, mage
 
 #meilleur wood : taper wood texture pixel art sur google. Wooden planks?
 
@@ -96,7 +101,7 @@ humans2.finalize()
 ##game.add_unit((20,8), humans2["infantry"], 100, team=2)
 ##game.add_unit((15,7), humans2["infantry"], 100, team=2)
 
-game.add_unit((14,10), humans2["wizard"], 10, team=2)
+game.add_unit((14,10), humans2["wizard"], 2, team=2)
 game.add_unit((14,9), humans["infantry"], 10, team=1)
 game.add_unit((15,10), humans["infantry"], 10, team=1)
 game.add_unit((13,10), humans["infantry"], 10, team=1)
@@ -116,6 +121,7 @@ game.add_unit((14,11), humans["infantry"], 10, team=1)
 #### GUI and events part #######################################################
 
 ui = gui.Gui(game)
+game.outdoor_sound.play(-1)
 
 def func_reac_time(): #here add wathever you want
     """Function called each frame"""

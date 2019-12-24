@@ -161,6 +161,7 @@ class FightingUnit:
 
     def refresh_sprite_type(self):
         i,n,t = self.unit.sprites_ref[self.direction]
+        print("Refresh", i, n, t)
         self.isprite = i
         self.nframes = n
         self.frame = 0
@@ -195,7 +196,7 @@ class FightingUnit:
                     force = d / D
                     self.pos -= K * force
 
-    def draw_and_move_notarget(self):
+    def draw_move_fight_notarget(self):
         if self.battle.fight_t < BATTLE_DURATION:
             if len(self.opponents) > 0:
                 self.direction = "idle"
@@ -249,8 +250,7 @@ class FightingUnit:
         elif result > 0:
             self.battle.to_remove.append(self.target)
 
-    def fight_against_target_distant(self, i):
-        pass
+
 
     def refresh_not_near_target(self):
         if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
@@ -262,11 +262,11 @@ class FightingUnit:
     def get_frame_near_target(self):
         return (self.frame0 + self.battle.fight_frame_attack)%self.nframes
 
-    def draw_and_move(self):
+    def draw_move_fight(self):
         if self.battle.fight_t == self.start_to_run:
             self.vel = self.final_vel
         if self.target is None or self.target.dead:
-            self.draw_and_move_notarget()
+            self.draw_move_fight_notarget()
             self.time_frome_last_direction_change += 1
             return
         target_pos = V2(self.target.rect.center)
@@ -285,11 +285,11 @@ class FightingUnit:
                 self.fight_against_target_near()
         else: #walking (so we have to move the unit)
             frame = self.refresh_not_near_target()
-        self.fight_against_target_distant(frame)
         self.rect.center = self.pos
         frame += self.isprite
         img = self.unit.imgs_z_t[self.z][frame]
-        self.blit(img)
+        if self.battle.blit_this_frame: #bug potentiel ???????????
+            self.blit(img)
         self.time_frome_last_direction_change += 1
 
 
@@ -349,6 +349,7 @@ class Battle:
         #
         self.game = game
         self.surface = thorpy.get_screen()
+        self.surface_rect = self.surface.get_rect()
         self.W, self.H = self.surface.get_size()
         print("BATTLE", [unit.name for unit in units.values()])
         self.right = units.get("right")
@@ -525,8 +526,22 @@ class Battle:
             self.surface.blit(self.terrain, (0,0))
             self.blit_deads()
         for u in self.f:
-            u.draw_and_move()
+            u.draw_move_fight()
         if self.blit_this_frame:
+##            print("n projectiles=", len(self.projectiles))
+            to_delete = []
+            for p in self.projectiles:
+                self.surface.blit(p.img, p.pos)
+                p.update_pos()
+                print(p.D)
+                if p.D < self.cell_size:
+                    to_delete.append(p)
+                    p.kill_unit_here() #tuer unite proche de la position. Pas encore écrit
+                elif not self.surface_rect.collidepoint(p.pos):
+                    to_delete.append(p)
+            for p in to_delete:
+                self.projectiles.remove(p)
+        ########################################################################
             if self.finished:
                 self.text_finish.blit()
             self.refresh_timebar()
@@ -800,6 +815,7 @@ class Battle:
         els = {}
         names = {"left":"west", "right":"east", "up":"north", "down":"south", "center":"center"}
         show_death = []
+        losses = {}
         for side in ("left", "center", "right", "up", "down"):
             u = getattr(self, side)
             if u:
@@ -815,6 +831,10 @@ class Battle:
                 eside = thorpy.make_text(side.capitalize()+" unit")
                 line = thorpy.Line(eside.get_rect().width, "h")
                 race = thorpy.make_text(u.race.name)
+                if u.race.name in losses:
+                    losses[u.race.name] += before-u.quantity
+                else:
+                    losses[u.race.name] = before-u.quantity
                 utype = thorpy.make_text(u.name.capitalize())
                 race_type = thorpy.make_group([race, utype])
                 els[side] = thorpy.Box([eside,line,race_type,engaged,dead])
@@ -823,8 +843,13 @@ class Battle:
             else:
                 side = names[side]
                 els[side] = thorpy.Box([thorpy.make_text("No "+side+" unit")])
+        group_bottom = []
+        for key in losses:
+            group_bottom.append(thorpy.make_text(key+" : "+str(losses[key])+" losses"))
+        group_bottom = thorpy.make_group(group_bottom, "v")
         group_center = thorpy.make_group([els["west"], els["center"], els["east"]])
-        e = thorpy.make_ok_box([e1,e2,els["north"],group_center,els["south"]])
+        e = thorpy.make_ok_box([e1,e2,els["north"],group_center,els["south"],
+                    thorpy.Line(2*e1.get_rect().width // 3, "h"),group_bottom])
         e.set_main_color((255,255,255,100))
         e.center()
         b = self.game.me.draw()
@@ -847,9 +872,6 @@ class DistantBattle(Battle):
         self.distance = distance
 
 
-
-
-
 class DistantFightingUnit(FightingUnit):
 
     def get_frame_near_target(self):
@@ -865,20 +887,49 @@ class DistantFightingUnit(FightingUnit):
         self.refresh_sprite_type()
         self.time_frome_last_direction_change = 0
 
-    def fight_against_target_distant(self, i):
+    def fight_against_target_distant(self):
         self_is_defending = self.battle.defender is self.unit
         result = self.unit.get_distant_attack_result(self.target.unit,
                                             self.terrain_bonus,
                                             self.target.terrain_bonus,
                                             self_is_defending)
-        if result > 0:
-            battle.add_projectile(self.projectile_img, self.pos, self.target.pos)) #NON ! les targets devraient etre attribues de facon globale par Battle (pas dans l'immediat)
+        damage = result
+        P = 0.05
+        if random.random() < damage*P:
+            random.choice(self.battle.game.magic_attack_sounds).play()
+            projectile = Projectile(self, self.target)
+            self.battle.projectiles.append(projectile)
+
+    def draw_move_fight(self):
+        if self.battle.fight_t == self.start_to_run:
+            self.vel = self.final_vel
+        if self.target is None or self.target.dead:
+            self.draw_move_fight_notarget()
+            self.time_frome_last_direction_change += 1
+            return
+        target_pos = V2(self.target.rect.center)
+        self_pos = V2(self.rect.center)
+        delta = target_pos - self_pos
+        self.refresh_dxdy(delta.x, delta.y)
+        ########################################################################
+        if not self.target.dead and not self.dead:
+            if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
+                self.refresh_direction_target()
+            self.fight_against_target_distant()
+            frame = self.get_frame_near_target()
+        self.rect.center = self.pos
+        frame += self.isprite
+        img = self.unit.imgs_z_t[self.z][frame]
+        if self.battle.blit_this_frame: #bug potentiel ???????????
+            self.blit(img)
+        self.time_frome_last_direction_change += 1
+
 
 
 class CannotFightUnit(DistantFightingUnit):
 
-    def fight_against_target_distant(self, i):
-        pass
+##    def fight_against_target_distant(self, i):
+##        pass
 
     def refresh_direction_notarget(self):
         self.direction = DELTA_TO_KEY[self.dxdy]
@@ -887,34 +938,44 @@ class CannotFightUnit(DistantFightingUnit):
 
 
 class Projectile:
-    def __init__(self, fired_by, target, rect1, rect2):
+    def __init__(self, fired_by, target):#, rect1, rect2):
         self.fired_by = fired_by
         self.target = target
-        self.img = self.fired_by.projectile_img
+        self.target_pos = self.target.pos
+        self.img = self.fired_by.unit.projectile1
         self.pos = V2(self.fired_by.pos)
-        self.rect1 = rect1 #battle zone rect of the source unit
-        self.rect2 = rect2 #battle zone of the target unit
-##        self.D = abs(self.fired_by.pos - self.target.pos)
-
-class Arrow(Projectile):
-    def __init__(self, fired_by, target, angle, dx):
-        Projectile.__init__(self, fired_by, target)
-        self.dx = dx
-        self.dy = math.atan(angle) * self.dx
-        self.y_direction = 1.
-        self.img_down = pygame.transform.flip(self.img, False, True) #toujours right-left !!!!
+        self.velocity = 5*fired_by.unit.strength
+        self.direction = self.target_pos - self.fired_by.pos
+        self.direction.normalize_ip()
+        self.D = (self.fired_by.pos - self.target_pos).length()
 
     def update_pos(self):
-        if not self.rect1.collidepoint(self.pos):
-            self.y_direction = -1.
-        self.pos += (self.dx,self.y_direction*self.dy)
-        return (self.pos - self.target.pos).length()
+        self.pos += self.direction * self.velocity * self.target.battle.mod_display
+        self.D = (self.pos - self.target_pos).length()
 
-    def get_img(self):
-        if self.y_direction > 0:
-            return self.img
-        else:
-            return self.img_down
+    def kill_unit_here(self):
+        self.target.battle.to_remove.append(self.target)
+
+
+##class Arrow(Projectile):
+##    def __init__(self, fired_by, target, angle, dx):
+##        Projectile.__init__(self, fired_by, target)
+##        self.dx = dx
+##        self.dy = math.atan(angle) * self.dx
+##        self.y_direction = 1.
+##        self.img_down = pygame.transform.flip(self.img, False, True) #toujours right-left !!!!
+##
+##    def update_pos(self):
+##        if not self.rect1.collidepoint(self.pos):
+##            self.y_direction = -1.
+##        self.pos += (self.dx,self.y_direction*self.dy)
+##        return (self.pos - self.target.pos).length()
+##
+##    def get_img(self):
+##        if self.y_direction > 0:
+##            return self.img
+##        else:
+##            return self.img_down
 
 
 def get_units_dict_from_list(units):

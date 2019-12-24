@@ -138,6 +138,10 @@ class Race:
             u.footprint = pygame.image.load(imgs_fn+"_footprint.png")
         else:
             u.footprint = pygame.image.load("sprites/footprint.png")
+        if os.path.exists(imgs_fn+"_projectile.png"):
+            u.projectile1 = pygame.image.load(imgs_fn+"_projectile.png")
+        else:
+            u.projectile1 = pygame.image.load("sprites/projectile.png")
         return u
 
     def finalize(self):

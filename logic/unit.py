@@ -84,6 +84,7 @@ class Unit(MapObject):
         self.current_isprite = 0
         self.team = None
         self.footprint = None
+        self.projectile1 = None #projectile used in close battle
         self.id = Unit.unit_id
         Unit.unit_id += 1
 
@@ -157,6 +158,7 @@ class Unit(MapObject):
         obj.defense = self.defense
         #
         obj.footprint = self.footprint
+        obj.projectile1 = self.projectile1
         return obj
 
     def deep_copy(self):
@@ -196,6 +198,7 @@ class Unit(MapObject):
         for color in self.highlights:
             obj.highlights[color] = [i.copy() for i in self.highlights[color]]
         obj.footprint = self.footprint.copy()
+        obj.projectile1 = self.projectile1.copy()
         return obj
 
     def get_current_highlight(self, color):
@@ -342,9 +345,7 @@ class Unit(MapObject):
         f = RACE_FIGHT_FACTOR.get((self_race, other_race), 1.)
         r = get_random_factor_fight()
         damage_to_other = terrain_bonus1 * r * f * self.strength / other.defense
-        if damage_to_other > 0.75:
-            return 1
-        return 0
+        return damage_to_other
 
     def get_all_surrounding_units(self):
         units = []

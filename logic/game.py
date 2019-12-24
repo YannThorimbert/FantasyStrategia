@@ -27,6 +27,7 @@ class Game:
         self.hit_sounds = get_sounds("sounds/hits/", self.sounds)
         self.walk_sounds = get_sounds("sounds/footsteps/", self.sounds)
         self.outdoor_sound = self.sounds.add("sounds/atmosphere/nature.wav")[0]
+        self.magic_attack_sounds = get_sounds("sounds/attacks/", self.sounds)
         for s in self.death_sounds:
             s.set_volume(0.5)
 
