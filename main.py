@@ -36,14 +36,10 @@ map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
 me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
-
-#faire MAINTENANT mages/archers dans les deux types d'attaques, car bcp de trucs en dependent, bcp d'ajustements !!!!
+##A FAIRE IMMEDIATEMENT : BATAILLE DE CASES NON ADJACENTES
 #battle avec projectiles de loin PAS PAREIL que battle projectiles de pres
 #de loin : toujours rectangles separes, et tj 2 units à la fois max, donc tj sur axe droite-gauche, toujours unites immobiles !
 ##  ==> DistantBattle
-
-#de pres : fleches non paraboliques
-##  ==> Battle appellant des fonctions differentes
 
 
 #Finir tous les sprites relatifs aux batailles
@@ -101,11 +97,12 @@ humans2.finalize()
 ##game.add_unit((20,8), humans2["infantry"], 100, team=2)
 ##game.add_unit((15,7), humans2["infantry"], 100, team=2)
 
-game.add_unit((14,10), humans2["wizard"], 2, team=2)
+game.add_unit((14,10), humans2["wizard"], 10, team=2)
 game.add_unit((14,9), humans["infantry"], 10, team=1)
 game.add_unit((15,10), humans["infantry"], 10, team=1)
-game.add_unit((13,10), humans["infantry"], 10, team=1)
+game.add_unit((13,10), humans["wizard"], 10, team=1)
 game.add_unit((14,11), humans["infantry"], 10, team=1)
+game.add_unit((12,8), humans2["wizard"], 10, team=2)
 
 
 

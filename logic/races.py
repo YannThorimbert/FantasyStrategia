@@ -44,6 +44,20 @@ std_attack_range = {'villager':(1,1),
                     'transport_boat':(0,0),
                     'attack_boat':(1,3)}
 
+
+std_shot_frequency = {'villager':1,
+                    'infantry':1,
+                    'archer':100,
+                    'cavalry':1,
+                    'mounted archer':100,
+                    'wizard':50,
+                    'arch_mage':30,
+                    'king':1,
+                    'cook':1,
+                    'doctor':1,
+                    'transport_boat':1,
+                    'attack_boat':30}
+
 std_help_range = {  'villager':(1,1),
                     'infantry':(1,1),
                     'archer':(1,1),
@@ -151,6 +165,8 @@ class Race:
                 u.max_dist = self.dist_factor * std_max_dist[type_name]
             if u.attack_range is None:
                 u.attack_range = std_attack_range[type_name]
+            if u.shot_frequency is None:
+                u.shot_frequency = std_shot_frequency[type_name]
             if u.help_range is None:
                 print("adding help range", type_name, std_help_range[type_name])
                 u.help_range = std_help_range[type_name]

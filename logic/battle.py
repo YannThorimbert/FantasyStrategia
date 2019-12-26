@@ -161,7 +161,6 @@ class FightingUnit:
 
     def refresh_sprite_type(self):
         i,n,t = self.unit.sprites_ref[self.direction]
-        print("Refresh", i, n, t)
         self.isprite = i
         self.nframes = n
         self.frame = 0
@@ -505,7 +504,8 @@ class Battle:
                     random.choice(self.game.death_sounds).play()
                 u.dead = True
                 if u.target:
-                    u.target.targeted_by.remove(u)
+                    if u in u.target.targeted_by: #distant fighting units can target without beeing your current opponent
+                        u.target.targeted_by.remove(u)
                 self.f.remove(u)
                 u.friends.remove(u) #u.friends is u.target.opponents
                 self.deads.append(u)
@@ -533,7 +533,6 @@ class Battle:
             for p in self.projectiles:
                 self.surface.blit(p.img, p.pos)
                 p.update_pos()
-                print(p.D)
                 if p.D < self.cell_size:
                     to_delete.append(p)
                     p.kill_unit_here() #tuer unite proche de la position. Pas encore écrit
@@ -874,6 +873,10 @@ class DistantBattle(Battle):
 
 class DistantFightingUnit(FightingUnit):
 
+    def __init__(self, battle, unit, direction, zoom_level, pos):
+        FightingUnit.__init__(self, battle, unit, direction, zoom_level, pos)
+        self.time_from_last_shot = random.randint(0,100)
+
     def get_frame_near_target(self):
         return (self.frame0 + self.battle.fight_frame_attack_slow)%self.nframes
 
@@ -888,19 +891,16 @@ class DistantFightingUnit(FightingUnit):
         self.time_frome_last_direction_change = 0
 
     def fight_against_target_distant(self):
-        self_is_defending = self.battle.defender is self.unit
-        result = self.unit.get_distant_attack_result(self.target.unit,
-                                            self.terrain_bonus,
-                                            self.target.terrain_bonus,
-                                            self_is_defending)
-        damage = result
-        P = 0.05
-        if random.random() < damage*P:
+        if self.time_from_last_shot > self.unit.shot_frequency:
             random.choice(self.battle.game.magic_attack_sounds).play()
             projectile = Projectile(self, self.target)
             self.battle.projectiles.append(projectile)
+            self.time_from_last_shot = 0
 
     def draw_move_fight(self):
+        #random target otherwise they all focus on the same
+        if self.opponents:
+            self.target = random.choice(self.opponents)
         if self.battle.fight_t == self.start_to_run:
             self.vel = self.final_vel
         if self.target is None or self.target.dead:
@@ -923,6 +923,7 @@ class DistantFightingUnit(FightingUnit):
         if self.battle.blit_this_frame: #bug potentiel ???????????
             self.blit(img)
         self.time_frome_last_direction_change += 1
+        self.time_from_last_shot += 1
 
 
 
@@ -954,7 +955,14 @@ class Projectile:
         self.D = (self.pos - self.target_pos).length()
 
     def kill_unit_here(self):
-        self.target.battle.to_remove.append(self.target)
+        self_is_defending = self.target.battle.defender is self.fired_by.unit
+        damage = self.fired_by.unit.get_distant_attack_result(self.target.unit,
+                                            self.fired_by.terrain_bonus,
+                                            self.target.terrain_bonus,
+                                            self_is_defending)
+        DISTANT_FIGHT_DEAD_PROBABILITY = 0.3
+        if random.random() < damage*DISTANT_FIGHT_DEAD_PROBABILITY:
+            self.target.battle.to_remove.append(self.target)
 
 
 ##class Arrow(Projectile):

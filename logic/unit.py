@@ -69,6 +69,7 @@ class Unit(MapObject):
         #
         self.max_dist = None
         self.attack_range = None
+        self.shot_frequency = None
         self.help_range = None
         self.material_cost = {}
         self.terrain_attack = {}
@@ -153,6 +154,7 @@ class Unit(MapObject):
         obj.max_dist = self.max_dist
         obj.help_range = self.help_range
         obj.attack_range = self.attack_range
+        obj.shot_frequency = self.shot_frequency
         obj.terrain_attack = self.terrain_attack
         obj.strength = self.strength
         obj.defense = self.defense
@@ -190,6 +192,7 @@ class Unit(MapObject):
         obj.max_dist = self.max_dist
         obj.help_range = self.help_range
         obj.attack_range = self.attack_range
+        obj.shot_frequency = self.shot_frequency
         obj.terrain_attack = self.terrain_attack.copy()
         obj.strength = self.strength
         obj.defense = self.defense
@@ -345,6 +348,8 @@ class Unit(MapObject):
         f = RACE_FIGHT_FACTOR.get((self_race, other_race), 1.)
         r = get_random_factor_fight()
         damage_to_other = terrain_bonus1 * r * f * self.strength / other.defense
+        if self_is_defending:
+            damage_to_other *= 0.5
         return damage_to_other
 
     def get_all_surrounding_units(self):
