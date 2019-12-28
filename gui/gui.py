@@ -2,7 +2,7 @@ import pygame, thorpy, math
 import PyWorld2D.gui.elements as elements
 import PyWorld2D.gui.parameters as guip
 
-from logic.battle import Battle
+from logic.battle import Battle, DistantBattle
 from logic.unit import DELTA_TO_KEY, DELTAS
 
 class Footprint:
@@ -221,17 +221,19 @@ class Gui:
             defender = unit
             dx = defender.cell.coord[0] - self.selected_unit.cell.coord[0]
             dy = defender.cell.coord[1] - self.selected_unit.cell.coord[1]
-            delta = DELTA_TO_KEY.get((dx,dy))
-            if delta is not None:
+##            delta = DELTA_TO_KEY.get((dx,dy))
+            distance = dx+dy
+            if distance is not None:
                 units_in_battle = defender.get_all_surrounding_units()
                 units_in_battle.append(defender)
+                bug : click dabord sur mage jaune, puis bleu en diagonale.
                 #here, interact with user to select actual participating units among candidates to battle
                 print("DEFENDER", defender, defender.team, defender.quantity)
-                print(dx+dy)
-                if dx + dy > 1: #distant attack
-                    b = DistantBattle(self.game, units_in_battle, defender, dx+dy)
+                print(distance)
+                if distance > 1: #distant attack
+                    b = DistantBattle(self.game, units_in_battle, defender, distance)
                 else:
-                    b = Battle(self.game, units_in_battle, defender)
+                    b = Battle(self.game, units_in_battle, defender, distance)
                 b.fight()
         elif unit in self.blue_highlights:
             pass
@@ -353,7 +355,7 @@ class Gui:
         reac_motion = thorpy.Reaction(pygame.MOUSEMOTION, self.mousemotion)
         self.me.e_box.add_reaction(reac_motion)
         #TODO: remove this, this is for debug purpose only
-        reac_escape = thorpy.ConstantReaction(pygame.KEYDOWN, thorpy.functions.quit_func, {"key":pygame.K_ESCAPE})
-        self.me.e_box.add_reaction(reac_escape)
+##        reac_escape = thorpy.ConstantReaction(pygame.KEYDOWN, thorpy.functions.quit_func, {"key":pygame.K_ESCAPE})
+##        self.me.e_box.add_reaction(reac_escape)
 
 

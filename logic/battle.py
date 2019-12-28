@@ -339,8 +339,10 @@ class Battle:
 
     """
 
-    def __init__(self, game, units, defender, zoom_level=0):
+    def __init__(self, game, units, defender, distance, zoom_level=0):
+        self.distance = distance
         self.defender = defender
+        print("UNITS", units)
         units = get_units_dict_from_list(units)
         assert defender in units.values()
         nb_defender = len([u for u in units.values() if u.team==defender.team])
@@ -356,7 +358,7 @@ class Battle:
         self.up = units.get("up")
         self.down = units.get("down")
         self.center = units.get("center")
-
+        #
         self.terrain = pygame.Surface(self.surface.get_size())
         self.z = zoom_level
         self.cell_size = None
@@ -519,36 +521,39 @@ class Battle:
             life = 0.
         self.timebar.set_life(life)
 
+    def update_projectiles(self):
+        to_delete = []
+        for p in self.projectiles:
+            self.surface.blit(p.img, p.pos)
+            p.update_pos()
+            if p.D < self.cell_size:
+                to_delete.append(p)
+                p.kill_unit_here() #tuer unite proche de la position. Pas encore écrit
+            elif not self.surface_rect.collidepoint(p.pos):
+                to_delete.append(p)
+        for p in to_delete:
+            self.projectiles.remove(p)
+
+
+    def blit_terrain_and_deads(self):
+        self.surface.blit(self.terrain, (0,0))
+        self.blit_deads()
+
     def update_battle(self):
         if not self.finished:
             self.update_targets()
         if self.blit_this_frame:
-            self.surface.blit(self.terrain, (0,0))
-            self.blit_deads()
+            self.blit_terrain_and_deads()
         for u in self.f:
             u.draw_move_fight()
         if self.blit_this_frame:
-##            print("n projectiles=", len(self.projectiles))
-            to_delete = []
-            for p in self.projectiles:
-                self.surface.blit(p.img, p.pos)
-                p.update_pos()
-                if p.D < self.cell_size:
-                    to_delete.append(p)
-                    p.kill_unit_here() #tuer unite proche de la position. Pas encore écrit
-                elif not self.surface_rect.collidepoint(p.pos):
-                    to_delete.append(p)
-            for p in to_delete:
-                self.projectiles.remove(p)
-        ########################################################################
+            self.update_projectiles()
             if self.finished:
                 self.text_finish.blit()
             self.refresh_timebar()
             self.timebar.blit()
             pygame.display.flip()
-        #
         self.refresh_deads()
-        #
         self.fight_t += 1
         if self.fight_t % SLOW_FIGHT_FRAME1 == 0:
             self.fight_frame_walk += 1
@@ -562,10 +567,8 @@ class Battle:
             self.blit_this_frame = True
         else:
             self.blit_this_frame = False
-        #
         self.f.sort(key=lambda x:x.rect.bottom) #peut etre pas besoin selon systeme de cible
         extermination = len(self.f1) == 0 or len(self.f2) == 0
-
         if extermination or self.fight_t > BATTLE_DURATION:
             if self.finished == 0:
                 self.finished = self.fight_t
@@ -666,15 +669,14 @@ class Battle:
             population = self.f2
         positions = random.sample(disp, unit.quantity)
         for i in range(unit.quantity):
-            ipos = random.randint(0,len(disp)-1)
+##            ipos = random.randint(0,len(disp)-1)
 ##            pos = disp.pop(ipos)
             pos = list(positions[i])
             pos[0] += random.randint(0,s//3)
             pos[1] += random.randint(0,s//3)
-            if unit.attack_range[0] > 1 or not(unit.can_fight()):
+            if not(unit.can_fight()) or self.distance > unit.attack_range[1]:
                 u = CannotFightUnit(self, unit, "right", self.z, pos)
             elif unit.attack_range[1] > 1:
-                print("distant fighting unit", unit.name)
                 u = DistantFightingUnit(self, unit, "right", self.z, pos)
             else:
                 u = FightingUnit(self, unit, "right", self.z, pos)
@@ -867,8 +869,16 @@ class Battle:
 
 class DistantBattle(Battle):
     def __init__(self, game, units, defender, distance, zoom_level=0):
-        Battle.__init__(self, game, units, defender, zoom_level)
-        self.distance = distance
+        Battle.__init__(self, game, units, defender, distance, zoom_level)
+        self.separation_line = pygame.Surface((30,self.surface.get_height()))
+        self.sep_line_pos = (self.surface.get_width() - self.separation_line.get_width())/2
+##        for u in self.f:
+##            if not u can fight a distance:
+##                u = NoFightingUnit()
+
+    def blit_terrain_and_deads(self):
+        Battle.blit_terrain_and_deads(self)
+        self.surface.blit(self.separation_line, (self.sep_line_pos,0))
 
 
 class DistantFightingUnit(FightingUnit):
@@ -936,6 +946,9 @@ class CannotFightUnit(DistantFightingUnit):
         self.direction = DELTA_TO_KEY[self.dxdy]
         self.refresh_sprite_type()
         self.time_frome_last_direction_change = 0
+
+    def draw_move_fight(self):
+        pass
 
 
 class Projectile:

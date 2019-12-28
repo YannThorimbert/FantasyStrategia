@@ -102,7 +102,7 @@ game.add_unit((14,9), humans["infantry"], 10, team=1)
 game.add_unit((15,10), humans["infantry"], 10, team=1)
 game.add_unit((13,10), humans["wizard"], 10, team=1)
 game.add_unit((14,11), humans["infantry"], 10, team=1)
-game.add_unit((12,8), humans2["wizard"], 10, team=2)
+game.add_unit((12,9), humans2["wizard"], 10, team=2)
 
 
 
