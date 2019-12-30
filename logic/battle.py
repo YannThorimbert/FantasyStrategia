@@ -3,6 +3,7 @@ import numpy as np
 import pygame
 from pygame.math import Vector2 as V2
 import bisect
+import PyWorld2D.gui.parameters as guip
 
 ##from .unit import DELTA_TO_KEY, DELTA_TO_KEY_A, KEY_TO_DELTA, DELTAS
 
@@ -10,6 +11,14 @@ DELTAS = ((1,0),(-1,0),(0,1),(0,-1))
 DELTA_TO_KEY = {(0,0):"idle", (1,0):"right", (-1,0):"left", (0,1):"down", (0,-1):"up"}
 KEY_TO_DELTA = {DELTA_TO_KEY[key]:key for key in DELTA_TO_KEY}
 DELTA_TO_KEY_A = {(0,0):"idle", (1,0):"rattack", (-1,0):"lattack", (0,1):"down", (0,-1):"up"}
+
+ANGLE_PROJECTILE_RADIAN = math.atan(2.) #depend on the sprites (e.g. arrows) !!!!
+ANGLE_PROJECTILE = ANGLE_PROJECTILE_RADIAN * 180. / math.pi
+SPEEDUP_PROJECTILE = 10.
+
+##ANGLE_PROJECTILE = 30.
+##ANGLE_PROJECTILE_RADIAN = ANGLE_PROJECTILE * math.pi / 180.
+
 
 ANIM_VEL = 1.5
 SLOW_FIGHT_FRAME1 = 4
@@ -340,13 +349,16 @@ class Battle:
     """
 
     def __init__(self, game, units, defender, distance, zoom_level=0):
+        self.projectile_class = Projectile
         self.distance = distance
         self.defender = defender
-        print("UNITS", units)
-        units = get_units_dict_from_list(units)
+        print("UNITS", units, [u.team for u in units])
+        units = self.get_units_dict_from_list(units)
         assert defender in units.values()
         nb_defender = len([u for u in units.values() if u.team==defender.team])
         assert nb_defender == 1
+        #Map objects
+        self.objects = self.get_objects_dict_from_units() # PUIS BLITTER SUR LE TERRAIN...
         #
         self.game = game
         self.surface = thorpy.get_screen()
@@ -401,9 +413,43 @@ class Battle:
         self.timebar.set_main_color((220,220,220,100))
         self.timebar.stick_to("screen","top", "top")
 
+
     def press_enter(self):
         if self.finished:
             self.fight_t = 100000000000
+
+
+    def get_units_dict_from_list(self, units):
+        coords = [u.cell.coord for u in units]
+        assert 1 < len(coords) <= 5
+        neighbours = {}
+        for u in units:
+            x,y = u.cell.coord
+            neighbours[u] = []
+            for dx,dy in DELTAS:
+                if (x+dx,y+dy) in coords:
+                    neighbours[u].append((dx,dy))
+        #now choose the units with the largest amount of neighbours
+        candidates = [(len(neighbours[u]),units.index(u),u) for u in neighbours]
+        center_unit = max(candidates)[-1]
+        game = center_unit.game
+        x,y = center_unit.cell.coord
+        #build the relative dict
+        relative_dict = {}
+        for dx,dy in neighbours[center_unit]:
+            key = DELTA_TO_KEY[(dx,dy)]
+            other = game.get_unit_at(x+dx,y+dy)
+            relative_dict[key] = other
+        #now build the final dict
+        if len(coords) == 2:
+            assert len(relative_dict) == 1
+            only_key = list(relative_dict.keys())[0]
+            dx,dy = KEY_TO_DELTA[only_key]
+            otherkey = DELTA_TO_KEY[(-dx,-dy)]
+            relative_dict[otherkey] = center_unit
+        else:
+            relative_dict["center"] = center_unit
+        return relative_dict
 
     def fight(self):
         self.prepare_battle()
@@ -416,7 +462,7 @@ class Battle:
 
     def slow(self):
         self.mod_display = 1
-        thorpy.get_current_menu().fps = 60
+        thorpy.get_current_menu().fps = guip.FPS
 
 
     def show(self):
@@ -500,6 +546,9 @@ class Battle:
                 self.surface.blit(u.dead_img,u.rect)
 
     def refresh_deads(self):
+        if self.finished:
+            self.to_remove = []
+            return
         for u in self.to_remove:
             if not u.dead:
                 if self.game.death_sounds and random.random() < P_DEAD_SOUND:
@@ -523,13 +572,15 @@ class Battle:
 
     def update_projectiles(self):
         to_delete = []
+        semicell = self.cell_size//2
         for p in self.projectiles:
-            self.surface.blit(p.img, p.pos)
+            if p.can_blit():
+                self.surface.blit(p.img, p.pos)
             p.update_pos()
-            if p.D < self.cell_size:
+            if p.D < semicell:
                 to_delete.append(p)
                 p.kill_unit_here() #tuer unite proche de la position. Pas encore écrit
-            elif not self.surface_rect.collidepoint(p.pos):
+            elif p.should_be_removed():
                 to_delete.append(p)
         for p in to_delete:
             self.projectiles.remove(p)
@@ -538,6 +589,10 @@ class Battle:
     def blit_terrain_and_deads(self):
         self.surface.blit(self.terrain, (0,0))
         self.blit_deads()
+
+    def refresh_and_blit_gui(self):
+        self.refresh_timebar()
+        self.timebar.blit()
 
     def update_battle(self):
         if not self.finished:
@@ -550,8 +605,7 @@ class Battle:
             self.update_projectiles()
             if self.finished:
                 self.text_finish.blit()
-            self.refresh_timebar()
-            self.timebar.blit()
+            self.refresh_and_blit_gui()
             pygame.display.flip()
         self.refresh_deads()
         self.fight_t += 1
@@ -580,6 +634,7 @@ class Battle:
 
     def finish_battle(self):
         print("FINISH BATTLE")
+        self.slow()
         for u in self.f:
             u.target = None
             u.update_dest_end()
@@ -724,9 +779,6 @@ class Battle:
                 u.start_to_run = DEFENSE_START_RUNNING
                 u.vel = u.final_vel / 2.
         self.f.sort(key=lambda x:x.rect.bottom)
-        #
-##        self.before_f1 = len(self.f1), self.f1[0].unit
-##        self.before_f2 = len(self.f2), self.f2[0].unit
 
 
     def update_targets(self):
@@ -870,15 +922,54 @@ class Battle:
 class DistantBattle(Battle):
     def __init__(self, game, units, defender, distance, zoom_level=0):
         Battle.__init__(self, game, units, defender, distance, zoom_level)
+        self.projectile_class = DistantBattleProjectile
         self.separation_line = pygame.Surface((30,self.surface.get_height()))
-        self.sep_line_pos = (self.surface.get_width() - self.separation_line.get_width())/2
-##        for u in self.f:
-##            if not u can fight a distance:
-##                u = NoFightingUnit()
+        self.sep_line_x = (self.surface.get_width() - self.separation_line.get_width())/2
 
-    def blit_terrain_and_deads(self):
-        Battle.blit_terrain_and_deads(self)
-        self.surface.blit(self.separation_line, (self.sep_line_pos,0))
+    def get_units_dict_from_list(self, units):
+        coords = [u.cell.coord for u in units]
+        relative_dict = {}
+        if units[0].cell.coord[0] < units[1].cell.coord[0]:
+            relative_dict["left"] = units[0]
+            relative_dict["right"] = units[1]
+        else:
+            relative_dict["left"] = units[1]
+            relative_dict["right"] = units[0]
+        return relative_dict
+
+
+    def refresh_and_blit_gui(self):
+        self.refresh_timebar()
+        self.surface.blit(self.separation_line, (self.sep_line_x,0))
+        self.timebar.blit()
+
+##    def blit_terrain_and_deads(self):
+##        Battle.blit_terrain_and_deads(self)
+##        self.surface.blit(self.separation_line, (self.sep_line_x,0))
+
+    def prepare_battle(self):
+        Battle.prepare_battle(self)
+        W,H = self.surface.get_size()
+        nx = W // self.cell_size + 1
+        ny = H // self.cell_size + 1
+        cell = pygame.Rect(0, 0, self.cell_size, self.cell_size)
+        #left:
+        img, splash, footprint = get_img(self.left.cell, self.z)
+        for x in range(nx//2):
+            cell.x = x*self.cell_size
+            for y in range(ny):
+                cell.y = y*self.cell_size
+                self.terrain.blit(img, cell.topleft)
+        #right:
+        img, splash, footprint = get_img(self.right.cell, self.z)
+        for x in range(nx//2,nx):
+            cell.x = x*self.cell_size
+            for y in range(ny):
+                cell.y = y*self.cell_size
+                self.terrain.blit(img, cell.topleft)
+##        thorpy.get_screen().blit(self.terrain, (0,0))
+##        pygame.display.flip()
+##        thorpy.get_application().pause()
 
 
 class DistantFightingUnit(FightingUnit):
@@ -896,6 +987,7 @@ class DistantFightingUnit(FightingUnit):
         return (self.frame0 + self.battle.fight_frame_attack_slow)%self.nframes
 
     def refresh_direction_notarget(self):
+        return
         self.direction = DELTA_TO_KEY_A[self.dxdy]
         self.refresh_sprite_type()
         self.time_frome_last_direction_change = 0
@@ -903,7 +995,7 @@ class DistantFightingUnit(FightingUnit):
     def fight_against_target_distant(self):
         if self.time_from_last_shot > self.unit.shot_frequency:
             random.choice(self.battle.game.magic_attack_sounds).play()
-            projectile = Projectile(self, self.target)
+            projectile = self.battle.projectile_class(self, self.target)
             self.battle.projectiles.append(projectile)
             self.time_from_last_shot = 0
 
@@ -923,9 +1015,10 @@ class DistantFightingUnit(FightingUnit):
         self.refresh_dxdy(delta.x, delta.y)
         ########################################################################
         if not self.target.dead and not self.dead:
-            if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
-                self.refresh_direction_target()
-            self.fight_against_target_distant()
+            if not self.battle.finished:
+                if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
+                    self.refresh_direction_target()
+                self.fight_against_target_distant()
             frame = self.get_frame_near_target()
         self.rect.center = self.pos
         frame += self.isprite
@@ -937,10 +1030,8 @@ class DistantFightingUnit(FightingUnit):
 
 
 
-class CannotFightUnit(DistantFightingUnit):
+class CannotFightUnit(FightingUnit):
 
-##    def fight_against_target_distant(self, i):
-##        pass
 
     def refresh_direction_notarget(self):
         self.direction = DELTA_TO_KEY[self.dxdy]
@@ -948,7 +1039,30 @@ class CannotFightUnit(DistantFightingUnit):
         self.time_frome_last_direction_change = 0
 
     def draw_move_fight(self):
-        pass
+                #random target otherwise they all focus on the same
+        if self.opponents:
+            self.target = random.choice(self.opponents)
+        if self.battle.fight_t == self.start_to_run:
+            self.vel = self.final_vel
+        if self.target is None or self.target.dead:
+            self.draw_move_fight_notarget()
+            self.time_frome_last_direction_change += 1
+            return
+        target_pos = V2(self.target.rect.center)
+        self_pos = V2(self.rect.center)
+        delta = target_pos - self_pos
+        self.refresh_dxdy(delta.x, delta.y)
+        ########################################################################
+        if not self.target.dead and not self.dead:
+            if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
+                self.refresh_direction_target()
+            frame = self.get_frame_near_target()
+        self.rect.center = self.pos
+        frame += self.isprite
+        img = self.unit.imgs_z_t[self.z][frame]
+        if self.battle.blit_this_frame: #bug potentiel ???????????
+            self.blit(img)
+        self.time_frome_last_direction_change += 1
 
 
 class Projectile:
@@ -963,6 +1077,12 @@ class Projectile:
         self.direction.normalize_ip()
         self.D = (self.fired_by.pos - self.target_pos).length()
 
+    def should_be_removed(self):
+        return not self.target.battle.surface_rect.collidepoint(self.pos)
+
+    def can_blit(self):
+        return True
+
     def update_pos(self):
         self.pos += self.direction * self.velocity * self.target.battle.mod_display
         self.D = (self.pos - self.target_pos).length()
@@ -976,6 +1096,57 @@ class Projectile:
         DISTANT_FIGHT_DEAD_PROBABILITY = 0.3
         if random.random() < damage*DISTANT_FIGHT_DEAD_PROBABILITY:
             self.target.battle.to_remove.append(self.target)
+
+
+class DistantBattleProjectile(Projectile):
+
+    def __init__(self, fired_by, target):
+        Projectile.__init__(self, fired_by, target)
+        self.direction = V2(1,0)
+        if self.pos.x > self.target_pos.x:
+            self.direction.rotate_ip(ANGLE_PROJECTILE)
+            self.direction.x *= -1.
+            self.direction.y *= -1.
+        else:
+            self.direction.rotate_ip(ANGLE_PROJECTILE)
+            self.direction.y *= -1.
+        self.D = abs(self.pos.x - self.target_pos.x)
+        self.xmax = self.target.battle.surface.get_width()
+        self.x_change_direction = self.xmax//2
+
+    def should_be_removed(self):
+        return self.pos.x < 0 or self.pos.x > self.xmax
+
+    def update_pos(self):
+        before = self.pos.x > self.x_change_direction
+        self.pos += self.direction * self.velocity * self.target.battle.mod_display
+        after = self.pos.x > self.x_change_direction
+        self.D = abs(self.pos.x - self.target_pos.x)
+        if before != after or self.pos.y < 0:
+            if self.direction.y < 0: #crossed the mid domain whilst ascending
+                self.direction.y *= -1
+                self.pos.x = self.fired_by.pos.x
+                dx = abs(self.pos.x - self.target_pos.x)
+                dy = dx * math.tan(ANGLE_PROJECTILE_RADIAN)
+                self.pos.y = self.target_pos.y - dy
+                self.velocity *= SPEEDUP_PROJECTILE
+            elif before != after: #crossed the mid domain whilst descending
+                self.velocity /= SPEEDUP_PROJECTILE
+
+    def can_blit(self):
+        return True
+        if self.fired_by.pos.x > self.target_pos.x:
+            if self.direction.y < 0:
+                return self.pos.x > self.x_change_direction
+            elif self.direction.y > 0:
+                return self.pos.x < self.x_change_direction
+        else:
+            if self.direction.y < 0:
+                return self.pos.x < self.x_change_direction
+            elif self.direction.y > 0:
+                return self.pos.x > self.x_change_direction
+        return False
+
 
 
 ##class Arrow(Projectile):
@@ -999,37 +1170,6 @@ class Projectile:
 ##            return self.img_down
 
 
-def get_units_dict_from_list(units):
-    coords = [u.cell.coord for u in units]
-    assert 1 < len(coords) <= 5
-    neighbours = {}
-    for u in units:
-        x,y = u.cell.coord
-        neighbours[u] = []
-        for dx,dy in DELTAS:
-            if (x+dx,y+dy) in coords:
-                neighbours[u].append((dx,dy))
-    #now choose the units with the largest amount of neighbours
-    candidates = [(len(neighbours[u]),units.index(u),u) for u in neighbours]
-    center_unit = max(candidates)[-1]
-    game = center_unit.game
-    x,y = center_unit.cell.coord
-    #build the relative dict
-    relative_dict = {}
-    for dx,dy in neighbours[center_unit]:
-        key = DELTA_TO_KEY[(dx,dy)]
-        other = game.get_unit_at(x+dx,y+dy)
-        relative_dict[key] = other
-    #now build the final dict
-    if len(coords) == 2:
-        assert len(relative_dict) == 1
-        only_key = list(relative_dict.keys())[0]
-        dx,dy = KEY_TO_DELTA[only_key]
-        otherkey = DELTA_TO_KEY[(-dx,-dy)]
-        relative_dict[otherkey] = center_unit
-    else:
-        relative_dict["center"] = center_unit
-    return relative_dict
 
 
 def get_img(cell, z):

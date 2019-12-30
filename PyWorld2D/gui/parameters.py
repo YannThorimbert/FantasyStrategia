@@ -1,5 +1,7 @@
 import thorpy, pygame
 
+FPS = 60
+
 DELAY_HELP = 5.
 
 #cam

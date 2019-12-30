@@ -36,18 +36,25 @@ map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
 me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
-##A FAIRE IMMEDIATEMENT : BATAILLE DE CASES NON ADJACENTES
-#battle avec projectiles de loin PAS PAREIL que battle projectiles de pres
-#de loin : toujours rectangles separes, et tj 2 units à la fois max, donc tj sur axe droite-gauche, toujours unites immobiles !
-##  ==> DistantBattle
+################################################################################
+######################## OBJECTIF IMMEDIAT #####################################
+################################################################################
 
+#terrain:
+    #1) modifie le déplacement en mode carte (deja fait)
+    #2) modifie la probabilite d'etre touche par les projectiles au moment de l'impact en mode combat (a faire)
+# ===> montrer les objets dans les combats (maisons, buissons, arbres, ponts ...)
+#faire les maisons de la couleur des teams
 
 #Finir tous les sprites relatifs aux batailles
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
 
-#meilleur wood : taper wood texture pixel art sur google. Wooden planks?
 
-#combat depuis materiaux modifies par objets (pont, foret, villages, PAS murailles (archers derriere, pas dessus.))
+################################################################################
+################################################################################
+################################################################################
+
+#meilleur wood : taper wood texture pixel art sur google. Wooden planks?
 
 #murailles: au niveau de l'implementation, sont des types d'unites! (static unit)
 #       Les chateaux sont juste des villages entoures de murailles
@@ -62,6 +69,8 @@ game = Game(me)
 #impots, incendie, viols ==> depend de ce qu'on cherche a avoir, de la popularite
 #       aupres de ses soldats deja existants ou bien des futurs ressortissants des villes prises
 #3 scores : score militaire, score moral, score economique
+
+#chateaux : villages entoures de murailles, avec armes de jet a l'interieur
 
 
 ################################################################################
@@ -99,21 +108,23 @@ humans2.finalize()
 
 game.add_unit((14,10), humans2["wizard"], 10, team=2)
 game.add_unit((14,9), humans["infantry"], 10, team=1)
-game.add_unit((15,10), humans["infantry"], 10, team=1)
+game.add_unit((15,10), humans2["infantry"], 10, team=2)
 game.add_unit((13,10), humans["wizard"], 10, team=1)
 game.add_unit((14,11), humans["infantry"], 10, team=1)
 game.add_unit((12,9), humans2["wizard"], 10, team=2)
 
+game.add_unit((18,8), humans["infantry"], 1, team=1)
+game.add_unit((17,9), humans2["wizard"], 1, team=2)
 
+game.add_unit((15,15), humans["flag"], 1, team=1)
 
-##from logic.battle import Battle
-##b = Battle(game, game.units, game.units[1])
-##b.fight()
+##flag = Unit("flag", me, )
+##flag = MapObject(me, "./sprites/Flag.png", "Flag", 1.)
+##game.add_object((15,15), flag, 1)
 
 
 ##game.get_cell_at(14,15).set_name("My left cell")
 ##game.get_cell_at(15,14).set_name("My top cell")
-
 
 #### GUI and events part #######################################################
 

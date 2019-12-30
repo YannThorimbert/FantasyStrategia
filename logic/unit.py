@@ -39,6 +39,7 @@ def get_random_factor_fight():
 
 class Unit(MapObject):
     unit_id = 0
+    is_object = False
 
     @staticmethod
     def get_saved_attributes():
@@ -90,8 +91,6 @@ class Unit(MapObject):
         Unit.unit_id += 1
 
 
-
-
     def _spawn_possible_destinations(self, x, y, tot_cost, path_to_here, score):
         for dx,dy in DELTAS:
             cx, cy = x+dx, y+dy #next cell
@@ -131,7 +130,7 @@ class Unit(MapObject):
     def copy(self):
         """The copy references the same images as the original !"""
         self.ncopies += 1
-        obj = Unit(self.type_name, self.editor, None, self.name, self.factor,
+        obj = self.__class__(self.type_name, self.editor, None, self.name, self.factor,
                         list(self.relpos), new_type=False)
         obj.original_imgs = self.original_imgs
         obj.nframes = self.nframes
@@ -164,7 +163,7 @@ class Unit(MapObject):
         return obj
 
     def deep_copy(self):
-        obj = Unit(self.type_name, self.editor, None, self.name, self.factor,
+        obj = self.__class__(self.type_name, self.editor, None, self.name, self.factor,
                         list(self.relpos), new_type=False)
         obj.quantity = self.quantity
         obj.fns = self.fns
@@ -360,6 +359,59 @@ class Unit(MapObject):
             if unit:
                 units.append(unit)
         return units
+
+    def get_all_surrounding_ennemies(self):
+        return [u for u in self.get_all_surrounding_units() if u.team != self.team]
+
+
+class ObjectUnit(Unit):
+    is_object = True
+
+    def __init__(self, type_name, editor, sprites, name=None, factor=1., relpos=(0,0),
+                    build=True, new_type=True):
+        self.stop_animation = float("inf")
+        self.stop_animation_func = None
+        self.set_animation_type("loop")
+        self.animation_step = 0
+        self.highlights = {}
+        self.sprites_ref = {}
+        if sprites:
+            imgs = []
+            isprite = 0
+            for key in ["idle"]:
+                sprites_for_this_key, frame_type = sprites[key]
+                print("HHHHHHHHHHHHH",sprites_for_this_key)
+                imgs.extend(sprites_for_this_key)
+                n = len(sprites_for_this_key)
+                self.sprites_ref[key] = (isprite, n, frame_type)
+                isprite += n
+        else:
+            imgs = [""]
+        MapObject.__init__(self, editor, imgs, type_name, factor, relpos, build,
+                            new_type)
+        self.type_name = type_name
+        #
+        self.max_dist = None
+        self.attack_range = None
+        self.shot_frequency = None
+        self.help_range = None
+        self.material_cost = {}
+        self.terrain_attack = {}
+        self.strength = None
+        self.defense = None
+        #
+        self.race = None
+        self.game = None
+        #
+        self.walk_img = {}
+        self.set_frame_refresh_type(2) #type fast
+        self.vel = 0.07
+        self.current_isprite = 0
+        self.team = None
+        self.footprint = None
+        self.projectile1 = None #projectile used in close battle
+        self.id = Unit.unit_id
+        Unit.unit_id += 1
 
 
 def get_unit_sprites(fn,  colors="blue", deltas=None, s=32, ckey=(255,255,255)):

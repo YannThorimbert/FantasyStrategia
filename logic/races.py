@@ -1,6 +1,7 @@
 import os
 import pygame
 from . import unit
+import PyWorld2D.constants as const
 
 std_material_cost = {'Deep water': float("inf"),
                      'Grass': 1.5,
@@ -136,10 +137,12 @@ class Race:
         self.defense_factor = 1.
         #
         self.unit_types = {}
+        self.object_types = {}
         self.me = me
         self.color = color
         for unit_type in units_type_to_load:
             self.add_type(unit_type, "sprites/"+baserace+"_"+unit_type)
+        self.add_object("flag", "sprites/flag.png")
 
 
     def add_type(self, type_name, imgs_fn, factor=1.):
@@ -152,10 +155,20 @@ class Race:
             u.footprint = pygame.image.load(imgs_fn+"_footprint.png")
         else:
             u.footprint = pygame.image.load("sprites/footprint.png")
-        if os.path.exists(imgs_fn+"_projectile.png"):
-            u.projectile1 = pygame.image.load(imgs_fn+"_projectile.png")
+        if os.path.exists(imgs_fn+"_projectile1.png"):
+            u.projectile1 = pygame.image.load(imgs_fn+"_projectile1.png")
         else:
-            u.projectile1 = pygame.image.load("sprites/projectile.png")
+            u.projectile1 = pygame.image.load("sprites/projectile1.png")
+##            u.projectile1.convert()
+##            u.projectile1.set_colorkey((255,255,255))
+        return u
+
+    def add_object(self, object_name, imgs_fn, factor=1.):
+        imgs = {"idle":(unit.get_unit_sprites(imgs_fn, self.color), const.NORMAL)}
+        assert object_name not in self.object_types
+        u = unit.ObjectUnit(object_name, self.me, imgs, object_name, factor)
+        u.race = self
+        self.object_types[object_name] = u
         return u
 
     def finalize(self):
@@ -181,7 +194,10 @@ class Race:
                                             self.base_terrain_attack)
 
     def __getitem__(self, key):
-        return self.unit_types[key]
+        if not key in self.unit_types:
+            return self.object_types[key]
+        else:
+            return self.unit_types[key]
 
 
 def fusion_dicts(primary, secondary):

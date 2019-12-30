@@ -118,12 +118,20 @@ class Gui:
         self.moving_units = []
         self.add_reactions()
 
+    def clear(self):
+        self.selected_unit = None
+        self.unit_under_cursor = None
+        self.blue_highlights = []
+        self.red_highlights = []
+
     def get_destinations(self, cell):
         destinations = []
         self.red_highlights = []
         self.blue_highlights = []
         if cell.unit:
-            if cell.unit.anim_path:
+            if cell.unit.is_object:
+                return []
+            if cell.unit.anim_path: #moving unit, let her alone...
                 return []
             if not self.selected_unit:
                 ref_unit = self.unit_under_cursor
@@ -217,23 +225,28 @@ class Gui:
             self.selected_unit = None
 
     def treat_click_interaction(self, unit):
-        if unit in self.red_highlights:
+        if unit in self.red_highlights: #then self.selected_unit is the agressor
             defender = unit
             dx = defender.cell.coord[0] - self.selected_unit.cell.coord[0]
             dy = defender.cell.coord[1] - self.selected_unit.cell.coord[1]
-##            delta = DELTA_TO_KEY.get((dx,dy))
-            distance = dx+dy
-            if distance is not None:
-                units_in_battle = defender.get_all_surrounding_units()
-                units_in_battle.append(defender)
-                #here, interact with user to select actual participating units among candidates to battle
-                print("DEFENDER", defender, defender.team, defender.quantity)
-                print(distance)
-                if distance > 1: #distant attack
-                    b = DistantBattle(self.game, units_in_battle, defender, distance)
-                else:
-                    b = Battle(self.game, units_in_battle, defender, distance)
+            distance = abs(dx)+abs(dy)
+##            print("Units in battle", units_in_battle)
+##            print("DEFENDER", defender, defender.team, defender.quantity)
+##            print("AGRESSOR", self.selected_unit)
+##            print("Distance", distance)
+            if distance > 1 and self.selected_unit.attack_range[1] >= distance: #distant attack
+                units_in_battle = [self.selected_unit, defender]
+                b = DistantBattle(self.game, units_in_battle, defender, distance)
                 b.fight()
+                self.clear()
+                thorpy.get_current_menu().fps = guip.FPS
+            elif distance == 1:
+                units_in_battle = defender.get_all_surrounding_ennemies()
+                units_in_battle.append(defender)
+                b = Battle(self.game, units_in_battle, defender, distance)
+                b.fight()
+                self.clear()
+                thorpy.get_current_menu().fps = guip.FPS
         elif unit in self.blue_highlights:
             pass
         else:
@@ -346,6 +359,9 @@ class Gui:
     def refresh(self):
         self.enhancer.refresh()
 
+    def add_flag(self):
+        self.game.add_unit((16,15), self.game.units[0].race["flag"], 1, team=self.game.units[0].team)
+
     def add_reactions(self):
         reac_click = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, self.lmb,{"button":1})
         self.me.e_box.add_reaction(reac_click)
@@ -353,6 +369,9 @@ class Gui:
         self.me.e_box.add_reaction(reac_click)
         reac_motion = thorpy.Reaction(pygame.MOUSEMOTION, self.mousemotion)
         self.me.e_box.add_reaction(reac_motion)
+        reac_escape = thorpy.ConstantReaction(pygame.KEYDOWN, self.add_flag, {"key":pygame.K_f})
+        self.me.e_box.add_reaction(reac_escape)
+
         #TODO: remove this, this is for debug purpose only
 ##        reac_escape = thorpy.ConstantReaction(pygame.KEYDOWN, thorpy.functions.quit_func, {"key":pygame.K_ESCAPE})
 ##        self.me.e_box.add_reaction(reac_escape)
