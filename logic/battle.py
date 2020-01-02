@@ -97,6 +97,8 @@ class FightingUnit:
             self.dead_img = pygame.transform.flip(self.dead_img, True, False)
             dhx *= -1
         self.delta_head = (dhx,dhy)
+        if unit.type_name == "wizard":
+            self.delta_head = None
         self.direction = "left"
         self.refresh_sprite_type()
         self.dead = False
@@ -213,9 +215,10 @@ class FightingUnit:
                 self.vel = 0.
                 frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
             else:
-                delta = self.update_dest_end()
+                self.update_dest_end()
                 frame = (self.frame0 + self.battle.fight_frame_walk)%self.nframes
         else:
+            # print("LAA", self.battle.fight_t)
             delta = self.update_dest_end()
             dl = delta.length()
             if dl < self.battle.cell_size:
@@ -303,6 +306,12 @@ class FightingUnit:
 
     def update_dest_end(self):
         delta = self.init_pos - self.pos
+        if delta.length() < self.battle.cell_size//2:
+            self.direction = "idle"
+            self.dxdy = (0,0)
+            self.refresh_sprite_type()
+            self.vel = 0.
+            return delta
         self.refresh_dxdy(delta.x, delta.y)
         if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
             self.direction = DELTA_TO_KEY[self.dxdy]
@@ -348,6 +357,7 @@ class Battle:
 
     """
 
+
     def __init__(self, game, units, defender, distance, zoom_level=0):
         self.projectile_class = Projectile
         self.distance = distance
@@ -359,6 +369,8 @@ class Battle:
         assert nb_defender == 1
         #Map objects
         self.objects = self.get_objects_dict_from_units() # PUIS BLITTER SUR LE TERRAIN...
+            probleme : drapeau devrait pas etre une unite, parce que fout le bordel partout. Il faut vraiment que ce soit un objet...
+            ajouter aussi que le gui blit le nombre d'hommes de l'unit directement a cote sur la carte
         #
         self.game = game
         self.surface = thorpy.get_screen()
@@ -537,7 +549,8 @@ class Battle:
                 r.y += self.cell_size//2
                 self.terrain.blit(self.blood,r)
                 self.surface.blit(u.dead_img,u.rect)
-                self.terrain.blit(u.head, u.rect.move(u.delta_head))
+                if u.delta_head is not None:
+                    self.terrain.blit(u.head, u.rect.move(u.delta_head))
             elif frame < u.nframes:
                 self.surface.blit(u.unit.imgs_z_t[u.z][frame + u.isprite],u.rect)
             else:
@@ -593,6 +606,8 @@ class Battle:
     def refresh_and_blit_gui(self):
         self.refresh_timebar()
         self.timebar.blit()
+        if self.finished:
+            self.text_finish.blit()
 
     def update_battle(self):
         if not self.finished:
@@ -603,8 +618,6 @@ class Battle:
             u.draw_move_fight()
         if self.blit_this_frame:
             self.update_projectiles()
-            if self.finished:
-                self.text_finish.blit()
             self.refresh_and_blit_gui()
             pygame.display.flip()
         self.refresh_deads()
@@ -942,10 +955,9 @@ class DistantBattle(Battle):
         self.refresh_timebar()
         self.surface.blit(self.separation_line, (self.sep_line_x,0))
         self.timebar.blit()
+        if self.finished:
+            self.text_finish.blit()
 
-##    def blit_terrain_and_deads(self):
-##        Battle.blit_terrain_and_deads(self)
-##        self.surface.blit(self.separation_line, (self.sep_line_x,0))
 
     def prepare_battle(self):
         Battle.prepare_battle(self)
@@ -967,9 +979,6 @@ class DistantBattle(Battle):
             for y in range(ny):
                 cell.y = y*self.cell_size
                 self.terrain.blit(img, cell.topleft)
-##        thorpy.get_screen().blit(self.terrain, (0,0))
-##        pygame.display.flip()
-##        thorpy.get_application().pause()
 
 
 class DistantFightingUnit(FightingUnit):
@@ -977,6 +986,16 @@ class DistantFightingUnit(FightingUnit):
     def __init__(self, battle, unit, direction, zoom_level, pos):
         FightingUnit.__init__(self, battle, unit, direction, zoom_level, pos)
         self.time_from_last_shot = random.randint(0,100)
+
+
+    def draw_move_fight_notarget(self):
+        self.direction = "idle"
+        self.dxdy = (0,0)
+        self.refresh_sprite_type()
+        self.vel = 0.
+        frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
+        img = self.unit.imgs_z_t[self.z][frame]
+        self.blit(img)
 
     def get_frame_near_target(self):
         return (self.frame0 + self.battle.fight_frame_attack_slow)%self.nframes
@@ -987,10 +1006,7 @@ class DistantFightingUnit(FightingUnit):
         return (self.frame0 + self.battle.fight_frame_attack_slow)%self.nframes
 
     def refresh_direction_notarget(self):
-        return
-        self.direction = DELTA_TO_KEY_A[self.dxdy]
-        self.refresh_sprite_type()
-        self.time_frome_last_direction_change = 0
+        pass
 
     def fight_against_target_distant(self):
         if self.time_from_last_shot > self.unit.shot_frequency:

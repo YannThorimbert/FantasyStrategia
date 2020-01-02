@@ -380,7 +380,6 @@ class ObjectUnit(Unit):
             isprite = 0
             for key in ["idle"]:
                 sprites_for_this_key, frame_type = sprites[key]
-                print("HHHHHHHHHHHHH",sprites_for_this_key)
                 imgs.extend(sprites_for_this_key)
                 n = len(sprites_for_this_key)
                 self.sprites_ref[key] = (isprite, n, frame_type)
@@ -449,12 +448,6 @@ def load_sprites(fn, colors="blue", h=const.FAST, v=const.FAST, i=const.SLOW):
     rattack = get_unit_sprites(fn+"_right_attack.png",colors)
     die = get_unit_sprites(fn+"_die.png",colors)
     head = get_unit_sprites(fn+"_head.png",colors)
-##    heads = []
-##    for i in range(4):
-##        filename = fn+"_head"+str(i)+".png"
-##        if os.path.exists(filename):
-##            head = get_unit_sprites(filename,colors)
-##            heads.append(head)
     sprites = {"right":(right,h), "left":(left,h), "down":(down,v), "up":(up,v),
                 "idle":(idle,i),
                 "lattack":(lattack,i), "rattack":(rattack,i),
