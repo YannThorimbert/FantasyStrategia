@@ -4,6 +4,7 @@ import pygame
 from pygame.math import Vector2 as V2
 import bisect
 import PyWorld2D.gui.parameters as guip
+from .unit import Unit
 
 ##from .unit import DELTA_TO_KEY, DELTA_TO_KEY_A, KEY_TO_DELTA, DELTAS
 
@@ -40,6 +41,8 @@ P_HIT_SOUND = 0.04
 
 DFIGHT = 16
 K = 2.
+
+PROB_OBJECT = 0.1
 
 def sgn(x):
     if x < 0:
@@ -368,9 +371,13 @@ class Battle:
         nb_defender = len([u for u in units.values() if u.team==defender.team])
         assert nb_defender == 1
         #Map objects
-        self.objects = self.get_objects_dict_from_units() # PUIS BLITTER SUR LE TERRAIN...
-            probleme : drapeau devrait pas etre une unite, parce que fout le bordel partout. Il faut vraiment que ce soit un objet...
-            ajouter aussi que le gui blit le nombre d'hommes de l'unit directement a cote sur la carte
+        self.objects = {key:units[key].cell.objects for key in units}
+        self.objects_to_blit = []
+        for key in list(self.objects.keys()):
+            self.objects[key] = [o for o in self.objects[key] if not isinstance(o, Unit)]
+        print("OBJECTS")
+        for key in self.objects:
+            print(key, [o.name for o in self.objects[key]])
         #
         self.game = game
         self.surface = thorpy.get_screen()
@@ -602,6 +609,9 @@ class Battle:
     def blit_terrain_and_deads(self):
         self.surface.blit(self.terrain, (0,0))
         self.blit_deads()
+        for o,coord in self.objects_to_blit:
+            img = o.imgs_z_t[self.z][0]
+            self.surface.blit(img, coord)
 
     def refresh_and_blit_gui(self):
         self.refresh_timebar()
@@ -781,11 +791,11 @@ class Battle:
         self.is_footprint = np.zeros((self.nx, self.ny), dtype=bool)
         self.is_splash = np.zeros((self.nx, self.ny), dtype=bool)
         self.build_base_terrain()
-        self.build_terrain(disp_left, self.left)
-        self.build_terrain(disp_right, self.right)
-        self.build_terrain(disp_top, self.up)
-        self.build_terrain(disp_bottom, self.down)
-        self.build_terrain(disp_center, self.center)
+        self.build_terrain(disp_left, self.left, "left")
+        self.build_terrain(disp_right, self.right, "right")
+        self.build_terrain(disp_top, self.up, "up")
+        self.build_terrain(disp_bottom, self.down, "down")
+        self.build_terrain(disp_center, self.center, "center")
         for u in self.f:
             u.rect.center = u.pos
             if u.unit is self.defender:
@@ -808,15 +818,27 @@ class Battle:
 
 
 
-    def build_terrain(self, disp, unit):
+    def build_terrain(self, disp, unit, side):
         if not unit:
             return
         img, splash, footprint = get_img(unit.cell, self.z)
+        blit_everywhere = None
+        for o in self.objects[side]:
+            if o.name == "cobblestone" or o.name == "wood":
+                blit_everywhere = o.imgs_z_t[self.z][0]
+                break
         for x,y in disp:
             self.terrain.blit(img, (x,y))
+            if blit_everywhere:
+                self.terrain.blit(blit_everywhere, (x,y))
+            elif self.objects[side]:
+                if random.random() < PROB_OBJECT:
+                    o = random.choice(self.objects[side])
+                    self.objects_to_blit.append((o,(x,y)))
             x,y = self.get_cell_coord(x,y)
             self.is_splash[x,y] = splash
             self.is_footprint[x,y] = footprint
+
 
     def build_base_terrain(self):
         W,H = self.surface.get_size()
@@ -967,18 +989,46 @@ class DistantBattle(Battle):
         cell = pygame.Rect(0, 0, self.cell_size, self.cell_size)
         #left:
         img, splash, footprint = get_img(self.left.cell, self.z)
+        #
+        blit_everywhere = None
+        for o in self.objects["left"]:
+            if o.name == "cobblestone" or o.name == "wood":
+                blit_everywhere = o.imgs_z_t[self.z][0]
+                break
+        #
         for x in range(nx//2):
             cell.x = x*self.cell_size
             for y in range(ny):
                 cell.y = y*self.cell_size
                 self.terrain.blit(img, cell.topleft)
+                if blit_everywhere:
+                    self.terrain.blit(blit_everywhere, cell.topleft)
+                elif self.objects["left"]:
+                    if random.random() < PROB_OBJECT:
+                        o = random.choice(self.objects["left"])
+                        coord = cell.topleft
+                        self.objects_to_blit.append((o,coord))
         #right:
         img, splash, footprint = get_img(self.right.cell, self.z)
+                #
+        blit_everywhere = None
+        for o in self.objects["right"]:
+            if o.name == "cobblestone" or o.name == "wood":
+                blit_everywhere = o.imgs_z_t[self.z][0]
+                break
+        #
         for x in range(nx//2,nx):
             cell.x = x*self.cell_size
             for y in range(ny):
                 cell.y = y*self.cell_size
                 self.terrain.blit(img, cell.topleft)
+                if blit_everywhere:
+                    self.terrain.blit(blit_everywhere, cell.topleft)
+                if self.objects["right"]:
+                    if random.random() < PROB_OBJECT:
+                        o = random.choice(self.objects["right"])
+                        coord = cell.topleft
+                        self.objects_to_blit.append((o,coord))
 
 
 class DistantFightingUnit(FightingUnit):

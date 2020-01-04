@@ -424,6 +424,8 @@ class MapEditor:
         self.dynamic_objects.append(obj_added)
         return obj_added
 
+    FAIRE PAREIL AVEC ADD_OBJECT
+
     def process_mouse_navigation(self): #cam can move even with no mousemotion!
         if pygame.key.get_mods() & pygame.KMOD_LSHIFT:
             pos = pygame.mouse.get_pos()

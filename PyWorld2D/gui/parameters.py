@@ -31,6 +31,8 @@ HFC = (255,0,0)
 IFS = NFS
 IFC = (100,255,100)
 
+font_gui_life = "comicsansms"
+
 
 #environments:
 ##env = {"small":-3, "normal":0, "large":+3, "highlight":+1}

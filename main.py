@@ -40,14 +40,14 @@ game = Game(me)
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
 
-#terrain:
-    #1) modifie le déplacement en mode carte (deja fait)
-    #2) modifie la probabilite d'etre touche par les projectiles au moment de l'impact en mode combat (a faire)
-# ===> montrer les objets dans les combats (maisons, buissons, arbres, ponts ...)
-#faire les maisons de la couleur des teams
+#objets du jeu (eg drapeaux pour les maisons, maisons construites/detruites).
 
 #Finir tous les sprites relatifs aux batailles
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
+
+##    probleme : drapeau devrait pas etre une unite, parce que fout le bordel partout. Il faut vraiment que ce soit un objet...
+## Par contre, s'inspirer de Unit
+
 
 
 ################################################################################
@@ -81,18 +81,18 @@ map_initializer.build_map(me, fast=False, use_beach_tiler=False, load_tilers=Fal
 ##map_initializer.build_map(me, fast=False, use_beach_tiler=False, load_tilers=False)
 
 
-humans = Race("Green team", "human", LUNAR, me, "green")
+humans = Race("Green team", "human", LUNAR, me, "green", team=1)
 humans.base_material_cost["grass"] = 2
 humans.base_material_cost["forest"] = 5
 humans.dist_factor = 10
-humans.base_terrain_attack["grass"] = 2.
+##humans.base_terrain_attack["grass"] = 2.
 humans["infantry"].material_cost["sand"] = 4
 humans["infantry"].terrain_attack["snow"] = 0.8
 humans.finalize() #always call this function to finish initialize a race !!!
 
-humans2 = Race("White team", "human", SOLAR, me, "white")
+humans2 = Race("White team", "human", SOLAR, me, "white", team=2)
 humans2.base_material_cost["forest"] = 10
-humans2.base_terrain_attack["grass"] = 0.8
+##humans2.base_terrain_attack["grass"] = 0.8
 humans2["wizard"].material_cost["wood"] = 2.
 humans2.dist_factor = 10
 humans2.finalize()
@@ -106,17 +106,19 @@ humans2.finalize()
 ##game.add_unit((20,8), humans2["infantry"], 100, team=2)
 ##game.add_unit((15,7), humans2["infantry"], 100, team=2)
 
-game.add_unit((14,10), humans2["wizard"], 10, team=2)
-game.add_unit((14,9), humans["infantry"], 10, team=1)
-game.add_unit((15,10), humans2["infantry"], 10, team=2)
-game.add_unit((13,10), humans["wizard"], 10, team=1)
-game.add_unit((14,11), humans["infantry"], 10, team=1)
-game.add_unit((12,9), humans2["wizard"], 10, team=2)
+game.add_unit((14,10), humans2["wizard"], 10)
+game.add_unit((14,9), humans["infantry"], 10)
+game.add_unit((15,10), humans2["infantry"], 10)
+game.add_unit((13,10), humans["wizard"], 30)
+game.add_unit((14,1), humans["infantry"], 10)
+game.add_unit((12,11), humans2["wizard"], 30)
 
-game.add_unit((18,8), humans["infantry"], 1, team=1)
-game.add_unit((17,9), humans2["wizard"], 1, team=2)
+game.add_unit((18,8), humans["infantry"], 1)
+game.add_unit((17,10), humans["wizard"], 1)
+game.add_unit((16,9), humans2["villager"], 15)
+game.add_unit((15,9), humans2["infantry"], 15)
 
-game.add_unit((15,15), humans["flag"], 1, team=1)
+game.add_unit((15,15), humans["flag"], 1)
 
 ##flag = Unit("flag", me, )
 ##flag = MapObject(me, "./sprites/Flag.png", "Flag", 1.)

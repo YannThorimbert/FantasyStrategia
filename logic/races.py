@@ -19,7 +19,7 @@ std_material_cost = {'Deep water': float("inf"),
                      'river':6,
                      'bush':5}
 
-std_max_dist = {'villager':1,
+std_max_dist = {'villager':0.8,
                 'infantry':1,
                 'archer':1,
                 'cavalry':2,
@@ -72,7 +72,7 @@ std_help_range = {  'villager':(1,1),
                     'transport_boat':(1,1),
                     'attack_boat':(1,1)}
 
-std_strength = {'villager':0.3,
+std_strength = {'villager':0.6,
                 'infantry':1,
                 'archer':0.6,
                 'cavalry':2,
@@ -85,7 +85,7 @@ std_strength = {'villager':0.3,
                 'transport_boat':0,
                 'attack_boat':1} #attack boat only attack other boats
 
-std_defense =  {'villager':0.3,
+std_defense =  {'villager':0.6,
                 'infantry':1,
                 'archer':0.6,
                 'cavalry':2,
@@ -98,9 +98,13 @@ std_defense =  {'villager':0.3,
                 'transport_boat':1,
                 'attack_boat':1} #attack boat only attack other boats
 
+std_object_defense = {"bush":1.3,
+                      "forest":1.5,
+                      "village":1.8}
+
 std_distance_factor = 5
 
-units_type_to_load = ["infantry", "wizard"]
+units_type_to_load = ["infantry", "wizard", "villager"]
 
 assert set(std_help_range.keys()) == set(std_attack_range.keys()) == set(std_max_dist.keys())
 
@@ -125,14 +129,16 @@ RACE_FIGHT_FACTOR = {   (SOLAR,LUNAR):1.+BASE_RACE_FACTOR,
 ##    RACE_FIGHT_FACTOR[(b,a)] = 1. - BASE_RACE_FACTOR
 
 class Race:
-    def __init__(self, name, baserace, racetype, me, color="blue"):
+    def __init__(self, name, baserace, racetype, me, color="blue", team=None):
         self.name = name
         self.baserace = baserace
         self.racetype = racetype
+        self.team = team
         #
         self.base_material_cost = std_material_cost.copy()
         self.dist_factor = std_distance_factor
         self.base_terrain_attack = {}
+        self.base_object_defense = std_object_defense.copy()
         self.strength_factor = 1.
         self.defense_factor = 1.
         #
@@ -143,6 +149,7 @@ class Race:
         for unit_type in units_type_to_load:
             self.add_type(unit_type, "sprites/"+baserace+"_"+unit_type)
         self.add_object("flag", "sprites/flag.png")
+
 
 
     def add_type(self, type_name, imgs_fn, factor=1.):
@@ -192,6 +199,8 @@ class Race:
                                             self.base_material_cost)
             u.terrain_attack = fusion_dicts(u.terrain_attack,
                                             self.base_terrain_attack)
+            u.object_defense = fusion_dicts(u.object_defense,
+                                            self.base_object_defense)
 
     def __getitem__(self, key):
         if not key in self.unit_types:

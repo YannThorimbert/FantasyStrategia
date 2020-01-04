@@ -34,6 +34,7 @@ map1.max_number_of_rivers = 4
 map1.seed_static_objects = 110
 map1.add_object("oak", 16, 5)
 map1.add_object("wood", 18, 7)
+##map1.add_object("bush", 16, 8)
 
 # ##############################################################################
 map2 = MapInitializer("Second demo map")

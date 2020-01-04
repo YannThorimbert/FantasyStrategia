@@ -360,8 +360,6 @@ class MapEditor:
         if self.lm.tot_time%self.cursor_slowness == 0:
             self.idx_cursor = (self.idx_cursor+1)%len(self.cursors[0])
             self.img_cursor = self.cursors[self.cursor_color][self.idx_cursor]
-        for u in game.units:
-            print(u.current_iframe)
 
 
     def func_reac_click(self, e):

@@ -33,9 +33,9 @@ class Game:
 
 
 
-    def add_unit(self, coord, unit, quantity, team):
+    def add_unit(self, coord, unit, quantity):
         u = self.me.add_unit(coord, unit, quantity)
-        u.team = team
+        u.team = u.race.team
         u.game = self
         self.units.append(u)
 

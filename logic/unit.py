@@ -29,8 +29,8 @@ ANIM_ONCE = 1
 
 BASE_FIGHT_FACTOR = 1.5
 ATTACKING_DAMAGE_FACTOR = 1.2
-FIGHT_AMPLITUDE = 0.8 #control the length of the fights
-FIGHT_RANDOMNESS = 0.4
+FIGHT_AMPLITUDE = 1.3 #control the length of the fights
+FIGHT_RANDOMNESS = 0.6
 FIGHT_R0 = 1. - FIGHT_RANDOMNESS/2.
 def get_random_factor_fight():
     """Returns a float in [1-FIGHT_RANDOMNESS/2, 1+FIGHT_RANDOMNESS/2]."""
@@ -74,6 +74,7 @@ class Unit(MapObject):
         self.help_range = None
         self.material_cost = {}
         self.terrain_attack = {}
+        self.object_defense = {}
         self.strength = None
         self.defense = None
         #
@@ -155,6 +156,7 @@ class Unit(MapObject):
         obj.attack_range = self.attack_range
         obj.shot_frequency = self.shot_frequency
         obj.terrain_attack = self.terrain_attack
+        obj.object_defense = self.object_defense
         obj.strength = self.strength
         obj.defense = self.defense
         #
@@ -193,6 +195,7 @@ class Unit(MapObject):
         obj.attack_range = self.attack_range
         obj.shot_frequency = self.shot_frequency
         obj.terrain_attack = self.terrain_attack.copy()
+        obj.object_defense = self.object_defense.copy()
         obj.strength = self.strength
         obj.defense = self.defense
         #
@@ -314,13 +317,9 @@ class Unit(MapObject):
         return self.cell.material.name.lower()
 
     def get_terrain_bonus(self):
+        d = max([self.object_defense.get(o.name,1.) for o in self.cell.objects])
         terrain = self.get_terrain_name_for_fight()
-        return self.terrain_attack.get(terrain, 1.)
-
-##    def get_fight_result(self, other): #-1, 0, 1
-##        if random.random() < 1e-2:
-##            return random.choice([-1,1])
-##        return 0
+        return self.terrain_attack.get(terrain, 1.)*d
 
     def get_fight_result(self, other, terrain_bonus1, terrain_bonus2, self_is_defending): #-1, 0, 1
         """-1: self looses, 0: draw, 1: self wins"""
@@ -396,6 +395,7 @@ class ObjectUnit(Unit):
         self.help_range = None
         self.material_cost = {}
         self.terrain_attack = {}
+        self.object_defense = {}
         self.strength = None
         self.defense = None
         #

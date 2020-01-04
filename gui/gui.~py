@@ -96,6 +96,7 @@ class Gui:
         self.enhancer = GuiGraphicsEnhancement( self, zoom=0, #work only for a given zoom level
                                                 splashes=True,
                                                 footprints=True)
+        self.lifes = []
         #
         self.last_destination_score = {}
         self.destinations_mousemotion = []
@@ -117,6 +118,9 @@ class Gui:
         #
         self.moving_units = []
         self.add_reactions()
+        self.font_life = pygame.font.SysFont(guip.font_gui_life, guip.NFS)
+        self.refresh_lifes()
+        self.show_lifes = True
 
     def clear(self):
         self.selected_unit = None
@@ -230,23 +234,19 @@ class Gui:
             dx = defender.cell.coord[0] - self.selected_unit.cell.coord[0]
             dy = defender.cell.coord[1] - self.selected_unit.cell.coord[1]
             distance = abs(dx)+abs(dy)
-##            print("Units in battle", units_in_battle)
-##            print("DEFENDER", defender, defender.team, defender.quantity)
-##            print("AGRESSOR", self.selected_unit)
-##            print("Distance", distance)
+            b = None
             if distance > 1 and self.selected_unit.attack_range[1] >= distance: #distant attack
                 units_in_battle = [self.selected_unit, defender]
                 b = DistantBattle(self.game, units_in_battle, defender, distance)
-                b.fight()
-                self.clear()
-                thorpy.get_current_menu().fps = guip.FPS
             elif distance == 1:
                 units_in_battle = defender.get_all_surrounding_ennemies()
                 units_in_battle.append(defender)
                 b = Battle(self.game, units_in_battle, defender, distance)
+            if b:
                 b.fight()
                 self.clear()
                 thorpy.get_current_menu().fps = guip.FPS
+                self.refresh_lifes()
         elif unit in self.blue_highlights:
             pass
         else:
@@ -314,6 +314,15 @@ class Gui:
         rect.center = unit.get_current_rect_center(s)
         self.surface.blit(img, rect.topleft)
 
+    def refresh_lifes(self):
+        self.lifes = []
+        for u in self.game.units:
+            if not u in self.moving_units:
+                text = self.font_life.render(str(u.quantity), True, (0,0,0))
+                x,y = self.game.me.cam.get_rect_at_coord(u.cell.coord).center
+                coord = x+4,y+4
+                self.lifes.append((text, coord))
+
     def draw_before_objects(self, s):
         self.enhancer.draw_footprints()
         self.refresh_moving_units()
@@ -355,12 +364,19 @@ class Gui:
 
     def draw_after_objects(self, s):
         self.enhancer.draw_splashes()
+        if self.show_lifes:
+            self.refresh_lifes()
+            for img, coord in self.lifes:
+                self.surface.blit(img, coord)
 
     def refresh(self):
         self.enhancer.refresh()
 
-    def add_flag(self):
-        self.game.add_unit((16,15), self.game.units[0].race["flag"], 1, team=self.game.units[0].team)
+##    def add_flag(self):
+##        self.game.add_unit((16,15), self.game.units[0].race["flag"], 1, team=self.game.units[0].team)
+
+    def toggle_show_life():
+        self.show_lifes = not(self.show_lifes)
 
     def add_reactions(self):
         reac_click = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, self.lmb,{"button":1})
@@ -369,11 +385,13 @@ class Gui:
         self.me.e_box.add_reaction(reac_click)
         reac_motion = thorpy.Reaction(pygame.MOUSEMOTION, self.mousemotion)
         self.me.e_box.add_reaction(reac_motion)
-        reac_escape = thorpy.ConstantReaction(pygame.KEYDOWN, self.add_flag, {"key":pygame.K_f})
-        self.me.e_box.add_reaction(reac_escape)
-
-        #TODO: remove this, this is for debug purpose only
-##        reac_escape = thorpy.ConstantReaction(pygame.KEYDOWN, thorpy.functions.quit_func, {"key":pygame.K_ESCAPE})
+##        reac_escape = thorpy.ConstantReaction(pygame.KEYDOWN, self.esc_menu, {"key":pygame.K_ESCAPE})
 ##        self.me.e_box.add_reaction(reac_escape)
+        shortcuts = [(pygame.K_l, self.toggle_show_life)]
+        reacs = []
+        for key,func in shortcuts:
+            reacs.append(thorpy.ConstantReaction(pygame.KEYDOWN, func,
+                         {"key":key}))
+        self.me.e_box.add_reactions(reacs)
 
 

@@ -238,7 +238,7 @@ class UnitInfo: #name, image, nombre(=vie dans FS!)
         self.e_img = thorpy.Image.make(pygame.Surface(cell_size))
 ##        self.e_img = thorpy.Image.make(pygame.Surface((1,1)))
         self.blank_img = pygame.Surface(cell_size)
-        self.e_name = guip.get_title("Unit infos (no unit)")
+        self.e_name = guip.get_text("Unit infos (no unit)")
         #
 ##        self.e_group = thorpy.make_group([self.e_img, self.e_name])
         ghost = thorpy.Ghost([self.e_img, self.e_name])
