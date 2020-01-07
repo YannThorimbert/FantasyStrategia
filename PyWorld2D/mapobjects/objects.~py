@@ -84,7 +84,7 @@ class MapObject:
     @staticmethod
     def get_saved_attributes():
         return ["name", "quantity", "fns", "factor", "new_type", "relpos",
-                "build", "vel", "_refresh_frame_type", "is_ground"]
+                "build", "vel", "_refresh_frame_type", "can_interact", "is_ground"]
 
     def __init__(self, editor, fns, name="", factor=1., relpos=(0,0), build=True,
                  new_type=True):
@@ -226,7 +226,8 @@ class MapObject:
 
     def remove_from_cell(self):
         self.cell.objects.remove(self)
-        self.cell.unit = None
+        if self is self.cell.unit:
+            self.cell.unit = None
 
     def move_to_cell(self, dest_cell):
 ##        assert dest_cell.unit is None

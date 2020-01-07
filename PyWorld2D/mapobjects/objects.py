@@ -226,7 +226,8 @@ class MapObject:
 
     def remove_from_cell(self):
         self.cell.objects.remove(self)
-        self.cell.unit = None
+        if self is self.cell.unit:
+            self.cell.unit = None
 
     def move_to_cell(self, dest_cell):
 ##        assert dest_cell.unit is None
@@ -350,7 +351,7 @@ class MapObject:
 
 
     def distance_to(self, another_obj):
-        return self.cell.get_distance_to(another_obj.cell)
+        return self.cell.distance_to(another_obj.cell)
 
     def set_frame_refresh_type(self, type_):
         functions = {const.NORMAL:self._get_current_frame1,

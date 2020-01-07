@@ -41,6 +41,7 @@ class Game:
 
     def add_object(self, coord, obj, quantity):
         o = self.me.add_dynamic_object(coord, obj, quantity)
+        o.game = self
         self.objects.append(o)
 
     def get_cell_at(self, x, y):

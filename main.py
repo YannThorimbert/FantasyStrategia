@@ -50,6 +50,9 @@ game = Game(me)
 ## Par contre, s'inspirer de Unit
 
 
+#mettre foret dans le layer des villages, peut-être pas si mal
+#interactions avec objects de la meme cellule
+#click a cote pour faire aucune action au menu du choix, et bouton "cancel" ==> faire mon propre truc et pas juste thorpy.launch_actions...
 
 ################################################################################
 ################################################################################
@@ -121,9 +124,9 @@ game.add_unit((15,9), humans2["infantry"], 15)
 
 
 
-flag = InteractiveObject("flag", me, "sprites/flag", race=humans2)
-game.add_object((15,15), flag, 1)
-game.add_fire(15,15)
+##flag = InteractiveObject("flag", me, "sprites/flag", race=humans2)
+game.add_object((15,11), humans2.flag, 1)
+##game.add_fire(15,15)
 
 
 ##game.get_cell_at(14,15).set_name("My left cell")

@@ -121,6 +121,10 @@ class Gui:
         self.font_life = pygame.font.SysFont(guip.font_gui_life, guip.NFS)
         self.refresh_lifes()
         self.show_lifes = True
+        self.actions = {"flag":[("Remove flag",self.remove_flag),
+                                ("Set flag",self.set_flag)]
+                        }
+        self.interaction_objs = []
 
     def clear(self):
         self.selected_unit = None
@@ -226,28 +230,60 @@ class Gui:
             # self.selected_unit.move_to_cell(cell)
             self.selected_unit = None
 
-    def treat_click_interaction(self, unit):
-        if unit in self.red_highlights: #then self.selected_unit is the agressor
-            defender = unit
-            dx = defender.cell.coord[0] - self.selected_unit.cell.coord[0]
-            dy = defender.cell.coord[1] - self.selected_unit.cell.coord[1]
-            distance = abs(dx)+abs(dy)
-            b = None
-            if distance > 1 and self.selected_unit.attack_range[1] >= distance: #distant attack
-                units_in_battle = [self.selected_unit, defender]
-                b = DistantBattle(self.game, units_in_battle, defender, distance)
-            elif distance == 1:
-                units_in_battle = defender.get_all_surrounding_ennemies()
-                units_in_battle.append(defender)
-                b = Battle(self.game, units_in_battle, defender, distance)
-            if b:
-                b.fight()
-                self.clear()
-                thorpy.get_current_menu().fps = guip.FPS
-                self.refresh_lifes()
-        elif unit in self.blue_highlights: #can help unit
-            pass
+##    def treat_click_interaction(self, unit):
+##        if unit in self.red_highlights: #then self.selected_unit is the agressor
+##            defender = unit
+##            dx = defender.cell.coord[0] - self.selected_unit.cell.coord[0]
+##            dy = defender.cell.coord[1] - self.selected_unit.cell.coord[1]
+##            distance = abs(dx)+abs(dy)
+##            b = None
+##            if distance > 1 and self.selected_unit.attack_range[1] >= distance: #distant attack
+##                units_in_battle = [self.selected_unit, defender]
+##                b = DistantBattle(self.game, units_in_battle, defender, distance)
+##            elif distance == 1:
+##                units_in_battle = defender.get_all_surrounding_ennemies()
+##                units_in_battle.append(defender)
+##                b = Battle(self.game, units_in_battle, defender, distance)
+##            if b:
+##                b.fight()
+##                self.clear()
+##                thorpy.get_current_menu().fps = guip.FPS
+##                self.refresh_lifes()
+##        elif unit in self.blue_highlights: #can help unit
+##            pass
 
+    def attack(self):
+        defender = self.interaction_objs[0].cell.unit
+        print("HEHOO", defender, self.selected_unit)
+        distance = defender.distance_to(self.selected_unit)
+        units_in_battle = defender.get_all_surrounding_ennemies()
+        units_in_battle.append(defender)
+        b = Battle(self.game, units_in_battle, defender, distance)
+        b.fight()
+        self.clear()
+        thorpy.get_current_menu().fps = guip.FPS
+        self.refresh_lifes()
+
+    def distant_attack(self):
+        defender = self.interaction_objs[0].cell.unit
+        distance = defender.distance_to(self.selected_unit)
+        units_in_battle = [self.selected_unit, defender]
+        b = DistantBattle(self.game, units_in_battle, defender, distance)
+        b.fight()
+        self.clear()
+        thorpy.get_current_menu().fps = guip.FPS
+        self.refresh_lifes()
+
+    def remove_flag(self):
+        for o in self.interaction_objs:
+            if o.type_name == "flag":
+                o.remove_from_game()
+                break
+
+    def set_flag(self):
+        self.remove_flag()
+        cell = self.interaction_objs[0].cell
+        self.game.add_object(cell.coord, self.selected_unit.race.flag, 1)
 
     def help(self, unit):
         print("Not implemented yet")
@@ -256,8 +292,8 @@ class Gui:
     def get_interaction_choices(self, objs):
         choices = []
         cell = objs[0].cell
-        if cell.unit:
-            other = unit
+        if cell.unit and not(self.selected_unit is cell.unit):
+            other = cell.unit
             distance = other.distance_to(self.selected_unit)
             if cell.unit in self.red_highlights: #then self.selected_unit is the agressor
                 if distance > 1 and self.selected_unit.attack_range[1] >= distance: #distant attack
@@ -271,10 +307,23 @@ class Gui:
                     choices.append(("Help", self.help))
         for o in objs:
             if o is not cell.unit:
-                for couple in self.actions.get(o.type_name,()):
-                    choices.append(couple)
+                print("self actions", self.actions)
+                for name, func in self.actions.get(o.type_name):
+                    choices.append((name, func))
+        self.interaction_objs = objs
         return choices
 
+    def user_make_choice(self, choices):
+        buttons = []
+        class Clicked:
+            choice = ""
+        for title,func in choices:
+            def myfunc():
+                Clicked.choice = title
+            buttons.append((title,myfunc))
+        thorpy.launch_blocking_choices("Choose an action", buttons)
+        execute function associated with Clicked.choice
+        self.clear()
 
 
     def lmb(self, e):
@@ -284,11 +333,12 @@ class Gui:
         cell = self.me.cam.get_cell(pos)
         if cell:
             if self.destinations_lmb: #then the user may be clicking a destination
-                interactibles = self.game.can_interact(cell.coord)
+                interactibles = self.game.can_interact(cell.coord[0],cell.coord[1])
                 if interactibles:
                     print("treat interaction")
                     choices = self.get_interaction_choices(interactibles)
-                    self.treat_click_interaction(cell.unit)
+                    if choices:
+                        self.user_make_choice(choices)
                 else:
                     print("click destination")
                     self.treat_click_destination(cell)

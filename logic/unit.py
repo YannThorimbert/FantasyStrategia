@@ -477,6 +477,7 @@ class InteractiveObject(Unit):
         self.projectile1 = None #projectile used in close battle
         self.id = Unit.unit_id
         Unit.unit_id += 1
+        self.can_interact = True
 
     def copy(self):
         obj = InteractiveObject(self.type_name, self.editor, None, self.race, self.name,
@@ -491,3 +492,8 @@ class InteractiveObject(Unit):
         obj = Unit.deep_copy(self, obj)
         obj.color = self.color
         return obj
+
+    def remove_from_game(self):
+        self.game.objects.remove(self)
+        self.game.me.dynamic_objects.remove(self)
+        self.remove_from_cell()
