@@ -424,6 +424,17 @@ class MapEditor:
         self.dynamic_objects.append(obj_added)
         return obj_added
 
+    def add_dynamic_object(self, coord, obj, quantity=None):
+        cell = self.lm.get_cell_at(coord[0],coord[1])
+        assert cell
+        obj_added = obj.add_dynamic_object_on_cell(cell)
+        if quantity is not None:
+            obj_added.quantity = quantity
+        self.dynamic_objects.append(obj_added)
+        return obj_added
+
+    FAIRE PAREIL AVEC ADD_OBJECT
+
     def process_mouse_navigation(self): #cam can move even with no mousemotion!
         if pygame.key.get_mods() & pygame.KMOD_LSHIFT:
             pos = pygame.mouse.get_pos()

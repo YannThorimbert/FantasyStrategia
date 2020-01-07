@@ -84,7 +84,7 @@ class MapObject:
     @staticmethod
     def get_saved_attributes():
         return ["name", "quantity", "fns", "factor", "new_type", "relpos",
-                "build", "vel", "_refresh_frame_type", "is_ground"]
+                "build", "vel", "_refresh_frame_type", "can_interact", "is_ground"]
 
     def __init__(self, editor, fns, name="", factor=1., relpos=(0,0), build=True,
                  new_type=True):
@@ -134,6 +134,7 @@ class MapObject:
         self._refresh_frame_type = 1
         self.set_frame_refresh_type(self._refresh_frame_type)
         self.is_ground = False
+        self.can_interact = False
 
     def get_cell_coord(self):
         return self.cell.coord
@@ -165,6 +166,7 @@ class MapObject:
         obj.vel = self.vel
         obj.set_frame_refresh_type(self._refresh_frame_type)
         obj.is_ground = self.is_ground
+        obj.can_interact = self.can_interact
         return obj
 
     def deep_copy(self):
@@ -187,6 +189,7 @@ class MapObject:
         obj.vel = self.vel
         obj.set_frame_refresh_type(self._refresh_frame_type)
         obj.is_ground = self.is_ground
+        obj.can_interact = self.can_interact
         return obj
 
 
@@ -208,12 +211,17 @@ class MapObject:
         return copy
 
     def add_unit_on_cell(self, cell):
-        # print(cell.coord, cell.unit, cell.objects)
         assert cell.unit is None
         copy = self.copy()
         copy.cell = cell
         cell.objects.append(copy)
         cell.unit = copy
+        return copy
+
+    def add_dynamic_object_on_cell(self, cell):
+        copy = self.copy()
+        copy.cell = cell
+        cell.objects.append(copy)
         return copy
 
     def remove_from_cell(self):

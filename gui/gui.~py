@@ -133,8 +133,6 @@ class Gui:
         self.red_highlights = []
         self.blue_highlights = []
         if cell.unit:
-            if cell.unit.is_object:
-                return []
             if cell.unit.anim_path: #moving unit, let her alone...
                 return []
             if not self.selected_unit:
@@ -247,10 +245,36 @@ class Gui:
                 self.clear()
                 thorpy.get_current_menu().fps = guip.FPS
                 self.refresh_lifes()
-        elif unit in self.blue_highlights:
+        elif unit in self.blue_highlights: #can help unit
             pass
-        else:
-            self.add_alert(self.e_cant_move)
+
+
+    def help(self, unit):
+        print("Not implemented yet")
+        pass
+
+    def get_interaction_choices(self, objs):
+        choices = []
+        cell = objs[0].cell
+        if cell.unit:
+            other = unit
+            distance = other.distance_to(self.selected_unit)
+            if cell.unit in self.red_highlights: #then self.selected_unit is the agressor
+                if distance > 1 and self.selected_unit.attack_range[1] >= distance: #distant attack
+                    choices.append(("Distant attack", self.attack))
+                elif distance == 1:
+                    choices.append(("Attack", self.attack))
+            elif cell.unit in self.blue_highlights:
+                if distance > 1 and self.selected_unit.help_range[1] >= distance: #distant attack
+                    choices.append(("Distant help", self.help))
+                elif distance == 1:
+                    choices.append(("Help", self.help))
+        for o in objs:
+            if o is not cell.unit:
+                for couple in self.actions.get(o.type_name,()):
+                    choices.append(couple)
+        return choices
+
 
 
     def lmb(self, e):
@@ -260,12 +284,14 @@ class Gui:
         cell = self.me.cam.get_cell(pos)
         if cell:
             if self.destinations_lmb: #then the user may be clicking a destination
-                if not cell.unit:
+                interactibles = self.game.can_interact(cell.coord)
+                if interactibles:
+                    print("treat interaction")
+                    choices = self.get_interaction_choices(interactibles)
+                    self.treat_click_interaction(cell.unit)
+                else:
                     print("click destination")
                     self.treat_click_destination(cell)
-                else:
-                    print("treat interaction")
-                    self.treat_click_interaction(cell.unit)
                 self.destinations_lmb = [] #clear destinations
                 self.red_highlights = []
                 self.blue_highlights = []
@@ -375,7 +401,7 @@ class Gui:
 ##    def add_flag(self):
 ##        self.game.add_unit((16,15), self.game.units[0].race["flag"], 1, team=self.game.units[0].team)
 
-    def toggle_show_life():
+    def toggle_show_life(self):
         self.show_lifes = not(self.show_lifes)
 
     def add_reactions(self):

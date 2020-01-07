@@ -40,7 +40,7 @@ class Game:
         self.units.append(u)
 
     def add_object(self, coord, obj, quantity):
-        o = self.me.add_unit(coord, obj, quantity)
+        o = self.me.add_dynamic_object(coord, obj, quantity)
         self.objects.append(o)
 
     def get_cell_at(self, x, y):
@@ -50,3 +50,9 @@ class Game:
         cell = self.get_cell_at(x,y)
         if cell:
             return cell.unit
+
+    def add_fire(self, x, y):
+        self.add_object((x,y), self.fire, 1)
+
+    def can_interact(self, x, y):
+        return [o for o in self.get_cell_at(x,y).objects if o.can_interact]

@@ -22,7 +22,8 @@ from PyWorld2D.editor.mapbuilding import MapInitializer #configuration structure
 
 import maps.maps as maps
 import gui.gui as gui
-from logic.unit import Unit
+from logic.unit import Unit, InteractiveObject
+##from logic.interactiveobject import InteractiveObject
 from logic.races import Race, LUNAR, STELLAR, SOLAR
 from logic.game import Game
 import gui.theme as theme
@@ -90,7 +91,7 @@ humans["infantry"].material_cost["sand"] = 4
 humans["infantry"].terrain_attack["snow"] = 0.8
 humans.finalize() #always call this function to finish initialize a race !!!
 
-humans2 = Race("White team", "human", SOLAR, me, "white", team=2)
+humans2 = Race("White team", "human", SOLAR, me, "red", team=2)
 humans2.base_material_cost["forest"] = 10
 ##humans2.base_terrain_attack["grass"] = 0.8
 humans2["wizard"].material_cost["wood"] = 2.
@@ -118,11 +119,11 @@ game.add_unit((17,10), humans["wizard"], 1)
 game.add_unit((16,9), humans2["villager"], 15)
 game.add_unit((15,9), humans2["infantry"], 15)
 
-game.add_unit((15,15), humans["flag"], 1)
 
-##flag = Unit("flag", me, )
-##flag = MapObject(me, "./sprites/Flag.png", "Flag", 1.)
-##game.add_object((15,15), flag, 1)
+
+flag = InteractiveObject("flag", me, "sprites/flag", race=humans2)
+game.add_object((15,15), flag, 1)
+game.add_fire(15,15)
 
 
 ##game.get_cell_at(14,15).set_name("My left cell")

@@ -143,12 +143,10 @@ class Race:
         self.defense_factor = 1.
         #
         self.unit_types = {}
-        self.object_types = {}
         self.me = me
         self.color = color
         for unit_type in units_type_to_load:
             self.add_type(unit_type, "sprites/"+baserace+"_"+unit_type)
-        self.add_object("flag", "sprites/flag.png")
 
 
 
@@ -170,13 +168,6 @@ class Race:
 ##            u.projectile1.set_colorkey((255,255,255))
         return u
 
-    def add_object(self, object_name, imgs_fn, factor=1.):
-        imgs = {"idle":(unit.get_unit_sprites(imgs_fn, self.color), const.NORMAL)}
-        assert object_name not in self.object_types
-        u = unit.ObjectUnit(object_name, self.me, imgs, object_name, factor)
-        u.race = self
-        self.object_types[object_name] = u
-        return u
 
     def finalize(self):
         for type_name in self.unit_types:
@@ -203,10 +194,7 @@ class Race:
                                             self.base_object_defense)
 
     def __getitem__(self, key):
-        if not key in self.unit_types:
-            return self.object_types[key]
-        else:
-            return self.unit_types[key]
+        return self.unit_types[key]
 
 
 def fusion_dicts(primary, secondary):
