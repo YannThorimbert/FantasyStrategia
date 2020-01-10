@@ -121,8 +121,8 @@ class Gui:
         self.font_life = pygame.font.SysFont(guip.font_gui_life, guip.NFS)
         self.refresh_lifes()
         self.show_lifes = True
-        self.actions = {"flag":[("Remove flag",self.remove_flag),
-                                ("Set flag",self.set_flag)]
+        self.actions = {"flag":[("Remove flag",self.remove_flag,1),
+                                ("Set flag",self.set_flag,1)]
                         }
         self.interaction_objs = []
 
@@ -254,7 +254,6 @@ class Gui:
 
     def attack(self):
         defender = self.interaction_objs[0].cell.unit
-        print("HEHOO", defender, self.selected_unit)
         distance = defender.distance_to(self.selected_unit)
         units_in_battle = defender.get_all_surrounding_ennemies()
         units_in_battle.append(defender)
@@ -290,39 +289,38 @@ class Gui:
         pass
 
     def get_interaction_choices(self, objs):
-        choices = []
+        choices = {}
         cell = objs[0].cell
+        d = cell.distance_to(self.selected_unit.cell)
         if cell.unit and not(self.selected_unit is cell.unit):
             other = cell.unit
-            distance = other.distance_to(self.selected_unit)
             if cell.unit in self.red_highlights: #then self.selected_unit is the agressor
-                if distance > 1 and self.selected_unit.attack_range[1] >= distance: #distant attack
-                    choices.append(("Distant attack", self.attack))
-                elif distance == 1:
-                    choices.append(("Attack", self.attack))
+                if distance > 1 and self.selected_unit.attack_range[1] >= d: #distant attack
+                    choices["Distant attack"] = self.distant_attack
+                elif d == 1:
+                    choices["Attack"] = self.attack
             elif cell.unit in self.blue_highlights:
-                if distance > 1 and self.selected_unit.help_range[1] >= distance: #distant attack
-                    choices.append(("Distant help", self.help))
-                elif distance == 1:
-                    choices.append(("Help", self.help))
+                if d > 1 and self.selected_unit.help_range[1] >= d: #distant attack
+                    choices["Distant help"] = self.help
+                elif d == 1:
+                    choices["Help"] = self.help
         for o in objs:
-            if o is not cell.unit:
-                print("self actions", self.actions)
-                for name, func in self.actions.get(o.type_name):
-                    choices.append((name, func))
+            if o != cell.unit:
+                for name, func, dist in self.actions.get(o.type_name):
+                    if d <= dist:
+                        choices[name] = func
         self.interaction_objs = objs
         return choices
 
     def user_make_choice(self, choices):
-        buttons = []
-        class Clicked:
-            choice = ""
-        for title,func in choices:
-            def myfunc():
-                Clicked.choice = title
-            buttons.append((title,myfunc))
-        thorpy.launch_blocking_choices("Choose an action", buttons)
-        execute function associated with Clicked.choice
+        choice = thorpy.launch_blocking_choices_str("Choose an action",
+                                                    sorted(choices.keys())+["Cancel"],
+                                                    title_fontsize=guip.NFS,
+                                                    title_fontcolor=guip.NFC)
+        func = choices.get(choice, None)
+        if func:
+            func()
+##        treat outside click to cancel
         self.clear()
 
 

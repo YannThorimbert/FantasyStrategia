@@ -15,6 +15,7 @@ TICK_BUSY = False
 USE_IMG_DICT = False
 _loaded = {}
 
+
 class Application(object):
     """An Application object handles the pygame variables needed to create a
     graphical program, such as screen, screen's size window caption and window

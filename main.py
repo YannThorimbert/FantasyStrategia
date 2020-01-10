@@ -40,19 +40,17 @@ game = Game(me)
 ################################################################################
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
-
-#objets du jeu (eg drapeaux pour les maisons, maisons construites/detruites).
-
 #Finir tous les sprites relatifs aux batailles
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
+#conquete de base, batailles. Pas d'impots ni de destruction d'objets.
 
-##    probleme : drapeau devrait pas etre une unite, parce que fout le bordel partout. Il faut vraiment que ce soit un objet...
-## Par contre, s'inspirer de Unit
+#objets du jeu (eg drapeaux pour les maisons, maisons construites/detruites).
+comment faire qu'une unite se deplace sur case d'un drapeau ? Soit click droit pour interagir, soit "go there" dans les actions
+nom du flag contient race et team ?
+
 
 
 #mettre foret dans le layer des villages, peut-être pas si mal
-#interactions avec objects de la meme cellule
-#click a cote pour faire aucune action au menu du choix, et bouton "cancel" ==> faire mon propre truc et pas juste thorpy.launch_actions...
 
 ################################################################################
 ################################################################################

@@ -1,7 +1,7 @@
 """This module provides (non)blocking alert and choices similar to the default
 ones in ThorPy, but the launched element is richer (title, hline...)"""
 
-import thorpy
+import thorpy, pygame
 
 def make_textbox(title, text, font_size=None, font_color=None, ok_text="Ok",
                     hline=0, elements=None):
@@ -78,6 +78,45 @@ def launch_blocking_choices(text, choices, parent=None, title_fontsize=None,
     if func:
         func()
 
+def launch_blocking_choices_str(text, choices, parent=None, title_fontsize=None,
+                            title_fontcolor=None, func=None, store="v"):
+    """choices are tuple (text,func)"""
+    if title_fontsize is None: title_fontsize = thorpy.style.FONT_SIZE
+    if title_fontcolor is None: title_fontcolor = thorpy.style.FONT_COLOR
+    class Choice:
+        value = None
+    def choice_func(value):
+        Choice.value = value
+    elements = []
+    for name in choices:
+        e = thorpy.make_button(name, choice_func, {"value":name})
+        elements.append(e)
+    ghost = thorpy.make_group(elements, mode=store)
+    e_text = thorpy.make_text(text, title_fontsize, title_fontcolor)
+    box = thorpy.Box.make([e_text, thorpy.Line(100,"h"), ghost])
+    box.center()
+    from thorpy.miscgui.reaction import ConstantReaction
+    for e in elements:
+        reac = ConstantReaction(thorpy.constants.THORPY_EVENT,
+                                thorpy.functions.quit_menu_func,
+                                {"id":thorpy.constants.EVENT_UNPRESS,
+                                 "el":e})
+        box.add_reaction(reac)
+    def click_outside(e):
+        if not box.get_fus_rect().collidepoint(e.pos):
+            thorpy.functions.quit_menu_func()
+    reac = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, click_outside)
+    box.add_reaction(reac)
+    from thorpy.menus.tickedmenu import TickedMenu
+    m = TickedMenu(box)
+    m.play()
+    box.unblit()
+    if parent:
+        parent.partial_blit(None, box.get_fus_rect())
+        box.update()
+    if func:
+        func()
+    return Choice.value
 
 def launch_nonblocking_alert(title, text, parent=None, font_size=None,
                              font_color=None, ok_text="Ok", transp=False,

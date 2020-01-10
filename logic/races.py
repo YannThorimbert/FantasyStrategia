@@ -147,7 +147,9 @@ class Race:
         self.color = color
         for unit_type in units_type_to_load:
             self.add_type(unit_type, "sprites/"+baserace+"_"+unit_type)
-        self.flag = unit.InteractiveObject("flag", self.me, "sprites/flag", race=self)
+        self.flag = unit.InteractiveObject("flag", self.me, "sprites/flag",
+                                            race=self,
+                                            name=self.name+" flag")
 
 
 

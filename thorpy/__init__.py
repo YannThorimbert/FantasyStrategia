@@ -1,4 +1,4 @@
-__version__ = "1.5.9"
+__version__ = "1.6.3"
 
 import sys
 import os
@@ -116,6 +116,7 @@ from thorpy.miscgui.launchers.launcher import Launcher, make_ok_cancel_box, make
 from thorpy.miscgui.launchers.launcher import launch_blocking, auto_ok, set_as_done_button, set_as_cancel_button
 from thorpy.miscgui.launchers.launcher import launch as launch_nonblocking
 from thorpy.elements.dialog import launch_blocking_alert, launch_blocking_choices, make_textbox
+from thorpy.elements.dialog import launch_blocking_choices_str
 from thorpy.elements.dialog import launch_nonblocking_alert, launch_nonblocking_choices
 
 from thorpy.painting.writer import Writer
