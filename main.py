@@ -50,7 +50,8 @@ game = Game(me)
 
 #probleme : burn a distance ? non, jamais.
 
-##==> a quoi sert-il de planter des drapeaux, d'ailleurs ? : a definir un territoire ==> calcul de surface ==> calcul de nourriture
+##==> a quoi sert-il de planter des drapeaux, d'ailleurs ? : a augmenter le prestige
+#Ressources ??? : or. Prestige et crainte ne sont que des facteurs. Or uniquement !!!
 
 #a quoi sert-il de bruler un territoire ? : a interdire son accès pour 2 tours, a detruire l'objet si burnable.
 #peut-on les eteindre ? ==> seulement les magiciens.
@@ -120,7 +121,7 @@ game.add_unit((14,10), humans2["wizard"], 10)
 game.add_unit((14,9), humans["infantry"], 10)
 game.add_unit((15,10), humans2["infantry"], 10)
 game.add_unit((13,10), humans["wizard"], 30)
-game.add_unit((14,1), humans["infantry"], 10)
+game.add_unit((14,1), humans["villager"], 10)
 game.add_unit((12,11), humans2["wizard"], 30)
 
 game.add_unit((18,8), humans["infantry"], 1)
