@@ -57,7 +57,7 @@ class RandomObjectDistribution:
             if right_h:
                 cell = self.master_map.cells[x][y]
                 if cell.material in self.materials:
-                    if exclusive:
+                    if exclusive: #remove all other objects
                         remove_objects(cell, layer)
                     for i in range(self.max_density):
                         if random.random() < self.homogeneity:

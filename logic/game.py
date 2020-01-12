@@ -55,5 +55,5 @@ class Game:
     def add_fire(self, x, y):
         self.add_object((x,y), self.fire, 1)
 
-    def can_interact(self, x, y):
+    def get_interactive_objects(self, x, y):
         return [o for o in self.get_cell_at(x,y).objects if o.can_interact]

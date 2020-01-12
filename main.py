@@ -45,12 +45,21 @@ game = Game(me)
 #conquete de base, batailles. Pas d'impots ni de destruction d'objets.
 
 #objets du jeu (eg drapeaux pour les maisons, maisons construites/detruites).
-comment faire qu'une unite se deplace sur case d'un drapeau ? Soit click droit pour interagir, soit "go there" dans les actions
-nom du flag contient race et team ?
 
+##nom du flag contient race et team ?
 
+#probleme : burn a distance ? non, jamais.
 
-#mettre foret dans le layer des villages, peut-être pas si mal
+##==> a quoi sert-il de planter des drapeaux, d'ailleurs ? : a definir un territoire ==> calcul de surface ==> calcul de nourriture
+
+#a quoi sert-il de bruler un territoire ? : a interdire son accès pour 2 tours, a detruire l'objet si burnable.
+#peut-on les eteindre ? ==> seulement les magiciens.
+
+##empecher plantage de drapeau si unit ennemie, le burn si unit ennemie, implementer le burn des objets
+##==> comment filtrer les choices ?
+
+#nettoyer les self.interaction_objs[0].cell.unit ==> .unit_under_cursor()
+
 
 ################################################################################
 ################################################################################
@@ -80,7 +89,6 @@ nom du flag contient race et team ?
 #<use_beach_tiler>: quality much better if true, loading much slower. Req. Numpy!
 #<load_tilers> : Very slow but needed if you don't have Numpy but still want hi quality.
 map_initializer.build_map(me, fast=False, use_beach_tiler=False, load_tilers=False)
-##map_initializer.build_map(me, fast=False, use_beach_tiler=False, load_tilers=False)
 
 
 humans = Race("Green team", "human", LUNAR, me, "green", team=1)
@@ -199,7 +207,7 @@ app.quit()
 ##path = sp.solve()
 ##draw_path(path, objects=cobbles, layer=lm)
 
-
+##neige et pluie comme dans torus, et tangage bateau
 
 ###############################################################################
 

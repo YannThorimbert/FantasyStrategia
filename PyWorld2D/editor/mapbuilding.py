@@ -301,26 +301,26 @@ class MapInitializer:
         distributor.max_density = self.forest_max_density
         distributor.homogeneity = self.forest_homogeneity
         distributor.zones_spread = self.forest_zones_spread
-        distributor.distribute_objects(self._static_objs_layer)
+        distributor.distribute_objects(self._static_objs_layer, exclusive=True)
         #more trees in plains
         distributor = objs.get_distributor(me, [tree], self._forest_map, ["Grass"])
         distributor.max_density = self.forest_max_density
         distributor.homogeneity = self.forest_homogeneity
         distributor.zones_spread = self.forest_zones_spread
-        distributor.distribute_objects(self._static_objs_layer)
+        distributor.distribute_objects(self._static_objs_layer, exclusive=True)
         #snow forest
         distributor = objs.get_distributor(me, [firsnow, firsnow.flip()],
                                         self._forest_map, ["Thin snow","Snow"])
         distributor.max_density = self.forest_snow_max_density
         distributor.homogeneity = self.forest_snow_homogeneity
         distributor.zones_spread = self.forest_snow_zones_spread
-        distributor.distribute_objects(self._static_objs_layer)
+        distributor.distribute_objects(self._static_objs_layer, exclusive=True)
         #palm forest
         distributor = objs.get_distributor(me, [palm, palm.flip()], self._forest_map, ["Sand"])
         distributor.max_density = self.palm_max_density
         distributor.homogeneity = self.palm_homogeneity
         distributor.zones_spread = self.palm_zones_spread
-        distributor.distribute_objects(self._static_objs_layer)
+        distributor.distribute_objects(self._static_objs_layer, exclusive=True)
         #bushes
         distributor = objs.get_distributor(me, [bush], self._forest_map, ["Grass"])
         distributor.max_density = 2

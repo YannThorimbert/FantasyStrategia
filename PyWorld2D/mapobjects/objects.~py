@@ -351,7 +351,7 @@ class MapObject:
 
 
     def distance_to(self, another_obj):
-        return self.cell.get_distance_to(another_obj.cell)
+        return self.cell.distance_to(another_obj.cell)
 
     def set_frame_refresh_type(self, type_):
         functions = {const.NORMAL:self._get_current_frame1,
