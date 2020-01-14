@@ -421,7 +421,7 @@ class InteractiveObject(Unit):
     def get_saved_attributes():
         return Unit.get_saved_attributes() + ["color"]
 
-    def __init__(self, type_name, editor, sprites, race, name=None,
+    def __init__(self, type_name, editor, sprites, race=None, name=None,
                  sprites_keys=("idle",), factor=1., relpos=(0,0), build=True,
                  new_type=True):
         self.stop_animation = float("inf")

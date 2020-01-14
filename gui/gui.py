@@ -121,12 +121,44 @@ class Gui:
         self.font_life = pygame.font.SysFont(guip.font_gui_life, guip.NFS)
         self.refresh_lifes()
         self.show_lifes = True
-        self.actions = {"flag":[("Remove flag",self.remove_flag,1),
-                                ("Replace flag",self.set_flag,1)]
+        self.actions = {"flag":[("Remove flag",self.remove_flag,
+                                    self.check_interact_flag),
+                                ("Replace flag",self.set_flag,
+                                    self.check_interact_flag)]
                         }
-        self.actions_no_objs = [("Plant flag",self.set_flag,1),
-                                ("Burn",self.burn,1)]
+        self.actions_no_objs = [("Plant flag",self.set_flag,
+                                    self.check_interact_flag),
+                                ("Burn",self.burn,
+                                    self.check_interact_burn)]
         self.interaction_objs = []
+
+
+    def check_interact_burn(self):
+        """Return True if there is at least one thing (cell/object) that can
+        burn."""
+        if self.game.burning.get(self.cell_under_cursor.coord):
+            return False
+        elif self.unit_under_cursor():
+            return False
+        else:
+            for o in self.cell_under_cursor.objects:
+                if o.name in self.game.is_burnable:
+                    return True
+            for o in self.cell_under_cursor.objects:
+                if o.name == "river":
+                    return False
+        return self.cell_under_cursor.material.name.lower() in self.game.is_burnable
+
+
+    def check_interact_flag(self):
+        c = self.cell_under_cursor
+        if self.game.burning.get(c.coord):
+            return False
+        if c.unit:
+            if c.unit.team != self.selected_unit.team:
+                return False
+        if self.selected_unit.cell.distance_to(c) <= 1:
+            return c.material.name.lower() in self.game.is_flaggable
 
     def clear(self):
         self.selected_unit = None
@@ -236,7 +268,8 @@ class Gui:
 
 
     def attack(self):
-        defender = self.interaction_objs[0].cell.unit
+##        defender = self.interaction_objs[0].cell.unit
+        defender = self.unit_under_cursor()
         distance = defender.distance_to(self.selected_unit)
         units_in_battle = defender.get_all_surrounding_ennemies()
         units_in_battle.append(defender)
@@ -247,7 +280,7 @@ class Gui:
         self.refresh_lifes()
 
     def distant_attack(self):
-        defender = self.interaction_objs[0].cell.unit
+        defender = self.unit_under_cursor()
         distance = defender.distance_to(self.selected_unit)
         units_in_battle = [self.selected_unit, defender]
         b = DistantBattle(self.game, units_in_battle, defender, distance)
@@ -257,9 +290,6 @@ class Gui:
         self.refresh_lifes()
 
     def remove_flag(self):
-        print(self.cell_under_cursor.coord)
-        print([o.name for o in self.interaction_objs])
-        print([o.cell.coord for o in self.interaction_objs])
         for o in self.interaction_objs:
             if o.type_name == "flag":
                 o.remove_from_game()
@@ -271,7 +301,7 @@ class Gui:
         self.game.add_object(cell.coord, self.selected_unit.race.flag, 1)
 
     def burn(self):
-        pass
+        self.game.set_fire(self.cell_under_cursor.coord, 2)
 
     def help(self, unit):
         print("Not implemented yet")
@@ -296,12 +326,12 @@ class Gui:
                         choices["Help"] = self.help
             for o in objs:
                 if o != cell.unit:
-                    for name, func, dist in self.actions.get(o.type_name):
-                        if d <= dist:
+                    for name, func, check in self.actions.get(o.type_name):
+                        if check():
                             choices[name] = func
             self.interaction_objs = objs
-        for name, func, dist in self.actions_no_objs:
-            if d <= dist:
+        for name, func, check in self.actions_no_objs:
+            if check():
                 choices[name] = func
         return choices
 
@@ -352,8 +382,9 @@ class Gui:
 
     def rmb(self, e):
         if self.selected_unit:
-            cell = self.me.cam.get_cell(e.pos)
-            assert cell is self.cell_under_cursor
+##            cell = self.me.cam.get_cell(e.pos)
+##            assert cell is self.cell_under_cursor
+            cell = self.cell_under_cursor
             if cell:
                 print("treat interaction RMB")
                 interactibles = self.game.get_interactive_objects( cell.coord[0],

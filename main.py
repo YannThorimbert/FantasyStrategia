@@ -48,18 +48,17 @@ game = Game(me)
 
 ##nom du flag contient race et team ?
 
-#probleme : burn a distance ? non, jamais.
-
 ##==> a quoi sert-il de planter des drapeaux, d'ailleurs ? : a augmenter le prestige
 #Ressources ??? : or. Prestige et crainte ne sont que des facteurs. Or uniquement !!!
 
 #a quoi sert-il de bruler un territoire ? : a interdire son accès pour 2 tours, a detruire l'objet si burnable.
-#peut-on les eteindre ? ==> seulement les magiciens.
+#peut-on les eteindre ? ==> Non
 
-##empecher plantage de drapeau si unit ennemie, le burn si unit ennemie, implementer le burn des objets
-##==> comment filtrer les choices ?
+probleme : on voit pas les feux sur meme cellule que villages
 
-#nettoyer les self.interaction_objs[0].cell.unit ==> .unit_under_cursor()
+
+
+
 
 
 ################################################################################

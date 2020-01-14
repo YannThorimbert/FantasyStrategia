@@ -1,5 +1,7 @@
 import os, random, thorpy
 
+from .unit import InteractiveObject
+
 
 
 def get_sounds(root, sc):
@@ -30,6 +32,11 @@ class Game:
         self.magic_attack_sounds = get_sounds("sounds/attacks/", self.sounds)
         for s in self.death_sounds:
             s.set_volume(0.5)
+        self.is_flaggable = ["grass", "rock", "sand", "snow", "thin snow"]
+        self.is_burnable = ["grass", "wood", "oak", "fir1", "fir2", "firsnow",
+                            "palm", "bush", "village", "flag"]
+        self.burning = {} #e.g. burning[(4,12):2] means 2 remaining turns to burn
+        self.fire = InteractiveObject("fire", self.me, "sprites/fire")
 
 
 
@@ -52,8 +59,14 @@ class Game:
         if cell:
             return cell.unit
 
-    def add_fire(self, x, y):
-        self.add_object((x,y), self.fire, 1)
+    def set_fire(self, coord, n):
+        if coord in self.burning:
+            self.burning.pop(coord)
+            self.fires[coord].remove_from_game()
+            self.fires.pop(coord)
+        if n > 0:
+            self.burning[coord] = n
+            self.add_object(coord, self.fire, 1)
 
     def get_interactive_objects(self, x, y):
         return [o for o in self.get_cell_at(x,y).objects if o.can_interact]
