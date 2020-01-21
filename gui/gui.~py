@@ -301,7 +301,7 @@ class Gui:
         self.game.add_object(cell.coord, self.selected_unit.race.flag, 1)
 
     def burn(self):
-        self.game.burning[coord] = 2 #to do...
+        self.game.set_fire(self.cell_under_cursor.coord, 2)
 
     def help(self, unit):
         print("Not implemented yet")

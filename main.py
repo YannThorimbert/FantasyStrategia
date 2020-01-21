@@ -54,12 +54,8 @@ game = Game(me)
 #a quoi sert-il de bruler un territoire ? : a interdire son accès pour 2 tours, a detruire l'objet si burnable.
 #peut-on les eteindre ? ==> Non
 
-probleme : on voit pas les feux sur meme cellule que villages
 
-
-
-
-
+interaction avec cellule deja enflammee
 
 ################################################################################
 ################################################################################

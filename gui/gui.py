@@ -140,6 +140,8 @@ class Gui:
             return False
         elif self.unit_under_cursor():
             return False
+        elif self.selected_unit.cell.distance_to(self.cell_under_cursor) != 1:
+            return False
         else:
             for o in self.cell_under_cursor.objects:
                 if o.name in self.game.is_burnable:

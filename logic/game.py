@@ -46,9 +46,11 @@ class Game:
         u.game = self
         self.units.append(u)
 
-    def add_object(self, coord, obj, quantity):
+    def add_object(self, coord, obj, quantity, rand_relpos=False):
         o = self.me.add_dynamic_object(coord, obj, quantity)
         o.game = self
+        if rand_relpos:
+            o.randomize_relpos()
         self.objects.append(o)
 
     def get_cell_at(self, x, y):
@@ -66,7 +68,14 @@ class Game:
             self.fires.pop(coord)
         if n > 0:
             self.burning[coord] = n
-            self.add_object(coord, self.fire, 1)
+            village = False
+            for o in self.get_cell_at(coord[0],coord[1]).objects:
+                if o.name == "village":
+                    village = True
+                    self.fire.min_relpos = [0, o.relpos[1]+0.001]
+                    self.fire.max_relpos = [0, o.relpos[1]+0.001]
+                    break
+            self.add_object(coord, self.fire, 1, village)
 
     def get_interactive_objects(self, x, y):
         return [o for o in self.get_cell_at(x,y).objects if o.can_interact]
