@@ -65,6 +65,7 @@ class Ghost(object):
         self._jail = None
         self._overframe = None #used for shadows. Indicate that element can clip outside of its parent's clip
         self._is_in_family = True
+        self.message = None
         self.id = Ghost._current_id
         Ghost._current_id += 1
         if finish:

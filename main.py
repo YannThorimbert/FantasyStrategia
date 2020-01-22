@@ -66,6 +66,10 @@ game = Game(me)
 
 #utiliser la methode blits de surface et comparer perf (test : bataille)!
 
+# faire une fonction ui.redra_all qui utilise pas le func_reac_time de me
+
+#launch_blocking cancel marche plus
+
 
 ################################################################################
 ################################################################################
@@ -163,12 +167,13 @@ def quit_func():
     io.ask_save(me)
     thorpy.functions.quit_func()
 
-e_options = thorpy.make_button("Options")
+e_options = thorpy.make_button("Options", ui.show_options)
 e_save = thorpy.make_button("Save", io.ask_save, {"me":me})
 e_load = thorpy.make_button("Load", io.ask_load)
 e_quit = thorpy.make_button("Quit game", quit_func)
 
 launched_menu = thorpy.make_ok_box([ gui.get_help_box().launcher,
+                                            e_options,
                                             e_save,
                                             e_load,
                                             e_quit])

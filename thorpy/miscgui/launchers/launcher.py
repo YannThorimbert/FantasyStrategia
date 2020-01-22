@@ -16,19 +16,19 @@ DONE, CANCEL, CLICK_QUIT = constants.LAUNCH_DONE, constants.LAUNCH_CANCEL, const
 
 def func_click_quit(event, launcher, what):
     if not launcher.launched.collide(event.pos):
-        launcher.unlaunch(what)
+        launcher.unlaunch_cancel(what)
 
 def get_launcher(launched, click_quit=False, launching=None, autocenter=True):
     """Prepare and return a launcher object for launching <launched>."""
     launcher = Launcher(launched, launching=launching)
     launcher.autocenter = autocenter
     reac_done = ConstantReaction(constants.THORPY_EVENT,
-                         launcher.unlaunch,
+                         launcher.unlaunch_done,
                          {"id": constants.EVENT_DONE, "el":launched},
                          {"what": DONE},
                          reac_name="reac_done")
     reac_cancel = ConstantReaction(constants.THORPY_EVENT,
-                         launcher.unlaunch,
+                         launcher.unlaunch_cancel,
                          {"id": constants.EVENT_CANCEL, "el":launched},
                          {"what": CANCEL},
                          reac_name="reac_cancel")
@@ -48,6 +48,7 @@ def launch(launched, click_quit=False, launching=None, autocenter=True):
     launcher = get_launcher(launched, click_quit, launching, autocenter)
     launcher.launch()
     return launcher
+
 
 
 def set_launcher(launching, launched, click_quit=False):
@@ -83,10 +84,12 @@ def make_launcher(launched, text, click_quit=False):
     return button
 
 def post_done(el):
+    el.message = True
     e = event.Event(constants.THORPY_EVENT, id=constants.EVENT_DONE, el=el)
     event.post(e)
 
 def post_cancel(el):
+    el.message = True
     e = event.Event(constants.THORPY_EVENT, id=constants.EVENT_CANCEL, el=el)
     event.post(e)
 
@@ -144,6 +147,7 @@ class Launcher(object):
         self.active_record = {}
         self.launching = launching
         self.autocenter = True
+        self.how_exited = None
 
     def set_focus(self,value, exceptions=None):
         self.focus = value
@@ -260,7 +264,18 @@ class Launcher(object):
         self.remove_from_current_menu()
         self.postlaunch()
 
+    def unlaunch_cancel(self, what=None):
+        self.how_exited = "cancel"
+        self.unlaunch(what)
 
+    def unlaunch_done(self, what=None):
+        self.how_exited = "done"
+        self.unlaunch(what)
+
+
+class _FakeLauncher:
+    def __init__(self, how_exited):
+        self.how_exited = how_exited
 def launch_blocking(element, after=None, func=None, set_auto_ok=True,
                     add_ok_enter=None):
     if set_auto_ok:
@@ -285,6 +300,21 @@ def launch_blocking(element, after=None, func=None, set_auto_ok=True,
         after.unblit_and_reblit()
     if func:
         func()
+    done = None
+    cancel = None
+    if hasattr(element, "e_ok"):
+        done = element.e_ok.message
+    if hasattr(element, "e_cancel"):
+        cancel = element.e_cancel.message
+    if done and not(cancel):
+        return _FakeLauncher("done")
+    elif cancel and not(done):
+        return _FakeLauncher("cancel")
+    elif done and cancel:
+        raise Exception()
+    else:
+        return _FakeLauncher(None)
+
 
 def emulate_ok_press(element=None, inserters=None):
     if inserters:
@@ -298,4 +328,3 @@ def auto_ok(element):
     if hasattr(element,"e_ok"):
         element.e_ok.user_func = emulate_ok_press
         element.e_ok.user_params = {"element":element.e_ok}
-

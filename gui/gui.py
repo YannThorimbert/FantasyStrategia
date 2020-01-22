@@ -118,7 +118,9 @@ class Gui:
         #
         self.moving_units = []
         self.add_reactions()
-        self.font_life = pygame.font.SysFont(guip.font_gui_life, guip.NFS)
+        self.life_font_size = guip.NFS
+        self.life_font_color = (0,0,0)
+        self.font_life = pygame.font.SysFont(guip.font_gui_life, self.life_font_size)
         self.refresh_lifes()
         self.show_lifes = True
         self.actions = {"flag":[("Remove flag",self.remove_flag,
@@ -132,8 +134,9 @@ class Gui:
                                     self.check_interact_burn)]
         self.interaction_objs = []
 
-
-
+    def refresh_graphics_options(self):
+        self.font_life = pygame.font.SysFont(guip.font_gui_life, self.life_font_size)
+        self.clear()
 
     def check_interact_burn(self):
         """Return True if there is at least one thing (cell/object) that can
@@ -434,7 +437,7 @@ class Gui:
         self.lifes = []
         for u in self.game.units:
             if not u in self.moving_units:
-                text = self.font_life.render(str(u.quantity), True, (0,0,0))
+                text = self.font_life.render(str(u.quantity), True, self.life_font_color)
                 x,y = self.game.me.cam.get_rect_at_coord(u.cell.coord).center
                 coord = x+4,y+4
                 self.lifes.append((text, coord))
@@ -517,7 +520,20 @@ class Gui:
                          {"key":key}))
         self.me.e_box.add_reactions(reacs)
 
-
+    def show_options(self):
+        e_life_size = thorpy.SliderX(100, (6, 20), "Life font size", type_=int,
+                                            initial_value=self.life_font_size)
+        e_life_color = thorpy.ColorSetter(text="Life font color",
+                                            value=self.life_font_color)
+        e_title = thorpy.make_text("Units life")
+        e_box = thorpy.make_ok_cancel_box([e_title, e_life_size, e_life_color])
+        e_box.center()
+        result = thorpy.launch_blocking(e_box)
+        print("RESULT",result.how_exited)
+        if result.how_exited == "done":
+            self.life_font_size = e_life_size.get_value()
+            self.life_font_color = e_life_color.get_value()
+            self.refresh_graphics_options()
 
 
 
