@@ -133,6 +133,8 @@ class Gui:
         self.interaction_objs = []
 
 
+
+
     def check_interact_burn(self):
         """Return True if there is at least one thing (cell/object) that can
         burn."""
@@ -514,3 +516,27 @@ class Gui:
             reacs.append(thorpy.ConstantReaction(pygame.KEYDOWN, func,
                          {"key":key}))
         self.me.e_box.add_reactions(reacs)
+
+
+
+
+
+def get_help_box():
+    return elements.HelpBox([
+        ("Move camera",
+            [("To move the map, drag it with", "<LMB>",
+                "or hold", "<LEFT SHIFT>", "while moving mouse."),
+             ("The minimap on the upper right can be clicked or hold with",
+                "<LMB>", "in order to move the camera."),
+             ("The","<KEYBOARD ARROWS>",
+              "can also be used to scroll the map view.")]),
+
+        ("Zoom",
+            [("Use the","zoom slider","or","<NUMPAD +/- >",
+              "to change zoom level."),
+             ("You can also alternate zoom levels by pressing","<RMB>",".")]),
+
+        ("Miscellaneous",
+            [("Press","<G>","to toggle grid lines display."),
+             ("Press", "<L>", "to toggle the display of units life.")])
+        ])

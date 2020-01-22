@@ -327,12 +327,14 @@ def make_global_display_options(fn, text):
 ##    return box
 
 def make_menu_button(frame_size=(40,40), lines_size=(25,2), lines_radius=1,
-                     lines_color=(0,0,0), n=3, force_convert_alpha=False):
+                     lines_color=(0,0,0),
+                     lines_color_hover=(0,0,200),
+                     n=3, force_convert_alpha=False):
     e = make_button("")
     e.set_size(frame_size)
     imgs = {}
     for state in e.get_states():
-        img = e.get_image(state)
+        img = e.get_image(state).copy()
         frame = img.get_rect()
         line = graphics.get_aa_round_rect(lines_size, lines_radius, lines_color)
         rect = line.get_rect()
@@ -343,9 +345,20 @@ def make_menu_button(frame_size=(40,40), lines_size=(25,2), lines_radius=1,
             rect.y = margin + y*(gap+rect.h)
             img.blit(line, rect.topleft)
         imgs[state] = img
+    #
+    img_hover = e.get_image(constants.STATE_NORMAL).copy()
+    frame = img.get_rect()
+    line = graphics.get_aa_round_rect(lines_size, lines_radius, lines_color_hover)
+    rect = line.get_rect()
+    rect.centerx = frame.centerx
+    margin = frame.h//3
+    gap = (frame.h - 2*margin - n*rect.h) // (n-1)
+    for y in range(n):
+        rect.y = margin + y*(gap+rect.h)
+        img_hover.blit(line, rect.topleft)
     e = make_image_button(imgs[constants.STATE_NORMAL],
                             imgs[constants.STATE_PRESSED],
-                            imgs[constants.STATE_NORMAL],
+                            img_hover,
                             force_convert_alpha=force_convert_alpha)
     return e
 

@@ -162,11 +162,13 @@ thorpy.add_time_reaction(me.e_box, func_reac_time)
 def quit_func():
     io.ask_save(me)
     thorpy.functions.quit_func()
-e_quit = thorpy.make_button("Quit game", quit_func)
+
+e_options = thorpy.make_button("Options")
 e_save = thorpy.make_button("Save", io.ask_save, {"me":me})
 e_load = thorpy.make_button("Load", io.ask_load)
+e_quit = thorpy.make_button("Quit game", quit_func)
 
-launched_menu = thorpy.make_ok_box([ me.help_box.launcher,
+launched_menu = thorpy.make_ok_box([ gui.get_help_box().launcher,
                                             e_save,
                                             e_load,
                                             e_quit])
