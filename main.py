@@ -54,8 +54,18 @@ game = Game(me)
 #a quoi sert-il de bruler un territoire ? : a interdire son accès pour 2 tours, a detruire l'objet si burnable.
 #peut-on les eteindre ? ==> Non
 
+#interaction avec cellule deja enflammee
+#duree des incendies
+#effet sur la cellule après incendie.
 
-interaction avec cellule deja enflammee
+#click droit des interactions affiche pas la cellule svp
+
+#options ==> regler taille et couleur des indicateurs de vie !!
+
+#plant flag fait comme incendie, met le drapeau juste devant la maison sinon est cache par la maison
+
+#utiliser la methode blits de surface et comparer perf (test : bataille)!
+
 
 ################################################################################
 ################################################################################
@@ -128,7 +138,7 @@ game.add_unit((15,9), humans2["infantry"], 15)
 
 ##flag = InteractiveObject("flag", me, "sprites/flag", race=humans2)
 game.add_object((15,11), humans2.flag, 1)
-##game.add_fire(15,15)
+game.set_fire((15,15),2)
 
 
 ##game.get_cell_at(14,15).set_name("My left cell")
@@ -179,9 +189,6 @@ me.menu_button.user_params = {"element":launched_menu}
 ##me.e_box.add_reaction(reac_click)
 ##reac_motion = thorpy.Reaction(pygame.MOUSEMOTION, ui.mousemotion)
 ##me.e_box.add_reaction(reac_motion)
-
-
-print("0,0 ======= ", game.get_cell_at(0,0).h)
 
 me.set_zoom(level=0)
 m = thorpy.Menu(me.e_box,fps=me.fps)

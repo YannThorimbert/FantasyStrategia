@@ -8,7 +8,7 @@ from thorpy.elements.box import Box
 from thorpy.elements.inserter import Inserter
 from thorpy.miscgui.storage import store
 from thorpy.miscgui import constants, style, functions
-from thorpy.painting.painters.imageframe import ButtonImage
+from thorpy.painting.painters.imageframe import ButtonImage, ImageFrame
 import thorpy.painting.graphics as graphics
 
 def make_textbox(text, font_size=None, font_color=None, ok_text="Ok"):
@@ -144,17 +144,11 @@ def make_button(text, func=None, params=None):
     return button
 
 def make_image_button(img_normal, img_pressed=None, img_hover=None,
-                        alpha=255, colorkey=None, text=""):
+                        alpha=255, colorkey=None, text="",
+                        force_convert_alpha=False):
     e = Clickable(text,finish=False)
-    painter = ButtonImage(img_normal, img_pressed, img_hover, alpha, colorkey)
-    e.set_painter(painter)
-    e.finish()
-    return e
-
-def make_image_button_with_frame(img_normal, img_pressed=None, img_hover=None,
-                        alpha=255, colorkey=None, text=""):
-    e = Clickable(text,finish=False)
-    painter = ButtonImage(img_normal, img_pressed, img_hover, alpha, colorkey)
+    painter = ButtonImage(img_normal, img_pressed, img_hover, alpha, colorkey,
+                            force_convert_alpha=force_convert_alpha)
     e.set_painter(painter)
     e.finish()
     return e
@@ -333,7 +327,7 @@ def make_global_display_options(fn, text):
 ##    return box
 
 def make_menu_button(frame_size=(40,40), lines_size=(25,2), lines_radius=1,
-                     lines_color=(0,0,0), n=3):
+                     lines_color=(0,0,0), n=3, force_convert_alpha=False):
     e = make_button("")
     e.set_size(frame_size)
     imgs = {}
@@ -351,7 +345,8 @@ def make_menu_button(frame_size=(40,40), lines_size=(25,2), lines_radius=1,
         imgs[state] = img
     e = make_image_button(imgs[constants.STATE_NORMAL],
                             imgs[constants.STATE_PRESSED],
-                            imgs[constants.STATE_NORMAL])
+                            imgs[constants.STATE_NORMAL],
+                            force_convert_alpha=force_convert_alpha)
     return e
 
 

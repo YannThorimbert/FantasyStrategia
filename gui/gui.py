@@ -394,6 +394,8 @@ class Gui:
                 choices = self.get_interaction_choices(interactibles)
                 if choices:
                     self.user_make_choice(choices)
+                else:
+                    return
         self.destinations_mousemotion = []
         self.destinations_lmb = []
         self.selected_unit = None
@@ -512,5 +514,3 @@ class Gui:
             reacs.append(thorpy.ConstantReaction(pygame.KEYDOWN, func,
                          {"key":key}))
         self.me.e_box.add_reactions(reacs)
-
-

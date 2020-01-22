@@ -114,11 +114,10 @@ class MapEditor:
         self.unit_info = gui.UnitInfo(self,self.menu_rect.inflate((-10,0)).size,
                          self.cell_rect.size, self.draw_no_update, e_hmap)
 ##        self.misc_info = gui.MiscInfo(self.menu_rect.inflate((-10,0)).size)
-        self.menu_button = thorpy.make_menu_button()
+        self.menu_button = thorpy.make_menu_button(force_convert_alpha=True)
         ########################################################################
         elements =[
                     self.topbox,
-##                    self.misc_info.e,
                     self.cell_info.e,
                     self.unit_info.e,
                     self.menu_button]
@@ -382,7 +381,9 @@ class MapEditor:
             if self.cam.ui_manager:
                 mm = bool(self.cam.ui_manager.destinations_mousemotion)
                 lmb = bool(self.cam.ui_manager.destinations_lmb)
-            if mm or lmb:
+                su = self.cam.ui_manager.selected_unit
+                print(mm, lmb, su)
+            if mm or lmb or su:
                 self.cam.ui_manager.destinations_mousemotion = []
                 self.cam.ui_manager.destinations_lmb = []
                 self.cam.ui_manager.selected_unit = None
