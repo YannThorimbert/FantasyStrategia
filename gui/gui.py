@@ -1,9 +1,14 @@
 import pygame, thorpy, math
 import PyWorld2D.gui.elements as elements
 import PyWorld2D.gui.parameters as guip
+import PyWorld2D.saveload.io as io
 
 from logic.battle import Battle, DistantBattle
 from logic.unit import DELTA_TO_KEY, DELTAS
+
+def quit_func():
+    io.ask_save(me)
+    thorpy.functions.quit_func()
 
 class Footprint:
 
@@ -133,6 +138,21 @@ class Gui:
                                 ("Burn",self.burn,
                                     self.check_interact_burn)]
         self.interaction_objs = []
+        #
+        #here you can add/remove buttons to/from the menu
+        e_options = thorpy.make_button("Options", self.show_options)
+        e_save = thorpy.make_button("Save", io.ask_save, {"me":self.me})
+        e_load = thorpy.make_button("Load", io.ask_load)
+        e_quit = thorpy.make_button("Quit game", quit_func)
+        self.menu = thorpy.make_ok_box([ get_help_box().launcher,
+                                                    e_options,
+                                                    e_save,
+                                                    e_load,
+                                                    e_quit])
+        self.menu.center()
+
+    def launch_map_menu(self):
+        thorpy.launch_blocking(self.menu)
 
     def refresh_graphics_options(self):
         self.font_life = pygame.font.SysFont(guip.font_gui_life, self.life_font_size)
@@ -513,7 +533,8 @@ class Gui:
         self.me.e_box.add_reaction(reac_motion)
 ##        reac_escape = thorpy.ConstantReaction(pygame.KEYDOWN, self.esc_menu, {"key":pygame.K_ESCAPE})
 ##        self.me.e_box.add_reaction(reac_escape)
-        shortcuts = [(pygame.K_l, self.toggle_show_life)]
+        shortcuts = [(pygame.K_l, self.toggle_show_life),
+                     (pygame.K_ESCAPE, self.launch_map_menu)]
         reacs = []
         for key,func in shortcuts:
             reacs.append(thorpy.ConstantReaction(pygame.KEYDOWN, func,
@@ -534,6 +555,9 @@ class Gui:
             self.life_font_size = e_life_size.get_value()
             self.life_font_color = e_life_color.get_value()
             self.refresh_graphics_options()
+        self.me.draw()
+        self.menu.blit()
+        pygame.display.flip()
 
 
 

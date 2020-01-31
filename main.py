@@ -16,7 +16,6 @@ import thorpy #for GUI and other graphics - see www.thorpy.org
 
 from PyWorld2D import PW_PATH
 from PyWorld2D.mapobjects.objects import MapObject
-import PyWorld2D.saveload.io as io
 from PyWorld2D.editor.mapeditor import MapEditor #base structure for a map
 from PyWorld2D.editor.mapbuilding import MapInitializer #configuration structure of a map
 
@@ -65,10 +64,6 @@ game = Game(me)
 #plant flag fait comme incendie, met le drapeau juste devant la maison sinon est cache par la maison
 
 #utiliser la methode blits de surface et comparer perf (test : bataille)!
-
-# faire une fonction ui.redra_all qui utilise pas le func_reac_time de me
-
-#launch_blocking cancel marche plus
 
 
 ################################################################################
@@ -162,24 +157,7 @@ def func_reac_time(): #here add wathever you want
 thorpy.add_time_reaction(me.e_box, func_reac_time)
 
 
-#here you can add/remove buttons to/from the menu
-def quit_func():
-    io.ask_save(me)
-    thorpy.functions.quit_func()
-
-e_options = thorpy.make_button("Options", ui.show_options)
-e_save = thorpy.make_button("Save", io.ask_save, {"me":me})
-e_load = thorpy.make_button("Load", io.ask_load)
-e_quit = thorpy.make_button("Quit game", quit_func)
-
-launched_menu = thorpy.make_ok_box([ gui.get_help_box().launcher,
-                                            e_options,
-                                            e_save,
-                                            e_load,
-                                            e_quit])
-launched_menu.center()
-me.menu_button.user_func = thorpy.launch_blocking
-me.menu_button.user_params = {"element":launched_menu}
+me.menu_button.user_func = ui.launch_map_menu
 
 #me.e_box includes many default reactions. You can remove them as follow:
 #remove <g> key:

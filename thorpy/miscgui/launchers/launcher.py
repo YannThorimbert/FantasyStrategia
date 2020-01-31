@@ -276,10 +276,13 @@ class Launcher(object):
 class _FakeLauncher:
     def __init__(self, how_exited):
         self.how_exited = how_exited
+
 def launch_blocking(element, after=None, func=None, set_auto_ok=True,
-                    add_ok_enter=None):
+                    add_ok_enter=None, set_auto_cancel=True):
     if set_auto_ok:
         auto_ok(element)
+    if set_auto_cancel:
+        auto_cancel(element)
     from thorpy.elements.inserter import Inserter
     inserters = []
     if add_ok_enter is None: #auto detect
@@ -316,15 +319,26 @@ def launch_blocking(element, after=None, func=None, set_auto_ok=True,
         return _FakeLauncher(None)
 
 
-def emulate_ok_press(element=None, inserters=None):
+def emulate_ok_press(element, inserters=None):
     if inserters:
         for i in inserters:
             i.K_RETURN_pressed()
-    e = event.Event(constants.THORPY_EVENT, id=constants.EVENT_DONE, el=element)
-    event.post(e)
+    post_done(element)
     functions.quit_menu_func()
 
 def auto_ok(element):
     if hasattr(element,"e_ok"):
         element.e_ok.user_func = emulate_ok_press
         element.e_ok.user_params = {"element":element.e_ok}
+
+def emulate_cancel_press(element, inserters=None):
+    if inserters:
+        for i in inserters:
+            i.K_RETURN_pressed()
+    post_cancel(element)
+    functions.quit_menu_func()
+
+def auto_cancel(element):
+    if hasattr(element,"e_cancel"):
+        element.e_cancel.user_func = emulate_cancel_press
+        element.e_cancel.user_params = {"element":element.e_cancel}
