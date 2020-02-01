@@ -37,6 +37,7 @@ class Game:
                             "palm", "bush", "village", "flag"]
         self.burning = {} #e.g. burning[(4,12):2] means 2 remaining turns to burn
         self.fire = InteractiveObject("fire", self.me, "sprites/fire")
+##        self.fire.always_drawn_last = True
 
 
 
@@ -62,20 +63,27 @@ class Game:
             return cell.unit
 
     def set_fire(self, coord, n):
+        #1. remove old fire if necessary
         if coord in self.burning:
             self.burning.pop(coord)
+            enlever le feu
             self.fires[coord].remove_from_game()
             self.fires.pop(coord)
+        #2. add new fire
         if n > 0:
+            cell = self.get_cell_at(coord[0],coord[1])
             self.burning[coord] = n
-            village = False
-            for o in self.get_cell_at(coord[0],coord[1]).objects:
-                if o.name == "village":
-                    village = True
-                    self.fire.min_relpos = [0, o.relpos[1]+0.001]
-                    self.fire.max_relpos = [0, o.relpos[1]+0.001]
-                    break
-            self.add_object(coord, self.fire, 1, village)
+            self.add_obj_before_other_if_needed(self.fire,1,"village",cell)
+
+    def add_obj_before_other_if_needed(self, obj, qty, other_name, cell):
+        has_other = False
+        for o in cell.objects:
+            if o.name == other_name:
+                has_other = True
+                obj.min_relpos = [0, o.relpos[1]+0.001]
+                obj.max_relpos = [0, o.relpos[1]+0.001]
+                break
+        self.add_object(cell.coord, obj, qty, has_other)
 
     def get_interactive_objects(self, x, y):
         return [o for o in self.get_cell_at(x,y).objects if o.can_interact]

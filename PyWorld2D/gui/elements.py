@@ -70,10 +70,10 @@ class CellInfo:
         self.e_coordalt = guip.get_text("")
         self.e_mat_img = thorpy.Image.make(pygame.Surface(cell_size))
         self.e_mat_name = guip.get_text("")
-        self.e_mat = thorpy.make_group([self.e_mat_img, self.e_mat_name])
-##        self.e_mat = thorpy.Clickable.make(elements=[self.e_mat_img, self.e_mat_name])
-##        self.e_mat.set_size((size[0]-10,None))
-##        thorpy.store(self.e_mat, mode="h", x=2, margin=2)
+        self.e_obj_name = guip.get_text("")
+        self.e_mat_obj = thorpy.make_group([self.e_mat_name,  self.e_obj_name], "v")
+##        self.e_mat = thorpy.make_group([self.e_mat_img, self.e_mat_obj])
+        self.e_mat = thorpy.Box(elements=[self.e_mat_img, self.e_mat_obj])
 ##        self.e_mat.fit_children(axis=(False, True))
         self.elements = [self.e_mat, self.e_coordalt]
         self.e = thorpy.Box.make(self.elements)
@@ -95,7 +95,9 @@ class CellInfo:
         self.em_mat_img = thorpy.Clickable.make(elements=[self.em_mat_img_img])
         self.em_mat_img.fit_children()
         self.em_mat_name = guip.get_text("")
-        self.em_mat = thorpy.make_group([self.em_mat_img, self.em_mat_name])
+        self.em_obj_name = guip.get_text("")
+        self.em_mat_obj = thorpy.make_group([self.em_mat_name,  self.em_obj_name], "v")
+        self.em_mat = thorpy.make_group([self.em_mat_img, self.em_mat_obj])
 ##        self.em_elements = [self.em_title, thorpy.Line.make(100), self.em_mat, self.em_coord, self.em_altitude, self.em_name_rename]
         self.em_elements = [self.em_title, thorpy.Line.make(100), self.em_mat, self.em_coord, self.em_name_rename]
         self.em = thorpy.Box.make(self.em_elements)
@@ -115,27 +117,21 @@ class CellInfo:
     def update_em(self, cell):
         new_img = cell.extract_all_layers_img_at_zoom(0)
         self.em_mat_img_img.set_image(new_img)
-        ground_obj = False
+        #
+        text = cell.material.name
         for obj in cell.objects:
             if obj.is_ground:
-                ground_obj = obj.name
+                text = obj.name.capitalize()
                 break
-        if ground_obj: #cobblestone, river etc should not display "grass"
-            text = ground_obj.capitalize()
-            objs = set([])
-            for obj in cell.objects:
-                if not obj.is_ground:
-                    objs.add(obj.name) #split to not take the id
-            for name in objs:
-                text += " ("+name+")"
-        else:
-            text = cell.material.name
-            objs = set([])
-            for obj in cell.objects:
-                objs.add(obj.name) #split to not take the id
-            for name in objs:
-                text += " ("+name+")"
         self.em_mat_name.set_text(text)
+        #
+        objs = set([])
+        for obj in cell.objects:
+            if not obj.is_ground:
+                objs.add(obj.name) #split to not take the id
+        text = ",".join([name for name in objs])
+        self.em_obj_name.set_text(text)
+        #
         thorpy.store(self.em_mat, mode="h")
         self.em_coord.set_text("Coordinates: "+str(cell.coord))
 ##        self.em_altitude.set_text("Altitude: "+str(round(cell.get_altitude()))+"m")
@@ -193,33 +189,46 @@ class CellInfo:
 
     def update_e(self, cell):
         self.cell = cell
-        ground_obj = False
+        #
+        text = cell.material.name
         for obj in cell.objects:
             if obj.is_ground:
-                ground_obj = obj.name
+                text = obj.name.capitalize()
                 break
-        if ground_obj: #cobblestone, river etc should not display "grass"
-            basename = ground_obj.capitalize()
-        else:
-            basename = cell.material.name
-        if cell.name:
-            name = cell.name + " (" + basename + ")"
-        else:
-            name = basename
+        self.e_mat_name.set_text(text)
+        #
+        objs = set()
         for obj in cell.objects:
             if not obj.is_ground:
-                name += " (" + obj.name + ")"
-        self.e_mat_name.set_text(name)
+                objs.add(obj.name)
+        objs = list(objs)
+        text = ""
+        if len(objs) > 1:
+            text = objs[0] + "(...)"
+        elif len(objs) == 1:
+            text = objs[0]
+        self.e_obj_name.set_text(text)
+        #
         new_img = cell.extract_all_layers_img_at_zoom(0)
         self.e_mat_img.set_image(new_img)
+        if len(objs) > 0:
+            thorpy.store(self.e_mat_obj)
+            self.e_mat_obj.fit_children()
+        else:
+            self.e_mat_name.stick_to(self.e_mat_img,"right","left")
+            self.e_obj_name.center(element=self.e_mat_name)
+            self.e_mat_name.move((3,0))
         thorpy.store(self.e_mat, mode="h")
+        self.e_mat.fit_children()
         #
 ##        altitude = round(cell.get_altitude())
 ##        alt_text = str(altitude) + "m"
-        coord_text = str(cell.coord) + "     "
+        coord_text = str(cell.coord)# + "     "
 ##        self.e_coordalt.set_text(coord_text+alt_text)
         self.e_coordalt.set_text(coord_text)
-        self.e_coordalt.recenter()
+        self.e_coordalt.fit_children()
+##        self.e_coordalt.recenter()
+        thorpy.store(self.e)
 
     def can_be_launched(self, cell, me):
         if cell:

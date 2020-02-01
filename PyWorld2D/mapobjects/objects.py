@@ -84,7 +84,8 @@ class MapObject:
     @staticmethod
     def get_saved_attributes():
         return ["name", "quantity", "fns", "factor", "new_type", "relpos",
-                "build", "vel", "_refresh_frame_type", "can_interact", "is_ground"]
+                "build", "vel", "_refresh_frame_type", "can_interact",
+                "is_ground", "always_drawn_last"]
 
     def __init__(self, editor, fns, name="", factor=1., relpos=(0,0), build=True,
                  new_type=True):
@@ -133,8 +134,9 @@ class MapObject:
         self.get_current_frame = None
         self._refresh_frame_type = 1
         self.set_frame_refresh_type(self._refresh_frame_type)
-        self.is_ground = False
+        self.is_ground = False #always drawn first
         self.can_interact = False
+        self.always_drawn_last = False
 
     def get_cell_coord(self):
         return self.cell.coord
@@ -166,6 +168,7 @@ class MapObject:
         obj.vel = self.vel
         obj.set_frame_refresh_type(self._refresh_frame_type)
         obj.is_ground = self.is_ground
+        obj.always_drawn_last = self.always_drawn_last
         obj.can_interact = self.can_interact
         return obj
 
@@ -189,6 +192,7 @@ class MapObject:
         obj.vel = self.vel
         obj.set_frame_refresh_type(self._refresh_frame_type)
         obj.is_ground = self.is_ground
+        obj.always_drawn_last = self.always_drawn_last
         obj.can_interact = self.can_interact
         return obj
 

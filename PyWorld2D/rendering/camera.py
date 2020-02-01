@@ -161,6 +161,7 @@ class Camera:
 
 
     def blit_static_objects_around(self, screen, o, ir):
+        """Blit the neighboring objects according to their y-coordinate."""
         x,y = o.cell.coord
         s = self.lm.get_current_cell_size()
         for dx,dy in DELTA_STATIC_OBJECTS:
@@ -183,10 +184,13 @@ class Camera:
             self.ui_manager.draw_before_objects(s)
         for o in objs:
             img, rect = o.get_current_img_and_rect(s)
-            screen.blit(img, rect.topleft)
+            if not o.always_drawn_last:
+                screen.blit(img, rect.topleft)
             #check static object:
-            if not o.is_ground:
+            if not o.is_ground: #then some neigboring objects may have to be blitted according to y-coor.d
                 self.blit_static_objects_around(screen, o, rect)
+            if o.always_drawn_last:
+                screen.blit(img, rect.topleft)
         if self.ui_manager:
             self.ui_manager.draw_after_objects(s)
 

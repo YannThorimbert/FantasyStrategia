@@ -71,7 +71,7 @@ class MapEditor:
         self.box_hmap = None
         #
         self.ap = gui.AlertPool()
-        self.e_ap_move = gui.get_help_text("To move the map, drag it with", "<LBM>",
+        self.e_ap_move = gui.get_help_text("To move the map, drag it with", "<LMB>",
                                         "or hold", "<left shift>", "while moving mouse")
         self.ap.add_alert_countdown(self.e_ap_move, guip.DELAY_HELP * self.fps)
         #
@@ -114,11 +114,10 @@ class MapEditor:
         self.unit_info = gui.UnitInfo(self,self.menu_rect.inflate((-10,0)).size,
                          self.cell_rect.size, self.draw_no_update, e_hmap)
 ##        self.misc_info = gui.MiscInfo(self.menu_rect.inflate((-10,0)).size)
-        self.menu_button = thorpy.make_menu_button()
+        self.menu_button = thorpy.make_menu_button(force_convert_alpha=True)
         ########################################################################
         elements =[
                     self.topbox,
-##                    self.misc_info.e,
                     self.cell_info.e,
                     self.unit_info.e,
                     self.menu_button]
@@ -382,7 +381,9 @@ class MapEditor:
             if self.cam.ui_manager:
                 mm = bool(self.cam.ui_manager.destinations_mousemotion)
                 lmb = bool(self.cam.ui_manager.destinations_lmb)
-            if mm or lmb:
+                su = self.cam.ui_manager.selected_unit
+                print(mm, lmb, su)
+            if mm or lmb or su:
                 self.cam.ui_manager.destinations_mousemotion = []
                 self.cam.ui_manager.destinations_lmb = []
                 self.cam.ui_manager.selected_unit = None
@@ -424,16 +425,17 @@ class MapEditor:
         self.dynamic_objects.append(obj_added)
         return obj_added
 
-    def add_dynamic_object(self, coord, obj, quantity=None):
+
+    def add_dynamic_object(self, coord, obj, quantity=None): #le nom est mal copie qqpart !!!!
         cell = self.lm.get_cell_at(coord[0],coord[1])
         assert cell
+        print("BEFOREeeeeeeee", obj.name)
         obj_added = obj.add_dynamic_object_on_cell(cell)
+        print("AFTERrrrrrrrrrr", obj_added.name)
         if quantity is not None:
             obj_added.quantity = quantity
         self.dynamic_objects.append(obj_added)
         return obj_added
-
-    FAIRE PAREIL AVEC ADD_OBJECT
 
     def process_mouse_navigation(self): #cam can move even with no mousemotion!
         if pygame.key.get_mods() & pygame.KMOD_LSHIFT:

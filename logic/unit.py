@@ -152,6 +152,7 @@ class Unit(MapObject):
         obj.set_frame_refresh_type(self._refresh_frame_type)
         obj.sprites_ref = self.sprites_ref.copy()
         obj.is_ground = self.is_ground
+        obj.always_drawn_last = self.always_drawn_last
         obj.can_interact = self.can_interact
         obj.highlights = self.highlights
         obj.team = self.team
@@ -195,6 +196,7 @@ class Unit(MapObject):
         obj.sprites_ref = self.sprites_ref.copy()
         obj.can_interact = self.can_interact
         obj.is_ground = self.is_ground
+        obj.always_drawn_last = self.always_drawn_last
         obj.team = self.team
         #
         obj.material_cost = self.material_cost.copy()
@@ -419,7 +421,7 @@ class InteractiveObject(Unit):
 
     @staticmethod
     def get_saved_attributes():
-        return Unit.get_saved_attributes() + ["color"]
+        return Unit.get_saved_attributes() + ["color", "type_name"]
 
     def __init__(self, type_name, editor, sprites, race=None, name=None,
                  sprites_keys=("idle",), factor=1., relpos=(0,0), build=True,
@@ -454,6 +456,7 @@ class InteractiveObject(Unit):
         MapObject.__init__(self, editor, imgs, type_name, factor, relpos, build,
                             new_type)
         self.type_name = type_name
+        self.name = self.type_name if name is None else name
         #
         self.max_dist = None
         self.attack_range = None

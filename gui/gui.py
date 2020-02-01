@@ -131,7 +131,9 @@ class Gui:
         self.actions = {"flag":[("Remove flag",self.remove_flag,
                                     self.check_interact_flag),
                                 ("Replace flag",self.set_flag,
-                                    self.check_interact_flag)]
+                                    self.check_interact_flag)],
+                        "fire":[("Extinguish",self.extinguish,
+                                    self.check_extinguish)]
                         }
         self.actions_no_objs = [("Plant flag",self.set_flag,
                                     self.check_interact_flag),
@@ -150,6 +152,15 @@ class Gui:
                                                     e_load,
                                                     e_quit])
         self.menu.center()
+
+    def extinguish(self):
+        for o in self.cell_under_cursor.objects:
+            if o.name == "fire":
+                self.game.set_fire(self.cell_under_cursor.coord, 0)
+
+    def check_extinguish(self):
+        n = self.selected_unit.type_name
+        return n == "wizard" or n == "archiwizard"
 
     def launch_map_menu(self):
         thorpy.launch_blocking(self.menu)
@@ -322,10 +333,17 @@ class Gui:
                 o.remove_from_game()
                 break
 
+##    def set_flag(self):
+##        self.remove_flag()
+##        cell = self.cell_under_cursor
+##        self.game.add_object(cell.coord, self.selected_unit.race.flag, 1)
+
+
     def set_flag(self):
         self.remove_flag()
         cell = self.cell_under_cursor
-        self.game.add_object(cell.coord, self.selected_unit.race.flag, 1)
+        self.game.add_obj_before_other_if_needed(self.selected_unit.race.flag,
+                                                 1, "village", cell)
 
     def burn(self):
         self.game.set_fire(self.cell_under_cursor.coord, 2)
@@ -353,9 +371,10 @@ class Gui:
                         choices["Help"] = self.help
             for o in objs:
                 if o != cell.unit:
-                    for name, func, check in self.actions.get(o.type_name):
-                        if check():
-                            choices[name] = func
+                    if o.type_name in self.actions:
+                        for name, func, check in self.actions[o.type_name]:
+                            if check():
+                                choices[name] = func
             self.interaction_objs = objs
         for name, func, check in self.actions_no_objs:
             if check():

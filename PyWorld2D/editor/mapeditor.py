@@ -425,7 +425,8 @@ class MapEditor:
         self.dynamic_objects.append(obj_added)
         return obj_added
 
-    def add_dynamic_object(self, coord, obj, quantity=None):
+
+    def add_dynamic_object(self, coord, obj, quantity=None): #le nom est mal copie qqpart !!!!
         cell = self.lm.get_cell_at(coord[0],coord[1])
         assert cell
         obj_added = obj.add_dynamic_object_on_cell(cell)

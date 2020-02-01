@@ -1,6 +1,6 @@
 """
 Fantasy Strategia - A 2D, turn-based strategy game in a fantasy universe.
-Yann Thorimbert - 2019
+(C) Yann Thorimbert - 2020
 yann.thorimbert@gmail.com
 """
 from __future__ import print_function, division
@@ -39,31 +39,32 @@ game = Game(me)
 ################################################################################
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
-#Finir tous les sprites relatifs aux batailles
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
 #conquete de base, batailles. Pas d'impots ni de destruction d'objets.
-
-#objets du jeu (eg drapeaux pour les maisons, maisons construites/detruites).
-
-##nom du flag contient race et team ?
-
+#village peuvent etre conquis et peuvent produire unites
+#ressources : or, population et prestige
 ##==> a quoi sert-il de planter des drapeaux, d'ailleurs ? : a augmenter le prestige
 #Ressources ??? : or. Prestige et crainte ne sont que des facteurs. Or uniquement !!!
 
-#a quoi sert-il de bruler un territoire ? : a interdire son accès pour 2 tours, a detruire l'objet si burnable.
-#peut-on les eteindre ? ==> Non
+#2. FEUX:
+    #feux fonctionnels : allumables, eteignables, s'eteignent seuls, empechent de passer
+    #attention : bruler est une action a part entiere, empeche d'attaquer dans le meme tour
+    #a quoi sert-il de bruler un territoire ? : a interdire son accès pour 2 tours, a detruire l'objet si burnable.
+    #peut-on les eteindre ? ==> Non
+    #interaction avec cellule deja enflammee
+    #duree des incendies
+    #effet sur la cellule après incendie.
 
-#interaction avec cellule deja enflammee
-#duree des incendies
-#effet sur la cellule après incendie.
+#3. VILLAGES:
 
-#click droit des interactions affiche pas la cellule svp
 
-#options ==> regler taille et couleur des indicateurs de vie !!
+#4. SYSTEME DE JEU ET REGLES:
+    #implementer prestige des drapeaux
 
-#plant flag fait comme incendie, met le drapeau juste devant la maison sinon est cache par la maison
 
-#utiliser la methode blits de surface et comparer perf (test : bataille)!
+
+
+
 
 
 ################################################################################
@@ -134,11 +135,7 @@ game.add_unit((16,9), humans2["villager"], 15)
 game.add_unit((15,9), humans2["infantry"], 15)
 
 
-
-##flag = InteractiveObject("flag", me, "sprites/flag", race=humans2)
-game.add_object((15,11), humans2.flag, 1)
 game.set_fire((15,15),2)
-
 
 ##game.get_cell_at(14,15).set_name("My left cell")
 ##game.get_cell_at(15,14).set_name("My top cell")
@@ -211,3 +208,5 @@ app.quit()
 #ombres des objets en mode pil, y compris dans bataille (si option)
 #ridged noise
 #effets: fumee villages, ronds dans l'eau, herbe dans pieds, traces dans neige et sable, precipitations
+
+#utiliser la methode blits de pygame1.9 de surface et comparer perf (test : bataille)!
