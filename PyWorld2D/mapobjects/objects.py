@@ -396,6 +396,7 @@ def add_random_road(lm, layer,
                     min_length,
                     max_length):
     """Computes and draw a random road between two random villages."""
+    print("     Building random road...")
     villages = [o for o in layer.static_objects if "village" in o.name]
     if not villages:
         return
@@ -427,6 +428,7 @@ def add_random_river(me, layer,
                     possible_materials, possible_objects,
                     min_length, max_length):
     """Computes and draw a random river."""
+    print("     Building random river...")
     lm = me.lm
     #0)build tiles
     imgs = {}
@@ -521,7 +523,8 @@ def draw_road(path, cobbles, woods, layer):
     """<path> is a list of cells"""
     for cell in path:
         if "water" in cell.material.name.lower():
-            c = random.choice(woods)
+##            c = random.choice(woods)
+            c = random.choice(cobbles)
         else:
             c = random.choice(cobbles)
         c = c.add_copy_on_cell(cell)

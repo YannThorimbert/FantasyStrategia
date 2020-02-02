@@ -156,8 +156,6 @@ thorpy.add_time_reaction(me.e_box, func_reac_time)
 
 
 
-me.menu_button.user_func = ui.launch_map_menu #a deplacer dans gui !!!!!!!!!!!!!
-
 #me.e_box includes many default reactions. You can remove them as follow:
 #remove <g> key:
 ##me.e_box.remove_reaction("toggle grid")
@@ -167,16 +165,8 @@ me.menu_button.user_func = ui.launch_map_menu #a deplacer dans gui !!!!!!!!!!!!!
 ##me.e_box.remove_reaction("k <sign>")
 #remember to modify/deactivate the help text corresponding to the removed reac
 
-##reac_click = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, ui.lmb,{"button":1})
-##me.e_box.add_reaction(reac_click)
-##reac_click = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, ui.rmb,{"button":2})
-##me.e_box.add_reaction(reac_click)
-##reac_motion = thorpy.Reaction(pygame.MOUSEMOTION, ui.mousemotion)
-##me.e_box.add_reaction(reac_motion)
-
 me.set_zoom(level=0)
 m = thorpy.Menu(me.e_box,fps=me.fps)
-##game.outdoor_sound.play(-1)
 m.play()
 
 app.quit()

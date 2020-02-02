@@ -92,7 +92,7 @@ class GuiGraphicsEnhancement:
 
 class Gui:
 
-    def __init__(self, game):
+    def __init__(self, game, time_remaining=-1):
         self.game = game
         self.surface = thorpy.get_screen()
         game.me.cam.ui_manager = self
@@ -152,13 +152,14 @@ class Gui:
                                                     e_load,
                                                     e_quit])
         self.menu.center()
+        self.time_remaining = time_remaining
         self.set_map_gui()
 
     def set_map_gui(self):
         me = self.me
         #
-        me.add_gui_element(thorpy.Line(int(0.75*me.e_box.get_fus_rect().width),"h"),
-                            True)
+        self.hline = thorpy.Line(int(0.75*me.e_box.get_fus_rect().width), "h")
+        me.add_gui_element(self.hline, True)
         #
         self.e_end_turn = thorpy.make_button("End turn")
         self.e_end_turn.set_font_size(int(1.2*guip.TFS))
@@ -170,8 +171,19 @@ class Gui:
 ##        self.e_end_turn = thorpy.make_group([e_end_turn, nothing], "v")
         me.add_gui_element(self.e_end_turn, True)
         #
+        me.add_gui_element(self.hline.copy(), True)
+        if self.time_remaining > 0:
+            if self.time_remaining == 1:
+                text = "Last day !"
+            else:
+                text = str(self.time_remaining) + " days left"
+            self.e_time_remaining = guip.get_highlight_text(text)
+            me.add_gui_element(self.e_time_remaining, True)
+        #
         self.e_info_day = guip.get_title("Day 1")
         me.add_gui_element(self.e_info_day, True)
+        #
+        me.menu_button.user_func = self.launch_map_menu
 
     def extinguish(self):
         for o in self.cell_under_cursor.objects:

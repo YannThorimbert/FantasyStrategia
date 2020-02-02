@@ -356,11 +356,16 @@ class MapInitializer:
                          cobble.object_type: 0.9}
         #Materials allowed (here we allow water because we add bridges)
         possible_materials=list(me.materials)
+
+        ALTERNER routes et rivieres !!!
+
         #Objects allowed
         possible_objects=[cobble.object_type, bush.object_type, village1.object_type]
         for i in range(self.max_number_of_roads): #now we add 5 roads
-            objs.add_random_road(me.lm, self._static_objs_layer, cobbles, [wood], costs_materials,
-                                costs_objects, possible_materials, possible_objects,
+            objs.add_random_road(me.lm, self._static_objs_layer, cobbles, [wood],
+                                costs_materials,
+                                costs_objects, possible_materials,
+                                possible_objects,
                                 min_length=self.min_road_length,
                                 max_length=self.max_road_length)
         #now we build a path for rivers, just like we did with roads.

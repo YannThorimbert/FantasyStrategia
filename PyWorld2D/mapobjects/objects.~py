@@ -235,7 +235,7 @@ class MapObject:
 
     def remove_from_map(self, me):
         """To use only for dynamic objects !"""
-        me.dynamic_objects.remove(me)
+        me.dynamic_objects.remove(self)
         self.remove_from_cell()
 
     def move_to_cell(self, dest_cell):
@@ -396,6 +396,7 @@ def add_random_road(lm, layer,
                     min_length,
                     max_length):
     """Computes and draw a random road between two random villages."""
+    print("     Building random road")
     villages = [o for o in layer.static_objects if "village" in o.name]
     if not villages:
         return
@@ -521,7 +522,8 @@ def draw_road(path, cobbles, woods, layer):
     """<path> is a list of cells"""
     for cell in path:
         if "water" in cell.material.name.lower():
-            c = random.choice(woods)
+##            c = random.choice(woods)
+            c = random.choice(cobbles)
         else:
             c = random.choice(cobbles)
         c = c.add_copy_on_cell(cell)
