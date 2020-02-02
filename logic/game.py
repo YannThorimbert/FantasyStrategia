@@ -20,7 +20,6 @@ class Game:
     def __init__(self, me):
         self.me = me
         self.units = []
-        self.objects = []
         self.t = 0
         #
         self.sounds = thorpy.SoundCollection()
@@ -52,7 +51,6 @@ class Game:
         o.game = self
         if rand_relpos:
             o.randomize_relpos()
-        self.objects.append(o)
 
     def get_cell_at(self, x, y):
         return self.me.lm.get_cell_at(x,y)
@@ -62,13 +60,20 @@ class Game:
         if cell:
             return cell.unit
 
+    def remove_object(self, o):
+        o.remove_from_map(self.me)
+
+    def remove_unit(self, u): #just a wrapper
+        u.remove_from_game()
+
     def set_fire(self, coord, n):
         #1. remove old fire if necessary
         if coord in self.burning:
             self.burning.pop(coord)
-            enlever le feu
-            self.fires[coord].remove_from_game()
-            self.fires.pop(coord)
+            for o in self.get_cell_at(coord[0],coord[1]).objects:
+                if o.name == "fire":
+                    fire = o
+            self.remove_object(o)
         #2. add new fire
         if n > 0:
             cell = self.get_cell_at(coord[0],coord[1])
@@ -87,3 +92,8 @@ class Game:
 
     def get_interactive_objects(self, x, y):
         return [o for o in self.get_cell_at(x,y).objects if o.can_interact]
+
+
+
+
+##def add_game_gui_elements()

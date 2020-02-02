@@ -152,6 +152,26 @@ class Gui:
                                                     e_load,
                                                     e_quit])
         self.menu.center()
+        self.set_map_gui()
+
+    def set_map_gui(self):
+        me = self.me
+        #
+        me.add_gui_element(thorpy.Line(int(0.75*me.e_box.get_fus_rect().width),"h"),
+                            True)
+        #
+        self.e_end_turn = thorpy.make_button("End turn")
+        self.e_end_turn.set_font_size(int(1.2*guip.TFS))
+        self.e_end_turn.set_font_color(guip.TFC)
+        self.e_end_turn.scale_to_title()
+        w,h = self.e_end_turn.get_fus_size()
+        self.e_end_turn.set_size((w,w))
+##        nothing = thorpy.make_text("",20)
+##        self.e_end_turn = thorpy.make_group([e_end_turn, nothing], "v")
+        me.add_gui_element(self.e_end_turn, True)
+        #
+        self.e_info_day = guip.get_title("Day 1")
+        me.add_gui_element(self.e_info_day, True)
 
     def extinguish(self):
         for o in self.cell_under_cursor.objects:
@@ -159,8 +179,11 @@ class Gui:
                 self.game.set_fire(self.cell_under_cursor.coord, 0)
 
     def check_extinguish(self):
-        n = self.selected_unit.type_name
-        return n == "wizard" or n == "archiwizard"
+        u = self.selected_unit
+        if u.cell.distance_to(self.cell_under_cursor) <= u.help_range[1]:
+            n = u.type_name
+            return n == "wizard" or n == "arch_wizard"
+        return False
 
     def launch_map_menu(self):
         thorpy.launch_blocking(self.menu)
@@ -599,3 +622,5 @@ def get_help_box():
             [("Press","<G>","to toggle grid lines display."),
              ("Press", "<L>", "to toggle the display of units life.")])
         ])
+
+

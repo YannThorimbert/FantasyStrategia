@@ -946,12 +946,7 @@ class Battle:
         #manual animation is simpler in this case
         for unit in show_death:
             unit.die_after(2.)
-##            self.game.me.dynamic_objects.remove(unit)
-##        for frame in range(10):
-##            for unit in show_death:
-##                if frame < len(unit.imgs_z_t[zoom]):
-##                    self.game.me.cam.draw_objects(self.surface, self.game.me.dynamic_objects)
-##            pygame.display.flip()
+
 
 
 class DistantBattle(Battle):

@@ -60,10 +60,11 @@ game = Game(me)
 
 #4. SYSTEME DE JEU ET REGLES:
     #implementer prestige des drapeaux
+    #avant bataille, indiquer les bonus de defense et d'attaque, et autres aides de prevision
 
 
 
-
+#fusionner les thorpy ICI et git!!!!
 
 
 
@@ -154,7 +155,8 @@ def func_reac_time(): #here add wathever you want
 thorpy.add_time_reaction(me.e_box, func_reac_time)
 
 
-me.menu_button.user_func = ui.launch_map_menu
+
+me.menu_button.user_func = ui.launch_map_menu #a deplacer dans gui !!!!!!!!!!!!!
 
 #me.e_box includes many default reactions. You can remove them as follow:
 #remove <g> key:

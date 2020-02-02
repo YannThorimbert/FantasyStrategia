@@ -168,6 +168,7 @@ class MapObject:
         obj.vel = self.vel
         obj.set_frame_refresh_type(self._refresh_frame_type)
         obj.is_ground = self.is_ground
+        obj.always_drawn_last = self.always_drawn_last
         obj.can_interact = self.can_interact
         return obj
 
@@ -191,6 +192,7 @@ class MapObject:
         obj.vel = self.vel
         obj.set_frame_refresh_type(self._refresh_frame_type)
         obj.is_ground = self.is_ground
+        obj.always_drawn_last = self.always_drawn_last
         obj.can_interact = self.can_interact
         return obj
 
@@ -230,6 +232,11 @@ class MapObject:
         self.cell.objects.remove(self)
         if self is self.cell.unit:
             self.cell.unit = None
+
+    def remove_from_map(self, me):
+        """To use only for dynamic objects !"""
+        me.dynamic_objects.remove(me)
+        self.remove_from_cell()
 
     def move_to_cell(self, dest_cell):
 ##        assert dest_cell.unit is None

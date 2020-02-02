@@ -81,6 +81,10 @@ class MapEditor:
     def get_fn(self):
         return self.name.replace(" ","_")+".map"
 
+    def add_gui_element(self, e, insert=False):
+        self.e_box.add_element(e, insert)
+        thorpy.store(self.e_box)
+
     def build_gui_elements(self): #worst function ever
         e_hmap = thorpy.Image.make(self.cam.img_hmap)
         e_hmap.stick_to("screen", "right", "right", False)
@@ -91,12 +95,13 @@ class MapEditor:
         e_hmap.add_reaction(thorpy.Reaction(pygame.MOUSEBUTTONUP,
                                             self.func_reac_unclick))
         self.e_hmap = e_hmap
-        e_title_hmap = guip.get_title("Map")
         box_hmap = thorpy.Box.make([e_hmap])
         box_hmap.fit_children((self.box_hmap_margin,)*2)
         thorpy.makeup.add_basic_help(box_hmap,
                                      "Click to move camera on miniature map")
-        self.topbox = thorpy.make_group([e_title_hmap, box_hmap], "v")
+##        e_title_hmap = guip.get_text("Map")
+##        self.topbox = thorpy.make_group([e_title_hmap, box_hmap], "v")
+        self.topbox = box_hmap
         self.box_hmap = box_hmap
         ########################################################################
         self.cam.set_gui_elements(e_hmap, box_hmap)
@@ -116,8 +121,7 @@ class MapEditor:
 ##        self.misc_info = gui.MiscInfo(self.menu_rect.inflate((-10,0)).size)
         self.menu_button = thorpy.make_menu_button(force_convert_alpha=True)
         ########################################################################
-        elements =[
-                    self.topbox,
+        elements =[ self.topbox,
                     self.cell_info.e,
                     self.unit_info.e,
                     self.menu_button]

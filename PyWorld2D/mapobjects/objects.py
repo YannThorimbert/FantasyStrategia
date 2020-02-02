@@ -233,6 +233,11 @@ class MapObject:
         if self is self.cell.unit:
             self.cell.unit = None
 
+    def remove_from_map(self, me):
+        """To use only for dynamic objects !"""
+        me.dynamic_objects.remove(self)
+        self.remove_from_cell()
+
     def move_to_cell(self, dest_cell):
 ##        assert dest_cell.unit is None
         #remove from old cell

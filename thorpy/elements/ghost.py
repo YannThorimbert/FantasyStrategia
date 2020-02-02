@@ -33,6 +33,7 @@ class Ghost(object):
 
         <elements>: list of the children elements.
         """
+        self.get_size = self.get_fus_size
         self.surface = display.get_surface()
         if not elements:
             elements = []
@@ -160,6 +161,24 @@ class Ghost(object):
     def get_states(self):
         return self._states
 
+    def append_element(self, e):
+        if e in self._elements:
+            functions.debug_msg(e, " is already in ", self)
+            raise Exception("Element already in parent.")
+        else:
+            self._elements.append(e)
+            self._blit_after.append(e)
+            e.father = self
+
+    def insert_element(self, e):
+        if e in self._elements:
+            functions.debug_msg(e, " is already in ", self)
+            raise Exception("Element already in parent.")
+        else:
+            self._elements.insert(0, e)
+            self._blit_after.insert(0, e)
+            e.father = self
+
     def add_elements(self, elements, insert=False):
         """Use this method instead of .append, because it handles parents.
         If <insert>, use insert method instead of append, insert in first pos.
@@ -167,17 +186,24 @@ class Ghost(object):
         Remember : if you want the changes to affect the current menu,
         call thorpy.functions.refresh_current_menu().
         """
-        for el in elements:
-            if not(el in self._elements):
-                if insert:
-                    self._elements.insert(0, el)
-                    self._blit_after.insert(0, el)
-                else:
-                    self._elements.append(el)
-                    self._blit_after.append(el)
-                el.father = self
+        if not elements:
+            return
+        elif len(elements) == 1:
+            self.add_element(elements[0], insert)
+        else:
+            if insert:
+                for e in elements:
+                    self.insert_element(e)
             else:
-                functions.debug_msg(el, " is already in ", self)
+                for e in elements:
+                    self.append_element(e)
+
+    def add_element(self, e, insert=False):
+        if insert:
+            self.insert_element(e)
+        else:
+            self.append_element(e)
+
 
     def remove_elements(self, elements):
         """Remember : if you want the changes to affect the current menu,

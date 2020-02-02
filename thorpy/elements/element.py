@@ -35,6 +35,8 @@ class Element(_Screened, Ghost):
         self._finished = False
         self.normal_params.polite_set("txt", text)
         self.visible = self.normal_params.params.get("visible", True)
+        self.scale_to_text = self.scale_to_title
+        self.scale_to_content = self.fit_children
         if finish:
             self.finish()
 
