@@ -36,6 +36,9 @@ class Game:
                             "palm", "bush", "village", "flag"]
         self.burning = {} #e.g. burning[(4,12):2] means 2 remaining turns to burn
         self.fire = InteractiveObject("fire", self.me, "sprites/fire")
+        self.fire.min_relpos=[0,-0.4]
+        self.fire_max_relpos=[0,-0.4]
+        self.fire.relpos=[0,-0.4]
         self.wood = None
 ##        self.fire.always_drawn_last = True
 
@@ -47,6 +50,7 @@ class Game:
                     print("SAFHJ", obj.original_imgs)
                     self.wood = InteractiveObject("wood", self.me, (obj.original_imgs[0],"idle"))
                     self.wood.burnable = True
+                    self.wood.always_drawn_last = True
                 self.add_object(obj.cell.coord, self.wood, 1)
 
     def add_unit(self, coord, unit, quantity):
@@ -60,6 +64,7 @@ class Game:
         o.game = self
         if rand_relpos:
             o.randomize_relpos()
+        return o
 
     def get_cell_at(self, x, y):
         return self.me.lm.get_cell_at(x,y)
@@ -87,17 +92,18 @@ class Game:
         if n > 0:
             cell = self.get_cell_at(coord[0],coord[1])
             self.burning[coord] = n
-            self.add_obj_before_other_if_needed(self.fire,1,"village",cell)
+            self.add_obj_before_other_if_needed(self.fire,1,("village","wood"),cell)
 
-    def add_obj_before_other_if_needed(self, obj, qty, other_name, cell):
+    def add_obj_before_other_if_needed(self, obj, qty, other_names, cell):
         has_other = False
         for o in cell.objects:
-            if o.name == other_name:
-                has_other = True
-                obj.min_relpos = [0, o.relpos[1]+0.001]
-                obj.max_relpos = [0, o.relpos[1]+0.001]
-                break
-        self.add_object(cell.coord, obj, qty, has_other)
+            for n in other_names:
+                if o.name == n:
+                    has_other = True
+                    obj.min_relpos = [0, o.relpos[1]+0.001]
+                    obj.max_relpos = [0, o.relpos[1]+0.001]
+                    break
+        o = self.add_object(cell.coord, obj, qty, has_other)
 
     def get_interactive_objects(self, x, y):
         return [o for o in self.get_cell_at(x,y).objects if o.can_interact]

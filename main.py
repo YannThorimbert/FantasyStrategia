@@ -46,6 +46,9 @@ game = Game(me)
 ##==> a quoi sert-il de planter des drapeaux, d'ailleurs ? : a augmenter le prestige
 #Ressources ??? : or. Prestige et crainte ne sont que des facteurs. Or uniquement !!!
 
+
+PK PONT SE DESSINE AU_DESSUS DES UNITES ?????????????????????????????
+
 #2. FEUX:
     #pont, village peut bruler : faire qu'ils disparaissent en mm temps que le feu.
     #feux fonctionnels : allumables, eteignables, s'eteignent seuls, empechent de passer

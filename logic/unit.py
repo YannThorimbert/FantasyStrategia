@@ -143,6 +143,7 @@ class Unit(MapObject):
         obj.imgs_z_t = self.imgs_z_t
         obj.min_relpos = list(self.min_relpos)
         obj.max_relpos = list(self.max_relpos)
+        obj.relpos = list(self.relpos)
         obj.object_type = self.object_type
         obj.quantity = self.quantity
         obj.fns = self.fns
@@ -188,6 +189,7 @@ class Unit(MapObject):
 ##            obj.imgs_z_t = [i.copy() for i in imgs]
         obj.min_relpos = list(self.min_relpos)
         obj.max_relpos = list(self.max_relpos)
+        obj.relpos = list(self.relpos)
         obj.object_type = self.object_type
         #
         obj.race = self.race
