@@ -47,6 +47,7 @@ game = Game(me)
 #Ressources ??? : or. Prestige et crainte ne sont que des facteurs. Or uniquement !!!
 
 #2. FEUX:
+    #pont, village peut bruler : faire qu'ils disparaissent en mm temps que le feu.
     #feux fonctionnels : allumables, eteignables, s'eteignent seuls, empechent de passer
     #attention : bruler est une action a part entiere, empeche d'attaquer dans le meme tour
     #a quoi sert-il de bruler un territoire ? : a interdire son accès pour 2 tours, a detruire l'objet si burnable.
@@ -95,7 +96,9 @@ game = Game(me)
 #<fast> : quality a bit lower if true, loading time a bit faster.
 #<use_beach_tiler>: quality much better if true, loading much slower. Req. Numpy!
 #<load_tilers> : Very slow but needed if you don't have Numpy but still want hi quality.
-map_initializer.build_map(me, fast=False, use_beach_tiler=False, load_tilers=False)
+
+game.build_map(map_initializer, fast=False, use_beach_tiler=False, load_tilers=False)
+
 
 
 humans = Race("Green team", "human", LUNAR, me, "green", team=1)
@@ -167,9 +170,13 @@ thorpy.add_time_reaction(me.e_box, func_reac_time)
 
 me.set_zoom(level=0)
 m = thorpy.Menu(me.e_box,fps=me.fps)
+print()
+print(me.object_types)
 m.play()
 
 app.quit()
+
+
 
 ##Below is shown how to get a path, if you need it for an IA for instance:
 ##from ia.path import BranchAndBoundForMap

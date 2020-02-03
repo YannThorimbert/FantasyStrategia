@@ -339,48 +339,57 @@ class MapInitializer:
         distributor.homogeneity = 0.05
         distributor.zones_spread = [(0.1, 0.05), (0.2,0.05), (0.4,0.05)]
         distributor.distribute_objects(self._static_objs_layer, exclusive=True)
-
         cobbles = [cobble, cobble.flip(True,False),
                     cobble.flip(False,True), cobble.flip(True,True)]
         ############################################################################
         #Here we show how to use the path finder for a given unit of the game
         #Actually, we use it here in order to build cobblestone roads on the map
-        costs_materials = {name:1. for name in me.materials}
-        costs_materials["Snow"] = 10. #unit is 10 times slower in snow
-        costs_materials["Thin snow"] = 2. #twice slower on thin snow...
-        costs_materials["Sand"] = 2.
+        me.initialize_rivers()
+        costs_materials_road = {name:1. for name in me.materials}
+        costs_materials_road["Snow"] = 10. #unit is 10 times slower in snow
+        costs_materials_road["Thin snow"] = 2. #twice slower on thin snow...
+        costs_materials_road["Sand"] = 2.
         for name in me.materials:
             if "water" in name.lower():
-                costs_materials[name] = 1.1
-        costs_objects = {bush.object_type: 2., #unit is 2 times slower in bushes
-                         cobble.object_type: 0.9}
+                costs_materials_road[name] = 1.1
+        river_type = me.object_types["river"] #probleme : river a encore jamais ete ajoute...
+        costs_objects_road = {bush.object_type: 2., #unit is 2 times slower in bushes
+                                cobble.object_type: 0.9,
+                                river_type:0.9}
         #Materials allowed (here we allow water because we add bridges)
-        possible_materials=list(me.materials)
-
-        ALTERNER routes et rivieres !!!
-
-        #Objects allowed
-        possible_objects=[cobble.object_type, bush.object_type, village1.object_type]
-        for i in range(self.max_number_of_roads): #now we add 5 roads
-            objs.add_random_road(me.lm, self._static_objs_layer, cobbles, [wood],
-                                costs_materials,
-                                costs_objects, possible_materials,
-                                possible_objects,
-                                min_length=self.min_road_length,
-                                max_length=self.max_road_length)
+        possible_materials_road=list(me.materials)
+        possible_objects_road=[cobble.object_type, bush.object_type,
+                                village1.object_type, river_type]
+        ########################################################################
         #now we build a path for rivers, just like we did with roads.
-        costs_materials = {name:1. for name in me.materials}
+        costs_materials_river = {name:1. for name in me.materials}
         #Materials allowed (here we allow water because we add bridges)
-        possible_materials=list(me.materials)
-        #Objects allowed
-        possible_objects=[]
+        possible_materials_river=list(me.materials)
+        possible_objects_river=[]
         river_img = me.get_material_image("Shallow water")
         random.seed(self.seed_static_objects)
-        for i in range(self.max_number_of_rivers): #try to add 5 rivers
-            objs.add_random_river(me, me.lm, river_img, costs_materials, costs_objects,
-                                    possible_materials, possible_objects,
+        n_roads = 0
+        n_rivers = 0
+        while n_roads < self.max_number_of_roads or n_rivers < self.max_number_of_rivers:
+            if n_rivers < self.max_number_of_rivers:
+                n_rivers += 1
+                objs.add_random_river(me, me.lm, river_img,
+                                    costs_materials_river,
+                                    costs_objects_road,
+                                    possible_materials_river,
+                                    possible_objects_river,
                                     min_length=self.min_river_length,
                                     max_length=self.max_river_length)
+            if n_roads < self.max_number_of_roads:
+                n_roads += 1
+                objs.add_random_road(me.lm, self._static_objs_layer, cobbles,
+                                    [wood],
+                                    costs_materials_road,
+                                    costs_objects_road,
+                                    possible_materials_road,
+                                    possible_objects_road,
+                                    min_length=self.min_road_length,
+                                    max_length=self.max_road_length)
 
     def add_user_objects(self, me):
         for name,coord,flip in self.user_objects:
@@ -430,6 +439,7 @@ class MapInitializer:
         update_loading_bar(loading_bar, "Building surfaces", 0.9, graphical_load)
         me.build_surfaces()
         me.build_gui_elements()
+
 
     def h(self, x,y,h):
         if isinstance(h,str):

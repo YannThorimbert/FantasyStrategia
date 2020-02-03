@@ -10,6 +10,7 @@ import PyWorld2D.gui.elements as gui
 from PyWorld2D.rendering.camera import Camera
 import PyWorld2D.thornoise.purepython.noisegen as ng
 import PyWorld2D.saveload.io as io
+from PyWorld2D.mapobjects.objects import MapObject
 
 def sgn(x):
     if x < 0:
@@ -54,6 +55,7 @@ class MapEditor:
         self.material_couples = None
         self.dynamic_objects = []
         self.modified_cells = []
+        self.object_types = {}
 ##        self.last_cell_clicked = None
         #
         self.cursor_color = 0 #0 = normal, 1 = select
@@ -75,8 +77,30 @@ class MapEditor:
                                         "or hold", "<left shift>", "while moving mouse")
         self.ap.add_alert_countdown(self.e_ap_move, guip.DELAY_HELP * self.fps)
         #
-        self.primitive_types = {}
         self.map_initializer = None
+
+    def initialize_rivers(self):
+        lm = self.lm
+        img_fullsize = self.get_material_image("Shallow water")
+        imgs = {}
+        for dx in [-1,0,1]:
+            for dy in[-1,0,1]:
+                imgs = tm.build_tiles(img_fullsize, lm.cell_sizes,
+                                                lm.nframes,
+                                                dx*lm.nframes, dy*lm.nframes, #dx, dy
+                                                sin=False)
+                river_obj = MapObject(self, imgs[0], "river", 1.)
+                river_obj.is_ground = True
+                self.register_object_type(river_obj)
+
+    def register_object_type(self, obj):
+        registered = self.object_types.get(obj.name)
+        if registered is None: #first time we see this object name
+            self.object_types[obj.name] = obj.object_type
+        else:
+            if registered != obj.object_type:
+                print("Object types:", self.object_types)
+                raise Exception("Object type already exists:", obj.object_type)
 
     def get_fn(self):
         return self.name.replace(" ","_")+".map"
@@ -428,7 +452,6 @@ class MapEditor:
             obj_added.quantity = quantity
         self.dynamic_objects.append(obj_added)
         return obj_added
-
 
     def add_dynamic_object(self, coord, obj, quantity=None): #le nom est mal copie qqpart !!!!
         cell = self.lm.get_cell_at(coord[0],coord[1])

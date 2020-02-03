@@ -36,9 +36,18 @@ class Game:
                             "palm", "bush", "village", "flag"]
         self.burning = {} #e.g. burning[(4,12):2] means 2 remaining turns to burn
         self.fire = InteractiveObject("fire", self.me, "sprites/fire")
+        self.wood = None
 ##        self.fire.always_drawn_last = True
 
-
+    def build_map(self, map_initializer, fast, use_beach_tiler, load_tilers):
+        map_initializer.build_map(self.me, fast, use_beach_tiler, load_tilers)
+        for obj in self.me.lm.static_objects:
+            if obj.name == "wood":
+                if self.wood is None:
+                    print("SAFHJ", obj.original_imgs)
+                    self.wood = InteractiveObject("wood", self.me, (obj.original_imgs[0],"idle"))
+                    self.wood.burnable = True
+                self.add_object(obj.cell.coord, self.wood, 1)
 
     def add_unit(self, coord, unit, quantity):
         u = self.me.add_unit(coord, unit, quantity)

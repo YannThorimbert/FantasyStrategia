@@ -107,6 +107,3 @@ class BranchAndBoundForMap:
                         self.enode = self.lnl.pop()
                     already.add(self.enode.cell.coord)
                     i += 1
-
-
-

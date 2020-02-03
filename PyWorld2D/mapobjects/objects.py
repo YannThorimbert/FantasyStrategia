@@ -83,7 +83,7 @@ class MapObject:
 
     @staticmethod
     def get_saved_attributes():
-        return ["name", "quantity", "fns", "factor", "new_type", "relpos",
+        return ["name", "quantity", "fns", "factor", "new_type", "relpos", #put new type ?
                 "build", "vel", "_refresh_frame_type", "can_interact",
                 "is_ground", "always_drawn_last"]
 
@@ -124,10 +124,15 @@ class MapObject:
             # print("BUILDING", self.name, self.fns)
             self.build_imgs()
         self.new_type = new_type
-        if new_type:
-            self.object_type = MapObject.current_id
-            MapObject.current_id += 1
-        else:
+        if new_type: #then detect type
+            already = self.editor.object_types.get(self.name)
+            if already:
+                self.object_type = already
+            else:
+                self.object_type = MapObject.current_id
+                MapObject.current_id += 1
+                self.editor.register_object_type(self)
+        else: #will probably be set within copy() method
             self.object_type = None
         self.anim_path = []
         self.vel = 0.1
@@ -212,6 +217,7 @@ class MapObject:
             cell.objects.insert(0,copy)
         else:
             cell.objects.append(copy)
+        self.editor.register_object_type(self)
         return copy
 
     def add_unit_on_cell(self, cell):
@@ -226,6 +232,7 @@ class MapObject:
         copy = self.copy()
         copy.cell = cell
         cell.objects.append(copy)
+        self.editor.register_object_type(self)
         return copy
 
     def remove_from_cell(self):
@@ -522,9 +529,10 @@ def draw_path(path, objects, layer):
 def draw_road(path, cobbles, woods, layer):
     """<path> is a list of cells"""
     for cell in path:
-        if "water" in cell.material.name.lower():
-##            c = random.choice(woods)
-            c = random.choice(cobbles)
+        is_bridge =  "river" in [c.name for c in cell.objects]
+        if is_bridge:
+           c = random.choice(woods)
+            # c = random.choice(cobbles)
         else:
             c = random.choice(cobbles)
         c = c.add_copy_on_cell(cell)

@@ -246,13 +246,13 @@ class Unit(MapObject):
             key = DELTA_TO_KEY[delta]
             self.set_sprite_type(key)
 
-    def set_animation_type(self, new_type):
-        """new_type is either "once" or "loop"."""
-        if new_type == "loop":
+    def set_animation_type(self, new_animation_type):
+        """new_animation_type is either "once" or "loop"."""
+        if new_animation_type == "loop":
             self.animation_type = ANIM_LOOP
             self.get_current_img = self._free_get_current_img
             self.animation_step = 0
-        elif new_type == "once":
+        elif new_animation_type == "once":
             self.animation_type = ANIM_ONCE
             self.get_current_img = self._once_get_current_img
             self.animation_step = self.get_map_time()
@@ -442,6 +442,11 @@ class InteractiveObject(Unit):
             sprites = {}
             for key in sprites_keys:
                 sprites[key] = get_unit_sprites(fn+"_"+key+".png", self.color), const.NORMAL
+        elif isinstance(sprites,tuple):
+            img,key = sprites
+            sprites = {}
+            sprites[key] = [img], const.NORMAL
+        print("SPRITES", sprites)
         if sprites:
             imgs = []
             isprite = 0
