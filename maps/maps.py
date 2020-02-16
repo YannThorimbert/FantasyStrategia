@@ -23,13 +23,13 @@ map0.max_number_of_roads = 1
 
 # ##############################################################################
 map1 = MapInitializer("First demo map")
-map1.chunk = (1230,0)
+map1.chunk = (0,0)
 map1.reverse_hmap = True
 map1.world_size = (32,32)
 map1.set_terrain_type(terrain_plains, colorscale_plains)
 ##map1.set_terrain_type(terrain_small, colorscale_normal)
-map1.max_number_of_roads = 1
-map1.max_number_of_rivers = 1
+map1.max_number_of_roads = 20
+map1.max_number_of_rivers = 8
 map1.zoom_cell_sizes = [32,]
 map1.seed_static_objects = 110
 map1.add_object("oak", 16, 5)
