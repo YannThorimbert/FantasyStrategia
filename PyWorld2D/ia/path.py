@@ -65,11 +65,12 @@ class BranchAndBoundForMap:
                     time = 0.
                     if cell.objects:
                         time += self.costs_objects.get(obj_type,0.)
-                    if cell.material.name in self.possible_materials:
+                        really_possible = True
+                    elif cell.material.name in self.possible_materials:
                         time += self.costs_materials.get(cell.material.name,0.)
                         really_possible = True
-                    elif cell.objects:
-                        really_possible = True
+##                    elif cell.objects:
+##                        really_possible = True
                     if really_possible:
                         child = State(cell, state, state.time_so_far + time)
                         children.append(child)

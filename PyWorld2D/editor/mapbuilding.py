@@ -352,10 +352,10 @@ class MapInitializer:
         for name in me.materials:
             if "water" in name.lower():
                 costs_materials_road[name] = 1.1
-        river_type = me.object_types["river"] #probleme : river a encore jamais ete ajoute...
+        river_type = me.object_types["river"]
         costs_objects_road = {bush.object_type: 2., #unit is 2 times slower in bushes
                                 cobble.object_type: 0.9,
-                                river_type:0.9}
+                                river_type:2.}
         #Materials allowed (here we allow water because we add bridges)
         possible_materials_road=list(me.materials)
         possible_objects_road=[cobble.object_type, bush.object_type,

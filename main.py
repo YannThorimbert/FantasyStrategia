@@ -48,7 +48,6 @@ game = Game(me)
 #Ressources ??? : or. Prestige et crainte ne sont que des facteurs. Or uniquement !!!
 
 
-
 #2. FEUX:
     #pont, village peut bruler : faire qu'ils disparaissent en mm temps que le feu.
     #feux fonctionnels : allumables, eteignables, s'eteignent seuls, empechent de passer
