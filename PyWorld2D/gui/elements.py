@@ -128,7 +128,7 @@ class CellInfo:
         objs = set([])
         for obj in cell.objects:
             if obj.is_ground:
-                if obj.name == "wood":
+                if obj.name == "bridge":
                     objs.add("Bridge")
             else:
                 objs.add(obj.name) #split to not take the id
@@ -164,8 +164,7 @@ class CellInfo:
             self.em.clamp(rect)
             self.em.blit()
             self.em.update()
-##        else:
-##            print("Already launched!")
+
 
     def rename_current_cell(self):
         varset = thorpy.VarSet()
@@ -186,9 +185,7 @@ class CellInfo:
         self.em.blit()
         pygame.display.flip()
 
-##    def em_react(self, event):
-##        if self.launched:
-##            self.menu.react(event)
+
 
     def update_e(self, cell):
         self.cell = cell
@@ -203,7 +200,7 @@ class CellInfo:
         objs = set()
         for obj in cell.objects:
             if obj.is_ground:
-                if obj.name == "wood":
+                if obj.name == "bridge":
                     objs.add("Bridge")
             else:
                 objs.add(obj.name) #split to not take the id

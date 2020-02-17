@@ -322,7 +322,7 @@ class Unit(MapObject):
 
     def get_terrain_name_for_fight(self): #ajouter forest et compagnie
         if self.cell.coord in self.game.bridges: #bypass water
-            return self.game.wood.name
+            return self.game.bridge_object.name
         for obj in self.cell.objects:
             if obj.name == "river":
                 return obj.name

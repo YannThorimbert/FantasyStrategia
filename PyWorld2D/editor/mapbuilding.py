@@ -141,8 +141,10 @@ class MapInitializer:
         # self.cobble = PW_PATH + "/mapobjects/images/cobblestone2.png"
         self.cobble = PW_PATH + "/rendering/tiles/dirt1.jpg"
         self.cobble_size = 1.
-        self.wood = PW_PATH + "/mapobjects/images/wood1.png"
-        self.wood_size = 1.
+        self.bridge_h = PW_PATH + "/mapobjects/images/bridge_h.png"
+        self.bridge_h_size = 1.
+        self.bridge_v = PW_PATH + "/mapobjects/images/bridge_v.png"
+        self.bridge_v_size = 1.
         #if you want to add objects by yourself, look at add_static_objects(self)
         self.min_road_length = 10
         self.max_road_length = 40
@@ -287,13 +289,17 @@ class MapInitializer:
         #
         cobble = MapObject(me,self.cobble,"cobblestone",self.cobble_size)
         cobble.is_ground = True
-        wood = MapObject(me,self.wood,"wood",self.wood_size)
-        wood.is_ground = True
-        wood.max_relpos = [0.,0.]
-        wood.min_relpos = [0., 0.]
+        bridge_h = MapObject(me,self.bridge_h,"bridge",self.bridge_h_size)
+        bridge_h.is_ground = True
+        bridge_h.max_relpos = [0.,0.]
+        bridge_h.min_relpos = [0., 0.]
+        bridge_v = MapObject(me,self.bridge_v,"bridge",self.bridge_v_size)
+        bridge_v.is_ground = True
+        bridge_v.max_relpos = [0.,0.]
+        bridge_v.min_relpos = [0., 0.]
         self._objects = {"oak":tree, "fir1":fir1, "fir2":fir2, "firsnow":firsnow,
                         "palm":palm, "bush":bush, "village":village1,
-                        "cobble":cobble, "wood":wood}
+                        "cobble":cobble, "bridge_h":bridge_h, "bridge_v":bridge_v}
         #4) we add the objects via distributors, to add them randomly in a nice way
         #normal forest
         distributor = objs.get_distributor(me, [fir1, fir2, tree],
@@ -383,7 +389,7 @@ class MapInitializer:
             if n_roads < self.max_number_of_roads:
                 n_roads += 1
                 objs.add_random_road(me.lm, self._static_objs_layer, cobbles,
-                                    [wood],
+                                    [bridge_h,bridge_v],
                                     costs_materials_road,
                                     costs_objects_road,
                                     possible_materials_road,

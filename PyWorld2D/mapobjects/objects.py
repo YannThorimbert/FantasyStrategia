@@ -399,7 +399,7 @@ def find_free_next_to(lm, coord):
         return random.choice(ok)
 
 def add_random_road(lm, layer,
-                    cobbles, woods,
+                    cobbles, bridges,
                     costs_materials, costs_objects,
                     possible_materials, possible_objects,
                     min_length,
@@ -429,7 +429,7 @@ def add_random_road(lm, layer,
                                     costs_materials, costs_objects,
                                     possible_materials, possible_objects)
             path = sp.solve()
-            draw_road(path, cobbles, woods, lm)
+            draw_road(path, cobbles, bridges, lm)
 
 def add_random_river(me, layer,
                     img_fullsize,
@@ -496,21 +496,7 @@ def add_random_river(me, layer,
         objs[key] = river_obj
     #5) add river cells to map and layer
     for i,cell in enumerate(actual_path):
-        dx, dy = 0, 0
-        if i > 0:
-            dx += cell.coord[0] - actual_path[i-1].coord[0]
-            dy += cell.coord[1] - actual_path[i-1].coord[1]
-        if i + 1 < len(actual_path):
-            dx += actual_path[i+1].coord[0] - cell.coord[0]
-            dy += actual_path[i+1].coord[1] - cell.coord[1]
-        if dx > 0:
-            dx = 1
-        elif dx < 0:
-            dx = -1
-        if dy > 0:
-            dy = 1
-        elif dy < 0:
-            dy = -1
+        dx,dy = get_path_orientation(i, cell, actual_path)
         c = objs.get((dx,dy))
         if not c:
             raise Exception("No river object for delta", dx, dy)
@@ -520,6 +506,24 @@ def add_random_river(me, layer,
     return path
 
 
+def get_path_orientation(i, cell, path):
+    dx, dy = 0, 0
+    if i > 0:
+        dx += cell.coord[0] - path[i-1].coord[0]
+        dy += cell.coord[1] - path[i-1].coord[1]
+    if i + 1 < len(path):
+        dx += path[i+1].coord[0] - cell.coord[0]
+        dy += path[i+1].coord[1] - cell.coord[1]
+    if dx > 0:
+        dx = 1
+    elif dx < 0:
+        dx = -1
+    if dy > 0:
+        dy = 1
+    elif dy < 0:
+        dy = -1
+    return dx, dy
+
 
 def draw_path(path, objects, layer):
     """<path> is a list of cells"""
@@ -528,13 +532,19 @@ def draw_path(path, objects, layer):
         c = c.add_copy_on_cell(cell)
         layer.static_objects.append(c)
 
-def draw_road(path, cobbles, woods, layer):
+def draw_road(path, cobbles, bridges, layer):
     """<path> is a list of cells"""
-    for cell in path:
+    for i,cell in enumerate(path):
         is_bridge =  "river" in [c.name for c in cell.objects]
         if is_bridge:
-           c = random.choice(woods)
-            # c = random.choice(cobbles)
+            dx,dy = get_path_orientation(i,cell,path)
+            if dx == 0:
+                c = bridges[0]
+            elif dy == 0:
+                c = bridges[1]
+            else:
+                c = random.choice(bridges)
+                # raise Exception("Path orientation not expected:",dx,dy)
         else:
             c = random.choice(cobbles)
         c = c.add_copy_on_cell(cell)

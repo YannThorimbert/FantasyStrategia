@@ -40,6 +40,8 @@ game = Game(me)
 ################################################################################
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
+
+
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
 #conquete de base, batailles. Pas d'impots ni de destruction d'objets.
 #village peuvent etre conquis et peuvent produire unites
@@ -75,7 +77,6 @@ game = Game(me)
 ################################################################################
 ################################################################################
 
-#meilleur wood : taper wood texture pixel art sur google. Wooden planks?
 
 #murailles: au niveau de l'implementation, sont des types d'unites! (static unit)
 #       Les chateaux sont juste des villages entoures de murailles
@@ -115,7 +116,6 @@ humans.finalize() #always call this function to finish initialize a race !!!
 humans2 = Race("White team", "human", SOLAR, me, "red", team=2)
 humans2.base_material_cost["forest"] = 10
 ##humans2.base_terrain_attack["grass"] = 0.8
-humans2["wizard"].material_cost["wood"] = 2.
 humans2.dist_factor = 10
 humans2.finalize()
 

@@ -32,28 +32,27 @@ class Game:
         for s in self.death_sounds:
             s.set_volume(0.5)
         self.is_flaggable = ["grass", "rock", "sand", "snow", "thin snow"]
-        self.is_burnable = ["grass", "wood", "oak", "fir1", "fir2", "firsnow",
+        self.is_burnable = ["grass", "bridge", "oak", "fir1", "fir2", "firsnow",
                             "palm", "bush", "village", "flag"]
         self.burning = {} #e.g. burning[(4,12):2] means 2 remaining turns to burn
         self.fire = InteractiveObject("fire", self.me, "sprites/fire")
         self.fire.min_relpos=[0,-0.4]
         self.fire_max_relpos=[0,-0.4]
         self.fire.relpos=[0,-0.4]
-        self.wood = None
+        self.bridge_object = None
         self.bridges = []
 ##        self.fire.always_drawn_last = True
 
     def build_map(self, map_initializer, fast, use_beach_tiler, load_tilers):
         map_initializer.build_map(self.me, fast, use_beach_tiler, load_tilers)
         for obj in self.me.lm.static_objects:
-            if obj.name == "wood":
-                if self.wood is None:
-                    print("SAFHJ", obj.original_imgs)
-                    self.wood = InteractiveObject("wood", self.me, (obj.original_imgs[0],"idle"))
-                    self.wood.burnable = True
-                    self.wood.is_ground = True
-                    # self.wood.always_drawn_last = True
-                bridge = self.add_object(obj.cell.coord, self.wood, 1)
+            if obj.name == "bridge":
+                if self.bridge_object is None:
+                    self.bridge_object = InteractiveObject("bridge", self.me, (obj.original_imgs[0],"idle"))
+                    self.bridge_object.burnable = True
+                    self.bridge_object.is_ground = True
+                    # self.bridge_object.always_drawn_last = True
+                bridge = self.add_object(obj.cell.coord, self.bridge_object, 1)
                 self.bridges.append(obj.cell.coord)
 
     def add_unit(self, coord, unit, quantity):
@@ -95,7 +94,7 @@ class Game:
         if n > 0:
             cell = self.get_cell_at(coord[0],coord[1])
             self.burning[coord] = n
-            self.add_obj_before_other_if_needed(self.fire,1,("village","wood"),cell)
+            self.add_obj_before_other_if_needed(self.fire,1,("village","bridge"),cell)
 
     def add_obj_before_other_if_needed(self, obj, qty, other_names, cell):
         has_other = False

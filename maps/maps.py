@@ -32,8 +32,7 @@ map1.max_number_of_roads = 7
 map1.max_number_of_rivers = 7
 map1.zoom_cell_sizes = [32,]
 map1.seed_static_objects = 110
-map1.add_object("oak", 16, 5)
-##map1.add_object("wood", 18, 7)
+map1.add_object("oak", 6, 5)
 ##map1.add_object("bush", 16, 8)
 
 # ##############################################################################

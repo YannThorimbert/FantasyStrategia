@@ -824,7 +824,7 @@ class Battle:
         img, splash, footprint = get_img(unit.cell, self.z)
         blit_everywhere = None
         for o in self.objects[side]:
-            if o.name == "cobblestone" or o.name == "wood":
+            if o.name == "cobblestone" or o.name == "bridge":
                 blit_everywhere = o.imgs_z_t[self.z][0]
                 break
         for x,y in disp:
@@ -987,7 +987,7 @@ class DistantBattle(Battle):
         #
         blit_everywhere = None
         for o in self.objects["left"]:
-            if o.name == "cobblestone" or o.name == "wood":
+            if o.name == "cobblestone" or o.name == "bridge":
                 blit_everywhere = o.imgs_z_t[self.z][0]
                 break
         #
@@ -1008,7 +1008,7 @@ class DistantBattle(Battle):
                 #
         blit_everywhere = None
         for o in self.objects["right"]:
-            if o.name == "cobblestone" or o.name == "wood":
+            if o.name == "cobblestone" or o.name == "bridge":
                 blit_everywhere = o.imgs_z_t[self.z][0]
                 break
         #
