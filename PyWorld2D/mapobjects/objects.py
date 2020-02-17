@@ -501,7 +501,7 @@ def add_random_river(me, layer,
         if not c:
             raise Exception("No river object for delta", dx, dy)
         c = c.add_copy_on_cell(cell)
-        cell.name = "River"
+        cell.name = "river"
         layer.static_objects.append(c)
     return path
 
@@ -538,10 +538,13 @@ def draw_road(path, cobbles, bridges, layer):
         is_bridge =  "river" in [c.name for c in cell.objects]
         if is_bridge:
             dx,dy = get_path_orientation(i,cell,path)
-            if dx == 0:
-                c = bridges[0]
-            elif dy == 0:
+            print("     ***********3AFHJ", cell.coord, dx, dy)
+            if dx != 0:
+                print("                 ====> 0")
                 c = bridges[1]
+            elif dy != 0:
+                print("                 ====> 1")
+                c = bridges[0]
             else:
                 c = random.choice(bridges)
                 # raise Exception("Path orientation not expected:",dx,dy)

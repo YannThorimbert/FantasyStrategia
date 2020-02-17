@@ -389,7 +389,7 @@ class MapInitializer:
             if n_roads < self.max_number_of_roads:
                 n_roads += 1
                 objs.add_random_road(me.lm, self._static_objs_layer, cobbles,
-                                    [bridge_h,bridge_v],
+                                    (bridge_h,bridge_v),
                                     costs_materials_road,
                                     costs_objects_road,
                                     possible_materials_road,

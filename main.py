@@ -40,7 +40,7 @@ game = Game(me)
 ################################################################################
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
-
+probleme orientation pont : peut etre a voir avec object_types de mapeditor...
 
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
 #conquete de base, batailles. Pas d'impots ni de destruction d'objets.
