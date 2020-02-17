@@ -33,6 +33,7 @@ W,H = 1200, 700 #screen size
 app = thorpy.Application((W,H))
 
 map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
+map_initializer.chunk = (18,9)
 me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
@@ -47,7 +48,6 @@ game = Game(me)
 #Ressources ??? : or. Prestige et crainte ne sont que des facteurs. Or uniquement !!!
 
 
-PK PONT SE DESSINE AU_DESSUS DES UNITES ?????????????????????????????
 
 #2. FEUX:
     #pont, village peut bruler : faire qu'ils disparaissent en mm temps que le feu.

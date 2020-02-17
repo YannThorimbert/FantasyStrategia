@@ -40,6 +40,7 @@ class Game:
         self.fire_max_relpos=[0,-0.4]
         self.fire.relpos=[0,-0.4]
         self.wood = None
+        self.bridges = []
 ##        self.fire.always_drawn_last = True
 
     def build_map(self, map_initializer, fast, use_beach_tiler, load_tilers):
@@ -50,8 +51,10 @@ class Game:
                     print("SAFHJ", obj.original_imgs)
                     self.wood = InteractiveObject("wood", self.me, (obj.original_imgs[0],"idle"))
                     self.wood.burnable = True
-                    self.wood.always_drawn_last = True
-                self.add_object(obj.cell.coord, self.wood, 1)
+                    self.wood.is_ground = True
+                    # self.wood.always_drawn_last = True
+                bridge = self.add_object(obj.cell.coord, self.wood, 1)
+                self.bridges.append(obj.cell.coord)
 
     def add_unit(self, coord, unit, quantity):
         u = self.me.add_unit(coord, unit, quantity)

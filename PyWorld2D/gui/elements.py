@@ -127,10 +127,13 @@ class CellInfo:
         #
         objs = set([])
         for obj in cell.objects:
-            if not obj.is_ground:
+            if obj.is_ground:
+                if obj.name == "wood":
+                    objs.add("Bridge")
+            else:
                 objs.add(obj.name) #split to not take the id
         text = ",".join([name for name in objs])
-        self.em_obj_name.set_text(text)
+        self.em_obj_name.set_text(text.capitalize())
         #
         thorpy.store(self.em_mat, mode="h")
         self.em_coord.set_text("Coordinates: "+str(cell.coord))
@@ -199,15 +202,18 @@ class CellInfo:
         #
         objs = set()
         for obj in cell.objects:
-            if not obj.is_ground:
-                objs.add(obj.name)
+            if obj.is_ground:
+                if obj.name == "wood":
+                    objs.add("Bridge")
+            else:
+                objs.add(obj.name) #split to not take the id
         objs = list(objs)
         text = ""
         if len(objs) > 1:
             text = objs[0] + "(...)"
         elif len(objs) == 1:
             text = objs[0]
-        self.e_obj_name.set_text(text)
+        self.e_obj_name.set_text(text.capitalize())
         #
         new_img = cell.extract_all_layers_img_at_zoom(0)
         self.e_mat_img.set_image(new_img)

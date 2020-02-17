@@ -321,9 +321,9 @@ class Unit(MapObject):
         return self.get_coords_within_range(self.help_range)
 
     def get_terrain_name_for_fight(self): #ajouter forest et compagnie
+        if self.cell.coord in self.game.bridges: #bypass water
+            return self.game.wood.name
         for obj in self.cell.objects:
-            if obj.name == "wood":
-                return obj.name
             if obj.name == "river":
                 return obj.name
         return self.cell.material.name.lower()

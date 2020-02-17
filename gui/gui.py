@@ -76,6 +76,7 @@ class GuiGraphicsEnhancement:
                 ############################ Splashes ##########################
                 if self.splash:
                     if t == "river" or "water" in t:
+                        
                         self.units_splashes.append(u)
                 ################### Footprints #################################
                 if self.show_footprints:
@@ -634,5 +635,3 @@ def get_help_box():
             [("Press","<G>","to toggle grid lines display."),
              ("Press", "<L>", "to toggle the display of units life.")])
         ])
-
-
