@@ -325,6 +325,8 @@ class Unit(MapObject):
         for obj in self.cell.objects:
             if obj.str_type == "river":
                 return "river"
+            elif obj.str_type == "cobblestone":
+                return "cobblestone"
         return self.cell.material.name.lower()
 
     def get_terrain_bonus(self):

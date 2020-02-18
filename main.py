@@ -44,7 +44,7 @@ game = Game(me)
 ################################################################################
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
-BUG : pont sont infranchissable en 1 seul tour !
+#BUG : pont sont infranchissable en 1 seul tour !
 
 ##bug des chemins :
 ##map1 = MapInitializer("First demo map")

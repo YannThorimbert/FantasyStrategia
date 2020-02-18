@@ -76,7 +76,6 @@ class GuiGraphicsEnhancement:
                 ############################ Splashes ##########################
                 if self.splash:
                     if t == "river" or "water" in t:
-
                         self.units_splashes.append(u)
                 ################### Footprints #################################
                 if self.show_footprints:
