@@ -101,14 +101,16 @@ class Unit(MapObject):
             next_cell = self.editor.lm.get_cell_at(cx,cy)
             if next_cell:
                 if next_cell.unit:
-##                    if next_cell.unit.team != self.team:
                     continue
                 no_key_value = float("inf"), None
                 best_score, best_path = score.get((cx,cy), no_key_value)
                 #compute the cost of the current path ##########################
                 for obj in next_cell.objects:
                     if not isinstance(obj, Unit):
-                        if not isinstance(obj, InteractiveObject):
+                        if next_cell.coord in self.game.bridges:
+                            this_tot_cost = self.material_cost["bridge"]
+                            break
+                        elif not isinstance(obj, InteractiveObject):
                             this_tot_cost = self.material_cost[obj.str_type]
                             break
                 else: #if break is never reached

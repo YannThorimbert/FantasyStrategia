@@ -562,7 +562,6 @@ def add_random_river(me, layer, material_dict,
     elif "snow" in md:
         cell_end = random.choice(md["snow"])
     else:
-        print("COULD FIND END")
         return
     #2) pick one random source
     if "snow" in md:
@@ -572,7 +571,6 @@ def add_random_river(me, layer, material_dict,
     elif "rock" in md:
         cell_source = random.choice(md["rock"])
     else:
-        print("COULD FIND SOURCE")
         return
     #3) verify distance
     cell_source = lm.cells[cell_source[0]][cell_source[1]]
@@ -580,7 +578,6 @@ def add_random_river(me, layer, material_dict,
     if min_length <=  cell_source.distance_to(cell_end) <= max_length:
         pass
     else:
-        print("TOO LONG")
         return
     sp = BranchAndBoundForMap(lm, cell_source, cell_end,
                             costs_materials, costs_objects,
