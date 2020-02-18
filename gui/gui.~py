@@ -76,6 +76,7 @@ class GuiGraphicsEnhancement:
                 ############################ Splashes ##########################
                 if self.splash:
                     if t == "river" or "water" in t:
+
                         self.units_splashes.append(u)
                 ################### Footprints #################################
                 if self.show_footprints:
@@ -183,11 +184,11 @@ class Gui:
         self.e_info_day = guip.get_title("Day 1")
         me.add_gui_element(self.e_info_day, True)
         #
-        me.menu_button.user_func = ui.launch_map_menu #a deplacer dans gui !!!!!!!!!!!!!
+        me.menu_button.user_func = self.launch_map_menu
 
     def extinguish(self):
         for o in self.cell_under_cursor.objects:
-            if o.name == "fire":
+            if o.str_type == "fire":
                 self.game.set_fire(self.cell_under_cursor.coord, 0)
 
     def check_extinguish(self):
@@ -215,10 +216,10 @@ class Gui:
             return False
         else:
             for o in self.cell_under_cursor.objects:
-                if o.name in self.game.is_burnable:
+                if o.str_type in self.game.is_burnable:
                     return True
             for o in self.cell_under_cursor.objects:
-                if o.name == "river":
+                if o.str_type == "river":
                     return False
         return self.cell_under_cursor.material.name.lower() in self.game.is_burnable
 
@@ -634,5 +635,3 @@ def get_help_box():
             [("Press","<G>","to toggle grid lines display."),
              ("Press", "<L>", "to toggle the display of units life.")])
         ])
-
-

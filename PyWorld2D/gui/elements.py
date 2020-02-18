@@ -128,7 +128,7 @@ class CellInfo:
         objs = set([])
         for obj in cell.objects:
             if obj.is_ground:
-                if obj.name == "bridge":
+                if "bridge" in obj.str_type:
                     objs.add("Bridge")
             else:
                 objs.add(obj.name) #split to not take the id
@@ -200,7 +200,7 @@ class CellInfo:
         objs = set()
         for obj in cell.objects:
             if obj.is_ground:
-                if obj.name == "bridge":
+                if "bridge" in obj.str_type:
                     objs.add("Bridge")
             else:
                 objs.add(obj.name) #split to not take the id

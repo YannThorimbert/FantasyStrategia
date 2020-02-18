@@ -5,6 +5,8 @@ from PyWorld2D.mapobjects.objects import MapObject
 import PyWorld2D.mapobjects.objects as objs
 from PyWorld2D.editor.mapeditor import MapEditor
 from PyWorld2D import PW_PATH
+from PyWorld2D.ia.path import BranchAndBoundForMap
+import PyWorld2D.rendering.tilers.tilemanager as tm
 
 
 terrain_small = {  "hdeepwater": 0.3, #deep water only below 0.4
@@ -38,6 +40,8 @@ terrain_flat = {    "hdeepwater": 0.2, #deep water only below 0.4
                     "hgrass": 1.,
                     "hrock": 1.999,
                     "hthinsnow": 1.9999}
+
+VON_NEUMAN = [(-1,0), (1,0), (0,-1), (0,1)]
 
 class MapInitializer:
 
@@ -132,6 +136,7 @@ class MapInitializer:
         self.village1_size = 1.
         self.village2_size = 1.
         self.village3_size = 1.
+        self.village_homogeneity = 0.05
 ##        self.village1 = PW_PATH + "/mapobjects/images/pepperRacoon.png
 ##        self.village2 = PW_PATH + "/mapobjects/images/rgbfumes1.png"
 ##        self.village3 = PW_PATH + "/mapobjects/images/rgbfumes2.png"
@@ -289,11 +294,13 @@ class MapInitializer:
         #
         cobble = MapObject(me,self.cobble,"cobblestone",self.cobble_size)
         cobble.is_ground = True
-        bridge_h = MapObject(me,self.bridge_h,"bridge",self.bridge_h_size)
+        bridge_h = MapObject(me,self.bridge_h,"bridge",self.bridge_h_size,
+                                str_type="bridge_h")
         bridge_h.is_ground = True
-        bridge_h.max_relpos = [0.,0.]
+        bridge_h.max_relpos = [0., 0.]
         bridge_h.min_relpos = [0., 0.]
-        bridge_v = MapObject(me,self.bridge_v,"bridge",self.bridge_v_size)
+        bridge_v = MapObject(me,self.bridge_v,"bridge",self.bridge_v_size,
+                                str_type="bridge_v")
         bridge_v.is_ground = True
         bridge_v.max_relpos = [0.,0.]
         bridge_v.min_relpos = [0., 0.]
@@ -342,8 +349,8 @@ class MapInitializer:
 ##                                 village3, village3.flip(), village4, village4.flip()],
                                 self._forest_map, ["Grass"], limit_relpos_y=False)
         distributor.max_density = 1
-        distributor.homogeneity = 0.05
-        distributor.zones_spread = [(0.1, 0.05), (0.2,0.05), (0.4,0.05)]
+        distributor.homogeneity = self.village_homogeneity
+        distributor.zones_spread = [(0.1, 0.05), (0.2,0.05), (0.4,0.05), (0.5,0.05)]
         distributor.distribute_objects(self._static_objs_layer, exclusive=True)
         cobbles = [cobble, cobble.flip(True,False),
                     cobble.flip(False,True), cobble.flip(True,True)]
@@ -359,13 +366,13 @@ class MapInitializer:
             if "water" in name.lower():
                 costs_materials_road[name] = 1.1
         river_type = me.object_types["river"]
-        costs_objects_road = {bush.object_type: 2., #unit is 2 times slower in bushes
-                                cobble.object_type: 0.9,
+        costs_objects_road = {bush.int_type: 2., #unit is 2 times slower in bushes
+                                cobble.int_type: 0.9,
                                 river_type:2.}
         #Materials allowed (here we allow water because we add bridges)
         possible_materials_road=list(me.materials)
-        possible_objects_road=[cobble.object_type, bush.object_type,
-                                village1.object_type, river_type]
+        possible_objects_road=[cobble.int_type, bush.int_type,
+                                village1.int_type, river_type]
         ########################################################################
         #now we build a path for rivers, just like we did with roads.
         costs_materials_river = {name:1. for name in me.materials}
@@ -376,10 +383,19 @@ class MapInitializer:
         random.seed(self.seed_static_objects)
         n_roads = 0
         n_rivers = 0
+        imgs_river = {}
+        lm = me.lm
+        for dx in [-1,0,1]:
+            for dy in[-1,0,1]:
+                imgs_river[(dx,dy)] = tm.build_tiles(river_img, lm.cell_sizes,
+                                            lm.nframes,
+                                            dx*lm.nframes, dy*lm.nframes, #dx, dy
+                                            sin=False)
+        material_dict = get_materials_dict(lm)
         while n_roads < self.max_number_of_roads or n_rivers < self.max_number_of_rivers:
             if n_rivers < self.max_number_of_rivers:
                 n_rivers += 1
-                objs.add_random_river(me, me.lm, river_img,
+                add_random_river(me, me.lm, material_dict, imgs_river,
                                     costs_materials_river,
                                     costs_objects_road,
                                     possible_materials_river,
@@ -388,7 +404,7 @@ class MapInitializer:
                                     max_length=self.max_river_length)
             if n_roads < self.max_number_of_roads:
                 n_roads += 1
-                objs.add_random_road(me.lm, self._static_objs_layer, cobbles,
+                add_random_road(me.lm, self._static_objs_layer, cobbles,
                                     (bridge_h,bridge_v),
                                     costs_materials_road,
                                     costs_objects_road,
@@ -480,9 +496,184 @@ def build_hmap(me):
     return hmap
 
 
-def add_dynamic_objects(me): #here we add two units for instance
-    char1 = MapObject(me, PW_PATH + "/mapobjects/images/char1.png", "My Unit", 1.)
-    obj = me.add_unit(coord=(15,15), obj=char1, quantity=12)
-    obj.name = "My first unit"
-    obj = me.add_unit((13,13), char1, 1)
-    obj.name = "My second unit"
+def add_random_road(lm, layer,
+                    cobbles, bridges,
+                    costs_materials, costs_objects,
+                    possible_materials, possible_objects,
+                    min_length,
+                    max_length):
+    """Computes and draw a random road between two random villages."""
+    print("     Building random road...")
+    villages = [o for o in layer.static_objects if "village" in o.str_type]
+    if not villages:
+        return
+    v1 = random.choice(villages)
+    c1 = find_free_next_to(lm, v1.cell.coord)
+    # c1 = v1.cell
+    if c1:
+        villages_at_right_distance = []
+        for v2 in villages:
+            if v2 is not v1:
+                if min_length <= c1.distance_to(v2.cell) <= max_length:
+                    villages_at_right_distance.append(v2)
+        if villages_at_right_distance:
+            v2 = random.choice(villages_at_right_distance)
+            c2 = find_free_next_to(lm, v2.cell.coord)
+            # c2 = v2.cell
+        else:
+            return
+        if c2:
+            sp = BranchAndBoundForMap(lm, c1, c2,
+                                    costs_materials, costs_objects,
+                                    possible_materials, possible_objects)
+            path = sp.solve()
+            draw_road(path, cobbles, bridges, lm)
+
+def get_materials_dict(lm):
+    d = {}
+    for x in range(lm.nx):
+        for y in range(lm.ny):
+            mat = lm.cells[x][y].material.name.lower()
+            if mat in d:
+                d[mat].append((x,y))
+            else:
+                d[mat] = [(x,y)]
+    return d
+
+##def pick_one_cell(md, coord1, materials):
+##    for mat in materials:
+##        if mat in md:
+##            return random.choice(md[mat])
+
+def add_random_river(me, layer, material_dict,
+                    imgs,
+                    costs_materials, costs_objects,
+                    possible_materials, possible_objects,
+                    min_length, max_length):
+    """Computes and draw a random river."""
+    print("     Building random river...")
+    lm = me.lm
+    md = material_dict
+    #1) pick one random end
+    if "shallow water" in md:
+        cell_end = random.choice(md["shallow water"])
+    elif "grass" in md:
+        cell_end = random.choice(md["grass"])
+    elif "snow" in md:
+        cell_end = random.choice(md["snow"])
+    else:
+        print("COULD FIND END")
+        return
+    #2) pick one random source
+    if "snow" in md:
+        cell_source = random.choice(md["snow"])
+    elif "thin snow" in md:
+        cell_source = random.choice(md["thin snow"])
+    elif "rock" in md:
+        cell_source = random.choice(md["rock"])
+    else:
+        print("COULD FIND SOURCE")
+        return
+    #3) verify distance
+    cell_source = lm.cells[cell_source[0]][cell_source[1]]
+    cell_end = lm.cells[cell_end[0]][cell_end[1]]
+    if min_length <=  cell_source.distance_to(cell_end) <= max_length:
+        pass
+    else:
+        print("TOO LONG")
+        return
+    sp = BranchAndBoundForMap(lm, cell_source, cell_end,
+                            costs_materials, costs_objects,
+                            possible_materials, possible_objects)
+    path = sp.solve()
+    #4) change the end to first shallow shore cell
+    actual_path = []
+    for cell in path:
+        actual_path.append(cell)
+        if "water" in cell.material.name.lower():
+            break
+        else:
+            next_to_water = False
+            for neigh in cell.get_neighbors_von_neuman():
+                if neigh:
+                    if "water" in neigh.material.name.lower():
+                        next_to_water = True
+                        break
+            if next_to_water:
+                break
+    #
+    objs = {}
+    for key in imgs:
+        river_obj = MapObject(me, imgs[key][0], "river", 1.)
+        river_obj.is_ground = True
+        objs[key] = river_obj
+    #5) add river cells to map and layer
+    for i,cell in enumerate(actual_path):
+        dx,dy = get_path_orientation(i, cell, actual_path)
+        c = objs.get((dx,dy))
+        if not c:
+            raise Exception("No river object for delta", dx, dy)
+        c = c.add_copy_on_cell(cell)
+        cell.name = "river"
+        layer.static_objects.append(c)
+    if path:
+        print("RIVER BUILT:", [cell.coord for cell in path])
+        return path
+
+
+
+def find_free_next_to(lm, coord):
+    ok = []
+    for x,y in VON_NEUMAN:
+        cell = lm.get_cell_at(coord[0]+x,coord[1]+y)
+        if cell:
+            if not cell.objects:
+                if not cell.unit:
+                    ok.append(cell)
+    if ok:
+        return random.choice(ok)
+
+
+def get_path_orientation(i, cell, path):
+    dx, dy = 0, 0
+    if i > 0:
+        dx += cell.coord[0] - path[i-1].coord[0]
+        dy += cell.coord[1] - path[i-1].coord[1]
+    if i + 1 < len(path):
+        dx += path[i+1].coord[0] - cell.coord[0]
+        dy += path[i+1].coord[1] - cell.coord[1]
+    if dx > 0:
+        dx = 1
+    elif dx < 0:
+        dx = -1
+    if dy > 0:
+        dy = 1
+    elif dy < 0:
+        dy = -1
+    return dx, dy
+
+
+def draw_path(path, objects, layer):
+    """<path> is a list of cells"""
+    for cell in path:
+        c = random.choice(objects)
+        c = c.add_copy_on_cell(cell)
+        layer.static_objects.append(c)
+
+def draw_road(path, cobbles, bridges, layer):
+    """<path> is a list of cells"""
+    for i,cell in enumerate(path):
+        is_bridge =  "river" in [c.str_type for c in cell.objects]
+        if is_bridge:
+            dx,dy = get_path_orientation(i,cell,path)
+            if dx != 0:
+                c = bridges[0]
+            elif dy != 0:
+                c = bridges[1]
+            else:
+                c = random.choice(bridges)
+                # raise Exception("Path orientation not expected:",dx,dy)
+        else:
+            c = random.choice(cobbles)
+        c = c.add_copy_on_cell(cell)
+        layer.static_objects.append(c)

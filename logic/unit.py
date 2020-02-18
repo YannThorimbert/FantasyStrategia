@@ -70,7 +70,6 @@ class Unit(MapObject):
         MapObject.__init__(self, editor, imgs, type_name, factor, relpos, build,
                             new_type)
         self.can_interact = True
-        self.type_name = type_name
         #
         self.max_dist = None
         self.attack_range = None
@@ -110,7 +109,7 @@ class Unit(MapObject):
                 for obj in next_cell.objects:
                     if not isinstance(obj, Unit):
                         if not isinstance(obj, InteractiveObject):
-                            this_tot_cost = self.material_cost[obj.name]
+                            this_tot_cost = self.material_cost[obj.str_type]
                             break
                 else: #if break is never reached
                     this_tot_cost = self.material_cost[next_cell.material.name]
@@ -136,7 +135,7 @@ class Unit(MapObject):
         """The copy references the same images as the original !"""
         self.ncopies += 1
         if obj is None:
-            obj = self.__class__(self.type_name, self.editor, None, self.name,
+            obj = self.__class__(self.str_type, self.editor, None, self.name,
                                 self.factor, list(self.relpos), new_type=False)
         obj.original_imgs = self.original_imgs
         obj.nframes = self.nframes
@@ -144,7 +143,7 @@ class Unit(MapObject):
         obj.min_relpos = list(self.min_relpos)
         obj.max_relpos = list(self.max_relpos)
         obj.relpos = list(self.relpos)
-        obj.object_type = self.object_type
+        obj.int_type = self.int_type
         obj.quantity = self.quantity
         obj.fns = self.fns
         #
@@ -174,7 +173,7 @@ class Unit(MapObject):
 
     def deep_copy(self, obj=None):
         if obj is None:
-            obj = self.__class__(self.type_name, self.editor, None, self.name,
+            obj = self.__class__(self.str_type, self.editor, None, self.name,
                                 self.factor, list(self.relpos), new_type=False)
         obj.quantity = self.quantity
         obj.fns = self.fns
@@ -190,7 +189,7 @@ class Unit(MapObject):
         obj.min_relpos = list(self.min_relpos)
         obj.max_relpos = list(self.max_relpos)
         obj.relpos = list(self.relpos)
-        obj.object_type = self.object_type
+        obj.int_type = self.int_type
         #
         obj.race = self.race
         obj.vel = self.vel
@@ -322,14 +321,14 @@ class Unit(MapObject):
 
     def get_terrain_name_for_fight(self): #ajouter forest et compagnie
         if self.cell.coord in self.game.bridges: #bypass water
-            return self.game.bridge_object.name
+            return "bridge"
         for obj in self.cell.objects:
-            if obj.name == "river":
-                return obj.name
+            if obj.str_type == "river":
+                return "river"
         return self.cell.material.name.lower()
 
     def get_terrain_bonus(self):
-        d = max([self.object_defense.get(o.name,1.) for o in self.cell.objects])
+        d = max([self.object_defense.get(o.str_type,1.) for o in self.cell.objects])
         terrain = self.get_terrain_name_for_fight()
         return self.terrain_attack.get(terrain, 1.)*d
 
@@ -423,11 +422,11 @@ class InteractiveObject(Unit):
 
     @staticmethod
     def get_saved_attributes():
-        return Unit.get_saved_attributes() + ["color", "type_name"]
+        return Unit.get_saved_attributes() + ["color"]
 
-    def __init__(self, type_name, editor, sprites, race=None, name=None,
+    def __init__(self, name, editor, sprites, race=None,
                  sprites_keys=("idle",), factor=1., relpos=(0,0), build=True,
-                 new_type=True):
+                 new_type=True, str_type=None):
         self.stop_animation = float("inf")
         self.stop_animation_func = None
         self.set_animation_type("loop")
@@ -460,10 +459,8 @@ class InteractiveObject(Unit):
                 isprite += n
         else:
             imgs = [""]
-        MapObject.__init__(self, editor, imgs, type_name, factor, relpos, build,
-                            new_type)
-        self.type_name = type_name
-        self.name = self.type_name if name is None else name
+        MapObject.__init__(self, editor, imgs, name, factor, relpos, build,
+                            new_type, str_type)
         #
         self.max_dist = None
         self.attack_range = None
@@ -490,15 +487,17 @@ class InteractiveObject(Unit):
         self.can_interact = True
 
     def copy(self):
-        obj = InteractiveObject(self.type_name, self.editor, None, self.race, self.name,
-                                self.factor, list(self.relpos), new_type=False)
+        obj = InteractiveObject(self.name, self.editor, None, self.race,
+                                self.factor, list(self.relpos), new_type=False,
+                                str_type=self.str_type)
         obj = Unit.copy(self, obj)
         obj.color = self.color
         return obj
 
     def deep_copy(self):
-        obj = InteractiveObject(self.type_name, self.editor, None, self.race, self.name,
-                                self.factor, list(self.relpos), new_type=False)
+        obj = InteractiveObject(self.name, self.editor, None, self.race,
+                                self.factor, list(self.relpos), new_type=False,
+                                str_type=self.str_type)
         obj = Unit.deep_copy(self, obj)
         obj.color = self.color
         return obj

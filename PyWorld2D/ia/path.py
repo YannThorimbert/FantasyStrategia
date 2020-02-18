@@ -55,7 +55,7 @@ class BranchAndBoundForMap:
                 obj_type = None
                 possible = False
                 if cell.objects:
-                    obj_type = cell.objects[0].object_type
+                    obj_type = cell.objects[0].int_type
                     if obj_type in self.possible_objects:
                         possible = True #e.g, bridge is on material water!
                 else:

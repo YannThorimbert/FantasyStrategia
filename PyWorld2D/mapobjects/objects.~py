@@ -2,8 +2,6 @@ import random, math
 import pygame
 import thorpy
 
-from PyWorld2D.ia.path import BranchAndBoundForMap
-import PyWorld2D.rendering.tilers.tilemanager as tm
 import PyWorld2D.constants as const
 
 
@@ -83,12 +81,12 @@ class MapObject:
 
     @staticmethod
     def get_saved_attributes():
-        return ["name", "quantity", "fns", "factor", "new_type", "relpos",
+        return ["name", "quantity", "fns", "factor", "new_type", "relpos", #put new type ?
                 "build", "vel", "_refresh_frame_type", "can_interact",
-                "is_ground", "always_drawn_last"]
+                "is_ground", "always_drawn_last", "str_type"]
 
     def __init__(self, editor, fns, name="", factor=1., relpos=(0,0), build=True,
-                 new_type=True):
+                 new_type=True, str_type=None):
         """<factor> : size factor.
         Object that looks the same at each frame"""
         self.editor = editor
@@ -115,6 +113,7 @@ class MapObject:
         self.imgs_z_t = None
         self.cell = None
         self.name = name
+        self.str_type = name if str_type is None else str_type
         self.ncopies = 0
         self.min_relpos = [-0.4, -0.4]
         self.max_relpos = [0.4,   0.4]
@@ -124,11 +123,16 @@ class MapObject:
             # print("BUILDING", self.name, self.fns)
             self.build_imgs()
         self.new_type = new_type
-        if new_type:
-            self.object_type = MapObject.current_id
-            MapObject.current_id += 1
-        else:
-            self.object_type = None
+        if new_type: #then detect type
+            already = self.editor.object_types.get(self.str_type)
+            if already:
+                self.int_type = already
+            else:
+                self.int_type = MapObject.current_id
+                MapObject.current_id += 1
+                self.editor.register_object_type(self)
+        else: #will probably be set within copy() method
+            self.int_type = None
         self.anim_path = []
         self.vel = 0.1
         self.get_current_frame = None
@@ -156,13 +160,14 @@ class MapObject:
         """The copy references the same images as the original !"""
         self.ncopies += 1
         obj = MapObject(self.editor, [""], self.name, self.factor,
-                        list(self.relpos), new_type=False)
+                        list(self.relpos), new_type=False, str_type=self.str_type)
         obj.original_imgs = self.original_imgs
         obj.nframes = self.nframes
         obj.imgs_z_t = self.imgs_z_t
         obj.min_relpos = list(self.min_relpos)
         obj.max_relpos = list(self.max_relpos)
-        obj.object_type = self.object_type
+        obj.relpos = list(self.relpos)
+        obj.int_type = self.int_type
         obj.quantity = self.quantity
         obj.fns = self.fns
         obj.vel = self.vel
@@ -174,7 +179,7 @@ class MapObject:
 
     def deep_copy(self):
         obj = MapObject(self.editor, [""], self.name, self.factor,
-                        list(self.relpos), new_type=False)
+                        list(self.relpos), new_type=False, str_type=self.str_type)
         obj.quantity = self.quantity
         obj.fns = self.fns
         obj.original_imgs = [i.copy() for i in self.original_imgs]
@@ -188,7 +193,8 @@ class MapObject:
 ##            obj.imgs_z_t = [i.copy() for i in imgs]
         obj.min_relpos = list(self.min_relpos)
         obj.max_relpos = list(self.max_relpos)
-        obj.object_type = self.object_type
+        obj.relpos = list(self.relpos)
+        obj.int_type = self.int_type
         obj.vel = self.vel
         obj.set_frame_refresh_type(self._refresh_frame_type)
         obj.is_ground = self.is_ground
@@ -212,6 +218,7 @@ class MapObject:
             cell.objects.insert(0,copy)
         else:
             cell.objects.append(copy)
+        self.editor.register_object_type(self)
         return copy
 
     def add_unit_on_cell(self, cell):
@@ -226,6 +233,7 @@ class MapObject:
         copy = self.copy()
         copy.cell = cell
         cell.objects.append(copy)
+        self.editor.register_object_type(self)
         return copy
 
     def remove_from_cell(self):
@@ -356,7 +364,7 @@ class MapObject:
 
     def set_same_type(self, objs):
         for o in objs:
-            o.object_type = self.object_type
+            o.int_type = self.int_type
 
 
     def distance_to(self, another_obj):
@@ -377,154 +385,3 @@ class MapObject:
         self.get_map_time = functions[type_]
 
 
-
-def find_free_next_to(lm, coord):
-    ok = []
-    for x,y in VON_NEUMAN:
-        cell = lm.get_cell_at(coord[0]+x,coord[1]+y)
-        if cell:
-            if not cell.objects:
-                if not cell.unit:
-                    ok.append(cell)
-    if ok:
-        return random.choice(ok)
-
-def add_random_road(lm, layer,
-                    cobbles, woods,
-                    costs_materials, costs_objects,
-                    possible_materials, possible_objects,
-                    min_length,
-                    max_length):
-    """Computes and draw a random road between two random villages."""
-    print("     Building random road")
-    villages = [o for o in layer.static_objects if "village" in o.name]
-    if not villages:
-        return
-    v1 = random.choice(villages)
-    c1 = find_free_next_to(lm, v1.cell.coord)
-    # c1 = v1.cell
-    if c1:
-        villages_at_right_distance = []
-        for v2 in villages:
-            if v2 is not v1:
-                if min_length <= c1.distance_to(v2.cell) <= max_length:
-                    villages_at_right_distance.append(v2)
-        if villages_at_right_distance:
-            v2 = random.choice(villages_at_right_distance)
-            c2 = find_free_next_to(lm, v2.cell.coord)
-            # c2 = v2.cell
-        else:
-            return
-        if c2:
-            sp = BranchAndBoundForMap(lm, c1, c2,
-                                    costs_materials, costs_objects,
-                                    possible_materials, possible_objects)
-            path = sp.solve()
-            draw_road(path, cobbles, woods, lm)
-
-def add_random_river(me, layer,
-                    img_fullsize,
-                    costs_materials, costs_objects,
-                    possible_materials, possible_objects,
-                    min_length, max_length):
-    """Computes and draw a random river."""
-    lm = me.lm
-    #0)build tiles
-    imgs = {}
-    for dx in [-1,0,1]:
-        for dy in[-1,0,1]:
-            imgs[(dx,dy)] = tm.build_tiles(img_fullsize, lm.cell_sizes,
-                                            lm.nframes,
-                                            dx*lm.nframes, dy*lm.nframes, #dx, dy
-                                            sin=False)
-    #1) pick one random source
-    for i in range(1000):
-        x,y = random.randint(0,lm.nx-1), random.randint(0,lm.ny-1)
-        cell_water = lm.cells[x][y]
-        if "shallow" in cell_water.material.name.lower():
-            break
-    else:
-        return
-    #2) pick one random end
-    for i in range(1000):
-        x,y = random.randint(0,lm.nx-1), random.randint(0,lm.ny-1)
-        cell_land = lm.cells[x][y]
-        if "snow" in cell_land.material.name.lower():
-            break
-    else:
-        return
-    #3) verify distance
-##    print("DISTANCE = ", cell_water.distance_to(cell_land))
-    if min_length <=  cell_water.distance_to(cell_land) <= max_length:
-        pass
-    else:
-        return
-    sp = BranchAndBoundForMap(lm, cell_land, cell_water,
-                            costs_materials, costs_objects,
-                            possible_materials, possible_objects)
-    path = sp.solve()
-    #4) change the end to first shallow shore cell
-    actual_path = []
-    for cell in path:
-        actual_path.append(cell)
-        if "water" in cell.material.name.lower():
-            break
-        else:
-            next_to_water = False
-            for neigh in cell.get_neighbors_von_neuman():
-                if neigh:
-                    if "water" in neigh.material.name.lower():
-                        next_to_water = True
-                        break
-            if next_to_water:
-                break
-    #
-    objs = {}
-    for key in imgs:
-        river_obj = MapObject(me, imgs[key][0], "river", 1.)
-        river_obj.is_ground = True
-        objs[key] = river_obj
-    #5) add river cells to map and layer
-    for i,cell in enumerate(actual_path):
-        dx, dy = 0, 0
-        if i > 0:
-            dx += cell.coord[0] - actual_path[i-1].coord[0]
-            dy += cell.coord[1] - actual_path[i-1].coord[1]
-        if i + 1 < len(actual_path):
-            dx += actual_path[i+1].coord[0] - cell.coord[0]
-            dy += actual_path[i+1].coord[1] - cell.coord[1]
-        if dx > 0:
-            dx = 1
-        elif dx < 0:
-            dx = -1
-        if dy > 0:
-            dy = 1
-        elif dy < 0:
-            dy = -1
-        c = objs.get((dx,dy))
-        if not c:
-            raise Exception("No river object for delta", dx, dy)
-        c = c.add_copy_on_cell(cell)
-        cell.name = "River"
-        layer.static_objects.append(c)
-    return path
-
-
-
-def draw_path(path, objects, layer):
-    """<path> is a list of cells"""
-    for cell in path:
-        c = random.choice(objects)
-        c = c.add_copy_on_cell(cell)
-        layer.static_objects.append(c)
-
-def draw_road(path, cobbles, woods, layer):
-    """<path> is a list of cells"""
-    for cell in path:
-        if "water" in cell.material.name.lower():
-##            c = random.choice(woods)
-            c = random.choice(cobbles)
-        else:
-            c = random.choice(cobbles)
-        c = c.add_copy_on_cell(cell)
-        layer.static_objects.append(c)

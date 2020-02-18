@@ -100,7 +100,7 @@ class FightingUnit:
             self.dead_img = pygame.transform.flip(self.dead_img, True, False)
             dhx *= -1
         self.delta_head = (dhx,dhy)
-        if unit.type_name == "wizard":
+        if unit.str_type == "wizard":
             self.delta_head = None
         self.direction = "left"
         self.refresh_sprite_type()
@@ -375,15 +375,10 @@ class Battle:
         self.objects_to_blit = []
         for key in list(self.objects.keys()):
             self.objects[key] = [o for o in self.objects[key] if not isinstance(o, Unit)]
-        print("OBJECTS")
-        for key in self.objects:
-            print(key, [o.name for o in self.objects[key]])
-        #
         self.game = game
         self.surface = thorpy.get_screen()
         self.surface_rect = self.surface.get_rect()
         self.W, self.H = self.surface.get_size()
-        print("BATTLE", [unit.name for unit in units.values()])
         self.right = units.get("right")
         self.left = units.get("left")
         self.up = units.get("up")
@@ -656,7 +651,6 @@ class Battle:
 ##            print(self.fight_t)
 
     def finish_battle(self):
-        print("FINISH BATTLE")
         self.slow()
         for u in self.f:
             u.target = None
@@ -824,7 +818,7 @@ class Battle:
         img, splash, footprint = get_img(unit.cell, self.z)
         blit_everywhere = None
         for o in self.objects[side]:
-            if o.name == "cobblestone" or o.name == "bridge":
+            if o.str_type== "cobblestone" or "bridge" in o.str_type:
                 blit_everywhere = o.imgs_z_t[self.z][0]
                 break
         for x,y in disp:
@@ -987,7 +981,7 @@ class DistantBattle(Battle):
         #
         blit_everywhere = None
         for o in self.objects["left"]:
-            if o.name == "cobblestone" or o.name == "bridge":
+            if o.str_type== "cobblestone" or "bridge" in o.str_type:
                 blit_everywhere = o.imgs_z_t[self.z][0]
                 break
         #
@@ -1008,7 +1002,7 @@ class DistantBattle(Battle):
                 #
         blit_everywhere = None
         for o in self.objects["right"]:
-            if o.name == "cobblestone" or o.name == "bridge":
+            if o.str_type == "cobblestone" or "bridge" in o.str_type:
                 blit_everywhere = o.imgs_z_t[self.z][0]
                 break
         #
@@ -1237,7 +1231,7 @@ def get_img(cell, z):
     splash = False
     footprint = False
     for obj in cell.objects:
-        if obj.name == "river":
+        if obj.str_type == "river":
             img = obj.imgs_z_t[z][0]
             splash = True
             break

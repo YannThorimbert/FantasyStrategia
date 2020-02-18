@@ -76,7 +76,7 @@ class GuiGraphicsEnhancement:
                 ############################ Splashes ##########################
                 if self.splash:
                     if t == "river" or "water" in t:
-                        
+
                         self.units_splashes.append(u)
                 ################### Footprints #################################
                 if self.show_footprints:
@@ -188,13 +188,13 @@ class Gui:
 
     def extinguish(self):
         for o in self.cell_under_cursor.objects:
-            if o.name == "fire":
+            if o.str_type == "fire":
                 self.game.set_fire(self.cell_under_cursor.coord, 0)
 
     def check_extinguish(self):
         u = self.selected_unit
         if u.cell.distance_to(self.cell_under_cursor) <= u.help_range[1]:
-            n = u.type_name
+            n = u.str_type
             return n == "wizard" or n == "arch_wizard"
         return False
 
@@ -216,10 +216,10 @@ class Gui:
             return False
         else:
             for o in self.cell_under_cursor.objects:
-                if o.name in self.game.is_burnable:
+                if o.str_type in self.game.is_burnable:
                     return True
             for o in self.cell_under_cursor.objects:
-                if o.name == "river":
+                if o.str_type == "river":
                     return False
         return self.cell_under_cursor.material.name.lower() in self.game.is_burnable
 
@@ -365,7 +365,7 @@ class Gui:
 
     def remove_flag(self):
         for o in self.interaction_objs:
-            if o.type_name == "flag":
+            if o.str_type == "flag":
                 o.remove_from_game()
                 break
 
@@ -407,8 +407,8 @@ class Gui:
                         choices["Help"] = self.help
             for o in objs:
                 if o != cell.unit:
-                    if o.type_name in self.actions:
-                        for name, func, check in self.actions[o.type_name]:
+                    if o.str_type in self.actions:
+                        for name, func, check in self.actions[o.str_type]:
                             if check():
                                 choices[name] = func
             self.interaction_objs = objs

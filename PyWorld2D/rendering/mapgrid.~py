@@ -3,7 +3,7 @@ import pygame
 from thorpy.gamestools.basegrid import BaseGrid
 from thorpy.gamestools.grid import PygameGrid
 from PyWorld2D.rendering.tilers.tilemanager import get_couple
-from PyWorld2D.mapobjects.objects import VON_NEUMAN
+from PyWorld2D.editor.mapbuilding import VON_NEUMAN
 import PyWorld2D.constants as const
 
 #pour eviter de tj faire des tuples, ne pas heriter de PygameGrid et faire moi meme
@@ -122,9 +122,9 @@ class LogicalMap(BaseGrid):
     def get_slowness(self,number):
         if number == const.NORMAL:
             return self.frame_slowness
-        elif number == const.FAST
+        elif number == const.FAST:
             return self.frame_slowness2
-        elif number == const.SLOW
+        elif number == const.SLOW:
             return self.frame_slowness3
 
     def add_layer(self, lay):

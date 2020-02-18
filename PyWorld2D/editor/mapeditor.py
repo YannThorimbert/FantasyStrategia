@@ -93,14 +93,14 @@ class MapEditor:
                 river_obj.is_ground = True
                 self.register_object_type(river_obj)
 
-    def register_object_type(self, obj):
-        registered = self.object_types.get(obj.name)
+    def register_object_type(self, obj): #map obj.str_type to obj.int_type
+        registered = self.object_types.get(obj.str_type)
         if registered is None: #first time we see this object name
-            self.object_types[obj.name] = obj.object_type
+            self.object_types[obj.str_type] = obj.int_type
         else:
-            if registered != obj.object_type:
+            if registered != obj.int_type: #conflict
                 print("Object types:", self.object_types)
-                raise Exception("Object type already exists:", obj.object_type)
+                raise Exception("Object type already exists:", obj.int_type)
 
     def get_fn(self):
         return self.name.replace(" ","_")+".map"

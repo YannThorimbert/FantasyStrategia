@@ -3,11 +3,10 @@ import pygame
 from thorpy.gamestools.basegrid import BaseGrid
 from thorpy.gamestools.grid import PygameGrid
 from PyWorld2D.rendering.tilers.tilemanager import get_couple
-from PyWorld2D.mapobjects.objects import VON_NEUMAN
 import PyWorld2D.constants as const
 
 #pour eviter de tj faire des tuples, ne pas heriter de PygameGrid et faire moi meme
-
+VON_NEUMAN = [(-1,0), (1,0), (0,-1), (0,1)]
 WATER = 1
 GRASS = 0
 

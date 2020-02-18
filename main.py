@@ -33,14 +33,36 @@ W,H = 1200, 700 #screen size
 app = thorpy.Application((W,H))
 
 map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
-map_initializer.chunk = (18,9)
+map_initializer.chunk = (1322,43944)
+map_initializer.max_number_of_roads = 5
+map_initializer.max_number_of_rivers = 5
+map_initializer.village_homogeneity = 0.1
+map_initializer.seed_static_objects = 15
 me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
 ################################################################################
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
-probleme orientation pont : peut etre a voir avec object_types de mapeditor...
+BUG : pont sont infranchissable en 1 seul tour !
+
+##bug des chemins :
+##map1 = MapInitializer("First demo map")
+##map1.chunk = (0,0)
+##map1.reverse_hmap = True
+##map1.world_size = (32,32)
+####map1.set_terrain_type(terrain_plains, colorscale_plains)
+####map1.set_terrain_type(terrain_small, colorscale_normal)
+##map1.max_number_of_roads = 5
+##map1.max_number_of_rivers = 3
+##map1.zoom_cell_sizes = [32,]
+##map1.seed_static_objects = 110
+##map1.add_object("oak", 6, 5)
+####map1.add_object("bush", 16, 8)
+##
+##map_initializer.chunk = (11,9)
+##map_initializer.reverse_hmap = False
+
 
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
 #conquete de base, batailles. Pas d'impots ni de destruction d'objets.

@@ -15,8 +15,9 @@ std_material_cost = {'Deep water': float("inf"),
                      'forest': 4,
                      'cobblestone':1,
                      'village':1,
-                     'bridge':1,
-                     'river':6,
+                     'bridge_v':1,
+                     'bridge_h':1,
+                     'river':10,
                      'bush':5}
 
 std_max_dist = {'villager':0.8,
@@ -147,9 +148,9 @@ class Race:
         self.color = color
         for unit_type in units_type_to_load:
             self.add_type(unit_type, "sprites/"+baserace+"_"+unit_type)
-        self.flag = unit.InteractiveObject("flag", self.me, "sprites/flag",
-                                            race=self,
-                                            name=self.name+" flag")
+        self.flag = unit.InteractiveObject(self.name+" flag", self.me,
+                                            "sprites/flag", race=self,
+                                            str_type="flag")
 ##        self.flag.always_drawn_last = True
 
 
@@ -157,7 +158,9 @@ class Race:
     def add_type(self, type_name, imgs_fn, factor=1.):
         imgs = unit.load_sprites(imgs_fn, self.color)
         assert type_name not in self.unit_types
-        u = unit.Unit(type_name, self.me, imgs, type_name, factor)
+        unit_name = type_name
+##        unit_name = self.name + " " +  type_name
+        u = unit.Unit(type_name, self.me, imgs, unit_name, factor)
         u.race = self
         self.unit_types[type_name] = u
         if os.path.exists(imgs_fn+"_footprint.png"):
