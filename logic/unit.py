@@ -507,6 +507,6 @@ class InteractiveObject(Unit):
         return obj
 
     def remove_from_game(self):
-        self.game.objects.remove(self)
+##        self.game.objects.remove(self)
         self.game.me.dynamic_objects.remove(self)
         self.remove_from_cell()

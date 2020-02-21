@@ -76,7 +76,6 @@ class GuiGraphicsEnhancement:
                 ############################ Splashes ##########################
                 if self.splash:
                     if t == "river" or "water" in t:
-
                         self.units_splashes.append(u)
                 ################### Footprints #################################
                 if self.show_footprints:
@@ -194,7 +193,7 @@ class Gui:
     def check_extinguish(self):
         u = self.selected_unit
         if u.cell.distance_to(self.cell_under_cursor) <= u.help_range[1]:
-            n = u.type_name
+            n = u.str_type
             return n == "wizard" or n == "arch_wizard"
         return False
 
@@ -365,7 +364,7 @@ class Gui:
 
     def remove_flag(self):
         for o in self.interaction_objs:
-            if o.type_name == "flag":
+            if o.str_type == "flag":
                 o.remove_from_game()
                 break
 
@@ -379,7 +378,7 @@ class Gui:
         self.remove_flag()
         cell = self.cell_under_cursor
         self.game.add_obj_before_other_if_needed(self.selected_unit.race.flag,
-                                                 1, "village", cell)
+                                                 1, ["village"], cell)
 
     def burn(self):
         self.game.set_fire(self.cell_under_cursor.coord, 2)
@@ -407,8 +406,8 @@ class Gui:
                         choices["Help"] = self.help
             for o in objs:
                 if o != cell.unit:
-                    if o.type_name in self.actions:
-                        for name, func, check in self.actions[o.type_name]:
+                    if o.str_type in self.actions:
+                        for name, func, check in self.actions[o.str_type]:
                             if check():
                                 choices[name] = func
             self.interaction_objs = objs

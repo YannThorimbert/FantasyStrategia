@@ -231,6 +231,9 @@ class Gui:
             if c.unit.team != self.selected_unit.team:
                 return False
         if self.selected_unit.cell.distance_to(c) <= 1:
+            for o in c.objects:
+                if o.str_type == "river":
+                    return False
             return c.material.name.lower() in self.game.is_flaggable
 
     def clear(self):
@@ -378,7 +381,7 @@ class Gui:
         self.remove_flag()
         cell = self.cell_under_cursor
         self.game.add_obj_before_other_if_needed(self.selected_unit.race.flag,
-                                                 1, "village", cell)
+                                                 1, ["village"], cell)
 
     def burn(self):
         self.game.set_fire(self.cell_under_cursor.coord, 2)

@@ -44,7 +44,7 @@ game = Game(me)
 ################################################################################
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
-bug remove flag
+##bug remove flag
 
 ##bug des chemins :
 ##map1 = MapInitializer("First demo map")
@@ -156,6 +156,7 @@ game.add_unit((15,10), humans2["infantry"], 10)
 game.add_unit((13,10), humans["wizard"], 30)
 game.add_unit((14,1), humans["villager"], 10)
 game.add_unit((12,11), humans2["wizard"], 30)
+game.add_unit((17,3), humans["villager"], 10)
 
 game.add_unit((18,8), humans["infantry"], 1)
 game.add_unit((17,10), humans["wizard"], 1)
