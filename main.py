@@ -34,35 +34,23 @@ app = thorpy.Application((W,H))
 
 map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
 map_initializer.chunk = (1322,43944)
-map_initializer.max_number_of_roads = 5
-map_initializer.max_number_of_rivers = 5
+map_initializer.max_number_of_roads = 0 #5
+map_initializer.max_number_of_rivers = 0 #5
 map_initializer.village_homogeneity = 0.1
 map_initializer.seed_static_objects = 15
+
+##map_initializer.chunk = (11,9)
+##map_initializer.reverse_hmap = False
 me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
 ################################################################################
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
-##bug remove flag
 
-##bug des chemins :
-##map1 = MapInitializer("First demo map")
-##map1.chunk = (0,0)
-##map1.reverse_hmap = True
-##map1.world_size = (32,32)
-####map1.set_terrain_type(terrain_plains, colorscale_plains)
-####map1.set_terrain_type(terrain_small, colorscale_normal)
-##map1.max_number_of_roads = 5
-##map1.max_number_of_rivers = 3
-##map1.zoom_cell_sizes = [32,]
-##map1.seed_static_objects = 110
-##map1.add_object("oak", 6, 5)
-####map1.add_object("bush", 16, 8)
-##
-##map_initializer.chunk = (11,9)
-##map_initializer.reverse_hmap = False
-
+bugs 1 et 2 ci-dessous sont lies (relpos)!!! chier !!!! bordel
+##bug1 : feu toujours blitte derriere arbre !!!!!!!!!!!
+##bug2 : arbre avec au-dessus un autre object (bush, arbre), alors unit blitte dans les feuilles de l'arbre du dessous...
 
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
 #conquete de base, batailles. Pas d'impots ni de destruction d'objets.
@@ -164,7 +152,8 @@ game.add_unit((16,9), humans2["villager"], 15)
 game.add_unit((15,9), humans2["infantry"], 15)
 
 
-game.set_fire((15,15),2)
+game.set_fire((6,5), 2)
+##print(lol)
 
 ##game.get_cell_at(14,15).set_name("My left cell")
 ##game.get_cell_at(15,14).set_name("My top cell")

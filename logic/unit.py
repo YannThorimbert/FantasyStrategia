@@ -102,6 +102,8 @@ class Unit(MapObject):
             if next_cell:
                 if next_cell.unit:
                     continue
+                elif next_cell.coord in self.game.burning:
+                    continue
                 no_key_value = float("inf"), None
                 best_score, best_path = score.get((cx,cy), no_key_value)
                 #compute the cost of the current path ##########################

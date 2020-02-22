@@ -362,15 +362,19 @@ class MapInitializer:
         costs_materials_road["Snow"] = 10. #unit is 10 times slower in snow
         costs_materials_road["Thin snow"] = 2. #twice slower on thin snow...
         costs_materials_road["Sand"] = 2.
-        for name in me.materials:
-            if "water" in name.lower():
-                costs_materials_road[name] = 1.1
+##        for name in me.materials:
+##            if "water" in name.lower():
+##                costs_materials_road[name] = 10
+        print("     COST SHALLOW WATER", costs_materials_road)
         river_type = me.object_types["river"]
         costs_objects_road = {bush.int_type: 2., #unit is 2 times slower in bushes
                                 cobble.int_type: 0.9,
                                 river_type:2.}
         #Materials allowed (here we allow water because we add bridges)
         possible_materials_road=list(me.materials)
+        for name in me.materials:
+            if "water" in name.lower():
+                possible_materials_road.remove(name)
         possible_objects_road=[cobble.int_type, bush.int_type,
                                 village1.int_type, river_type]
         ########################################################################

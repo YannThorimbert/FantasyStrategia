@@ -157,10 +157,10 @@ class Gui:
 
     def set_map_gui(self):
         me = self.me
-        #
+        ########################################################################
         self.hline = thorpy.Line(int(0.75*me.e_box.get_fus_rect().width), "h")
         me.add_gui_element(self.hline, True)
-        #
+        ########################################################################
         self.e_end_turn = thorpy.make_button("End turn")
         self.e_end_turn.set_font_size(int(1.2*guip.TFS))
         self.e_end_turn.set_font_color(guip.TFC)
@@ -170,8 +170,17 @@ class Gui:
 ##        nothing = thorpy.make_text("",20)
 ##        self.e_end_turn = thorpy.make_group([e_end_turn, nothing], "v")
         me.add_gui_element(self.e_end_turn, True)
-        #
+        ########################################################################
         me.add_gui_element(self.hline.copy(), True)
+        ########################################################################
+        self.e_gold_txt = thorpy.make_text("124")
+        self.e_gold_img = thorpy.Image("sprites/coin1.png",
+                                        colorkey=(255,255,255))
+        self.e_gold = thorpy.make_group([self.e_gold_img, self.e_gold_txt])
+        me.add_gui_element(self.e_gold, True)
+        ########################################################################
+        me.add_gui_element(self.hline.copy(), True)
+        ########################################################################
         if self.time_remaining > 0:
             if self.time_remaining == 1:
                 text = "Last day !"
@@ -179,10 +188,10 @@ class Gui:
                 text = str(self.time_remaining) + " days left"
             self.e_time_remaining = guip.get_highlight_text(text)
             me.add_gui_element(self.e_time_remaining, True)
-        #
+        ########################################################################
         self.e_info_day = guip.get_title("Day 1")
         me.add_gui_element(self.e_info_day, True)
-        #
+        ########################################################################
         me.menu_button.user_func = self.launch_map_menu
 
     def extinguish(self):

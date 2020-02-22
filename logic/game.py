@@ -105,21 +105,33 @@ class Game:
         if n > 0:
             cell = self.get_cell_at(coord[0],coord[1])
             self.burning[coord] = n
-            self.add_obj_before_other_if_needed(self.fire,1,("village","bridge"),cell)
+            names = ("village","bridge","forest")
+            self.add_obj_before_other_if_needed(self.fire,1,names,cell)
 
     def add_obj_before_other_if_needed(self, obj, qty, other_names, cell):
         has_other = False
         for o in cell.objects:
             for n in other_names:
                 if o.name == n:
-                    has_other = True
-                    obj.min_relpos = [0, o.relpos[1]+0.001]
-                    obj.max_relpos = [0, o.relpos[1]+0.001]
-                    break
+                    if o.relpos[1] >= obj.relpos[1]:
+                        has_other = True
+                        obj.min_relpos = [0, o.relpos[1]+0.01]
+                        obj.max_relpos = [0, o.relpos[1]+0.01]
+                        break
         o = self.add_object(cell.coord, obj, qty, has_other)
 
     def get_interactive_objects(self, x, y):
         return [o for o in self.get_cell_at(x,y).objects if o.can_interact]
+
+    def get_all_objects_by_name(self, name):
+        objs = []
+        for x in self.me.lm.nx:
+            for y in self.me.lm.ny:
+                cell = self.get_cell_at(x,y)
+                for o in cell.objects:
+                    if o.name == name:
+                        objs.append(o)
+        return o
 
 
 
