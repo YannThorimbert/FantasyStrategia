@@ -3,8 +3,9 @@ from pygame.math import Vector2 as V2
 from PyWorld2D.gui.parameters import RMOUSE_COLOR
 
 
-DELTA_STATIC_OBJECTS = [(1,0),(-1,0),(0,-1),(0,1),(0,0),
-                        (1,1), (-1,1), (1,-1), (-1,-1)]
+##DELTA_STATIC_OBJECTS = [(1,0),(-1,0),(0,-1),(0,1),(0,0),
+##                        (1,1), (-1,1), (1,-1), (-1,-1)]
+DELTA_STATIC_OBJECTS = [(1,0),(-1,0),(0,-1),(0,1),(0,0)]
 class Camera:
 
     def __init__(self):
@@ -160,26 +161,30 @@ class Camera:
         return self.get_rect_at_coord(self.get_coord_at_pix(pix))
 
 
-    def blit_static_objects_around(self, screen, o, ir):
+    def blit_static_objects_around(self, screen, o, ir, reblitted):
         """Blit the neighboring objects according to their y-coordinate."""
+        print("     BSOA", o.name, o.cell.coord)
         x,y = o.cell.coord
         s = self.lm.get_current_cell_size()
-        for dx,dy in DELTA_STATIC_OBJECTS: #includes 8 neighs + (0,0)
+        o_img, o_rect = o.get_current_img_and_rect(s)
+        for dx,dy in DELTA_STATIC_OBJECTS: #includes 4 neighs + (0,0)
             cell = self.lm.get_cell_at(x+dx, y+dy)
             if cell:
                 r = self.get_rect_at_coord(cell.coord)
                 for so in cell.objects:
                     if so is not o:
                         if not so.is_ground:
-                            so_img = so.get_current_img()
-                            so_rect = so_img.get_rect()
-                            so_rect.center = r.center
-                            so_rect.move_ip(so.relpos[0]*s, so.relpos[1]*s)
-                            if so_rect.bottom > ir.bottom:
-                                if cell.coord == (14,11):print(so.name, so_rect.bottom)
-                                if cell.coord == (14,10):print(so.name, so_rect.bottom)
-                                screen.blit(so_img, so_rect.topleft)
-
+                            so_img, so_rect = so.get_current_img_and_rect(s)
+                            if so_rect.colliderect(o_rect):
+                                if so_rect.bottom > ir.bottom:
+                                    if cell.coord == (14,11):print("            ",so.name, so.cell.coord)
+                                    if cell.coord == (14,10):print("            ",so.name, so.cell.coord)
+                                    blit_coord = so_rect.topleft
+                                    screen.blit(so_img, so_rect.topleft)
+##                                    if blit_coord in reblitted:
+##                                    else:
+##                                        reblitted[so_rect.]
+##                                    reblitted.append((o, so_img, so_rect.topleft))
     #Typically used to draw only the dynamic objects...
     #   The static ones are pre-blitted on the map !
     def draw_objects(self, screen, objs):
@@ -187,17 +192,22 @@ class Camera:
         s = self.lm.get_current_cell_size()
         if self.ui_manager:
             self.ui_manager.draw_before_objects(s)
+        reblitted = {}
         for o in objs:
             img, rect = o.get_current_img_and_rect(s)
             if not o.always_drawn_last:
-                if o.cell.coord == (14,10):print(o.name, "first")
+                if o.cell.coord == (14,10):print(o.name, "first", o.cell.coord)
+                if o.cell.coord == (14,11):print(o.name, "first", o.cell.coord)
                 screen.blit(img, rect.topleft)
             #check static object:
             if not o.is_ground: #then some neigboring objects may have to be blitted according to y-coord
-                self.blit_static_objects_around(screen, o, rect)
+                self.blit_static_objects_around(screen, o, rect, reblitted)
             if o.always_drawn_last:
-                if o.cell.coord == (14,10):print(o.name, "last")
+                if o.cell.coord == (14,10):print(o.name, "last", o.cell.coord)
+                if o.cell.coord == (14,11):print(o.name, "last", o.cell.coord)
                 screen.blit(img, rect.topleft)
+##        for o, img, r in reblitted:
+##            ...
         if self.ui_manager:
             self.ui_manager.draw_after_objects(s)
 ##        print(ftg)
