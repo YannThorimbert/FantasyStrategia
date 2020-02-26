@@ -115,8 +115,18 @@ class Game:
                 if o.name == n:
                     if o.relpos[1] >= obj.relpos[1]:
                         has_other = True
-                        obj.min_relpos = [0, o.relpos[1]+0.01]
-                        obj.max_relpos = [0, o.relpos[1]+0.01]
+                        s = self.me.lm.get_current_cell_size()
+                        im2, r2 = o.get_current_img_and_rect(s)
+                        cell_rect = o.get_current_rect(s)
+                        obj.cell = cell
+                        obj_rect = obj.get_current_img().get_rect()
+                        obj_rect.bottom = r2.bottom + 1
+                        obj.cell = None
+                        #pos = centercell + relpos*s
+                        #<==> relpos = (pos - centercell)/s
+                        relpos = (obj_rect.centery - cell_rect.centery) / s
+                        obj.min_relpos = [0, relpos]
+                        obj.max_relpos = [0, relpos]
                         break
         o = self.add_object(cell.coord, obj, qty, has_other)
 

@@ -48,9 +48,7 @@ game = Game(me)
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
 
-bugs 1 et 2 ci-dessous sont lies (relpos)!!! chier !!!! bordel
-##bug1 : feu toujours blitte derriere arbre !!!!!!!!!!!
-##bug2 : arbre avec au-dessus un autre object (bush, arbre), alors unit blitte dans les feuilles de l'arbre du dessous...
+##bug : arbre avec au-dessus un autre object (bush, arbre), alors unit blitte dans les feuilles de l'arbre du dessous...
 
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
 #conquete de base, batailles. Pas d'impots ni de destruction d'objets.
@@ -152,8 +150,7 @@ game.add_unit((16,9), humans2["villager"], 15)
 game.add_unit((15,9), humans2["infantry"], 15)
 
 
-game.set_fire((6,5), 2)
-##print(lol)
+game.set_fire((9,6), 2)
 
 ##game.get_cell_at(14,15).set_name("My left cell")
 ##game.get_cell_at(15,14).set_name("My top cell")
