@@ -352,6 +352,14 @@ class MapObject:
         ir.move_ip(self.relpos[0]*cell_size, self.relpos[1]*cell_size)
         return img, ir
 
+    def get_fakerect_and_img(self, cell_size):
+        img = self.get_current_img()
+        r = self.editor.cam.get_rect_at_coord(self.cell.coord)
+        ir = img.get_rect()
+        ir.center = r.center
+        ir.move_ip(self.relpos[0]*cell_size, self.relpos[1]*cell_size)
+        return (ir.x, ir.y, ir.right, ir.bottom), img
+
     def get_current_rect_center(self, cell_size):
         r = self.editor.cam.get_rect_at_coord(self.cell.coord)
         x = self.relpos[0]*cell_size+r.centerx

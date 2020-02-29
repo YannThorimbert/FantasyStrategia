@@ -161,56 +161,85 @@ class Camera:
         return self.get_rect_at_coord(self.get_coord_at_pix(pix))
 
 
-    def blit_static_objects_around(self, screen, o, ir, reblitted):
+##    def blit_static_objects_around(self, screen, o, ir):
+##        """Blit the neighboring objects according to their y-coordinate."""
+##        x,y = o.cell.coord
+##        s = self.lm.get_current_cell_size()
+##        o_img, o_rect = o.get_current_img_and_rect(s)
+##        for dx,dy in DELTA_STATIC_OBJECTS: #includes 4 neighs + (0,0)
+##            cell = self.lm.get_cell_at(x+dx, y+dy)
+##            if cell:
+##                r = self.get_rect_at_coord(cell.coord)
+##                for so in cell.objects:
+##                    if so is not o:
+##                        if not so.is_ground:
+##                            so_img, so_rect = so.get_current_img_and_rect(s)
+##                            if so_rect.colliderect(o_rect):
+##                                if so_rect.bottom > ir.bottom:
+##                                    blit_coord = so_rect.topleft
+##                                    screen.blit(so_img, so_rect.topleft)
+##
+##    #Typically used to draw only the dynamic objects...
+##    #   The static ones are pre-blitted on the map !
+##    def draw_objects(self, screen, objs):
+##        s = self.lm.get_current_cell_size()
+##        if self.ui_manager:
+##            self.ui_manager.draw_before_objects(s)
+##        for o in objs:
+##            img, rect = o.get_current_img_and_rect(s)
+##            if not o.always_drawn_last:
+##                screen.blit(img, rect.topleft)
+##            #check static object:
+##            if not o.is_ground: #then some neigboring objects may have to be blitted according to y-coord
+##                self.blit_static_objects_around(screen, o, rect)
+##            if o.always_drawn_last:
+##                screen.blit(img, rect.topleft)
+##        if self.ui_manager:
+##            self.ui_manager.draw_after_objects(s)
+
+
+
+    def log_static_objects_around(self, o, to_sort, drawn_last):
         """Blit the neighboring objects according to their y-coordinate."""
-        print("     BSOA", o.name, o.cell.coord)
         x,y = o.cell.coord
         s = self.lm.get_current_cell_size()
-        o_img, o_rect = o.get_current_img_and_rect(s)
         for dx,dy in DELTA_STATIC_OBJECTS: #includes 4 neighs + (0,0)
             cell = self.lm.get_cell_at(x+dx, y+dy)
             if cell:
                 r = self.get_rect_at_coord(cell.coord)
                 for so in cell.objects:
                     if so is not o:
-                        if not so.is_ground:
-                            so_img, so_rect = so.get_current_img_and_rect(s)
-                            if so_rect.colliderect(o_rect):
-                                if so_rect.bottom > ir.bottom:
-                                    if cell.coord == (14,11):print("            ",so.name, so.cell.coord)
-                                    if cell.coord == (14,10):print("            ",so.name, so.cell.coord)
-                                    blit_coord = so_rect.topleft
-                                    screen.blit(so_img, so_rect.topleft)
-##                                    if blit_coord in reblitted:
-##                                    else:
-##                                        reblitted[so_rect.]
-##                                    reblitted.append((o, so_img, so_rect.topleft))
-    #Typically used to draw only the dynamic objects...
-    #   The static ones are pre-blitted on the map !
+                        if not so.is_ground: #if ground no need to reblit
+                            so_rect, so_img = so.get_fakerect_and_img(s)
+                            if so.always_drawn_last:
+                                drawn_last.add((so_rect,so_img,so))
+                            else:
+                                to_sort.add((so_rect,so_img,so))
+
     def draw_objects(self, screen, objs):
-        print("***Draw objects")
         s = self.lm.get_current_cell_size()
         if self.ui_manager:
             self.ui_manager.draw_before_objects(s)
-        reblitted = {}
+        to_sort = set()
+        drawn_last = set()
         for o in objs:
-            img, rect = o.get_current_img_and_rect(s)
-            if not o.always_drawn_last:
-                if o.cell.coord == (14,10):print(o.name, "first", o.cell.coord)
-                if o.cell.coord == (14,11):print(o.name, "first", o.cell.coord)
-                screen.blit(img, rect.topleft)
-            #check static object:
-            if not o.is_ground: #then some neigboring objects may have to be blitted according to y-coord
-                self.blit_static_objects_around(screen, o, rect, reblitted)
+            rect, img = o.get_fakerect_and_img(s)
             if o.always_drawn_last:
-                if o.cell.coord == (14,10):print(o.name, "last", o.cell.coord)
-                if o.cell.coord == (14,11):print(o.name, "last", o.cell.coord)
-                screen.blit(img, rect.topleft)
-##        for o, img, r in reblitted:
-##            ...
+                drawn_last.add((rect,img,o))
+            else:
+                to_sort.add((rect,img,o))
+            self.log_static_objects_around(o, to_sort, drawn_last)
+        to_sort = sorted(to_sort, key=lambda x:x[0][-1])
+        for rect, img, o in to_sort:
+            screen.blit(img, (rect[0],rect[1]))
+        for rect, img, o in drawn_last:
+            screen.blit(img, (rect[0],rect[1]))
         if self.ui_manager:
             self.ui_manager.draw_after_objects(s)
-##        print(ftg)
+##        print([(o.cell.coord, o.name) for r,i,o in to_sort])
+##        print([(o.cell.coord, o.name) for r,i,o in drawn_last])
+##        print("***")
+
 
     def get_center_coord(self):
         return self.get_coord_at_pix(self.map_rect.center)

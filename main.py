@@ -48,10 +48,7 @@ game = Game(me)
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
 
-sinon : dresser la liste des clusters dobjets, et les blitter sequentiellement par ordre de bottom
-1ere boucle : parcourir tous les objets dyn, les ponts entre eux sont tous les objets dyn+stat.
-2eme boucle : parcourir les clusters et les blitter par ordre de bottom
-##bug : arbre avec au-dessus un autre object (bush, arbre), alors unit blitte dans les feuilles de l'arbre du dessous...
+##Toujours un probleme (aleatoire!!!!) avec l'arbre et magicien en (13,10) (cf "LALA")
 
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
 #conquete de base, batailles. Pas d'impots ni de destruction d'objets.

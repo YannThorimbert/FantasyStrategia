@@ -309,8 +309,10 @@ class MapInitializer:
                         "cobble":cobble, "bridge_h":bridge_h, "bridge_v":bridge_v}
         #4) we add the objects via distributors, to add them randomly in a nice way
         #normal forest
+        print("LALA 1", tree.max_relpos)
         distributor = objs.get_distributor(me, [fir1, fir2, tree],
                                             self._forest_map, ["Grass","Rock"])
+        print("LALA 2", tree.max_relpos)
         distributor.max_density = self.forest_max_density
         distributor.homogeneity = self.forest_homogeneity
         distributor.zones_spread = self.forest_zones_spread
