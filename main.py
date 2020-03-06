@@ -48,7 +48,6 @@ game = Game(me)
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
 
-##Toujours un probleme (aleatoire!!!!) avec l'arbre et magicien en (13,10) (cf "LALA")
 
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
 #conquete de base, batailles. Pas d'impots ni de destruction d'objets.

@@ -102,6 +102,7 @@ class MapInitializer:
         self.static_objects_n_octaves = None
         self.static_objects_persistance = 1.7
         self.static_objects_chunk = (12,24)
+        self.forest_relposy_multiplier = 1.5
         #normal forest:
         self.forest_text = "forest"
         self.tree = PW_PATH + "/mapobjects/images/tree.png"
@@ -309,16 +310,25 @@ class MapInitializer:
                         "cobble":cobble, "bridge_h":bridge_h, "bridge_v":bridge_v}
         #4) we add the objects via distributors, to add them randomly in a nice way
         #normal forest
-        print("LALA 1", tree.max_relpos)
-        distributor = objs.get_distributor(me, [fir1, fir2, tree],
+##        print("LALA 1", tree.relpos, tree.max_relpos, tree.min_relpos)
+        all_forest = [fir1, fir2, tree]
+        distributor = objs.get_distributor(me, all_forest,
                                             self._forest_map, ["Grass","Rock"])
-        print("LALA 2", tree.max_relpos)
+##        print("LALA 2", tree.relpos, tree.max_relpos, tree.min_relpos)
+        for obj in distributor.objs:
+            obj.max_relpos[1] *= self.forest_relposy_multiplier
+##        print("LALA 3", tree.relpos, tree.max_relpos, tree.min_relpos)
+##        tree.max_relpos = [0., -0.25] #!!!!!!!!!!!!!!!!!
+##        tree.max_relpos = list(tree.min_relpos)
+##        tree.randomize_relpos()
         distributor.max_density = self.forest_max_density
         distributor.homogeneity = self.forest_homogeneity
         distributor.zones_spread = self.forest_zones_spread
-        distributor.distribute_objects(self._static_objs_layer, exclusive=True)
+        distributor.distribute_objects(self._static_objs_layer, exclusive=True) #here, relpos is randomized for each object distributed
         #more trees in plains
         distributor = objs.get_distributor(me, [tree], self._forest_map, ["Grass"])
+        for obj in distributor.objs:
+            obj.max_relpos[1] *= self.forest_relposy_multiplier
         distributor.max_density = self.forest_max_density
         distributor.homogeneity = self.forest_homogeneity
         distributor.zones_spread = self.forest_zones_spread
@@ -326,12 +336,16 @@ class MapInitializer:
         #snow forest
         distributor = objs.get_distributor(me, [firsnow, firsnow.flip()],
                                         self._forest_map, ["Thin snow","Snow"])
+        for obj in distributor.objs:
+            obj.max_relpos[1] *= self.forest_relposy_multiplier
         distributor.max_density = self.forest_snow_max_density
         distributor.homogeneity = self.forest_snow_homogeneity
         distributor.zones_spread = self.forest_snow_zones_spread
         distributor.distribute_objects(self._static_objs_layer, exclusive=True)
         #palm forest
         distributor = objs.get_distributor(me, [palm, palm.flip()], self._forest_map, ["Sand"])
+        for obj in distributor.objs:
+            obj.max_relpos[1] *= self.forest_relposy_multiplier
         distributor.max_density = self.palm_max_density
         distributor.homogeneity = self.palm_homogeneity
         distributor.zones_spread = self.palm_zones_spread

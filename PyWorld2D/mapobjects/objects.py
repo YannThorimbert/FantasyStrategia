@@ -14,11 +14,17 @@ def sgn(x):
 
 def get_distributor(me, objects, forest_map, material_names,
                     limit_relpos_y=True):
-    if limit_relpos_y:
+    if limit_relpos_y: #then the max_relpos is set according to obj's factor
         for obj in objects:
+##            if obj.name == "forest":
+##                print("GETTING DISTRIBUTOR FOR FOREST", obj.max_relpos)
             obj.max_relpos[1] = (1. - obj.factor)/2.
+##            if obj.name == "forest":
+##                print("     ==> ", obj.max_relpos)
             if obj.min_relpos[1] > obj.max_relpos[1]:
                 obj.min_relpos[1] = obj.max_relpos[1]
+##                if obj.name == "forest":
+##                    print("Adapted min relpos")
     distributor = RandomObjectDistribution(objects, forest_map, me.lm)
     for name in material_names:
         if name in me.materials:
@@ -44,6 +50,9 @@ class RandomObjectDistribution:
     def distribute_objects(self, layer, exclusive=False):
         nx,ny = self.master_map.nx, self.master_map.ny
         dx, dy = random.randint(0,nx-1), random.randint(0,ny-1)
+        print("===DISTRIBUTING===")
+        for o in self.objs:
+            print("     ",o.name, o.max_relpos)
         for x,y in self.master_map:
             h = self.hmap[(x+dx)%nx][(y+dy)%ny]
             right_h = False

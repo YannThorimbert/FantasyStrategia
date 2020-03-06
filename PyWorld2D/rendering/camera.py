@@ -216,6 +216,9 @@ class Camera:
                             else:
                                 to_sort.add((so_rect,so_img,so))
 
+    #How it works:
+    #   We collect all the objects to be drawn, plus the static objects around them.
+    #   Then, we sort this big list by rect bottom coord, and we draw them.
     def draw_objects(self, screen, objs):
         s = self.lm.get_current_cell_size()
         if self.ui_manager:
@@ -229,7 +232,8 @@ class Camera:
             else:
                 to_sort.add((rect,img,o))
             self.log_static_objects_around(o, to_sort, drawn_last)
-        to_sort = sorted(to_sort, key=lambda x:x[0][-1])
+        #to_sort is on the form [((x,y,right,bottom),surface,object), ...]
+        to_sort = sorted(to_sort, key=lambda x:x[0][3])
         for rect, img, o in to_sort:
             screen.blit(img, (rect[0],rect[1]))
         for rect, img, o in drawn_last:
