@@ -49,6 +49,9 @@ game = Game(me)
 ################################################################################
 
 
+redessiner objets statiques :(
+
+
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
 #conquete de base, batailles. Pas d'impots ni de destruction d'objets.
 #village peuvent etre conquis et peuvent produire unites
@@ -59,13 +62,11 @@ game = Game(me)
 
 #2. FEUX:
     #pont, village peut bruler : faire qu'ils disparaissent en mm temps que le feu.
+    #       => laisse une terre brulee
     #feux fonctionnels : allumables, eteignables, s'eteignent seuls, empechent de passer
     #attention : bruler est une action a part entiere, empeche d'attaquer dans le meme tour
     #a quoi sert-il de bruler un territoire ? : a interdire son accès pour 2 tours, a detruire l'objet si burnable.
-    #peut-on les eteindre ? ==> Non
-    #interaction avec cellule deja enflammee
-    #duree des incendies
-    #effet sur la cellule après incendie.
+    #peut-on les eteindre ? ==> Non sauf magicien
 
 #3. VILLAGES:
 
@@ -149,9 +150,8 @@ game.add_unit((16,9), humans2["villager"], 15)
 game.add_unit((15,9), humans2["infantry"], 15)
 
 
-game.set_fire((9,6), 2)
+game.set_fire((9,6), 4)
 
-##game.get_cell_at(14,15).set_name("My left cell")
 ##game.get_cell_at(15,14).set_name("My top cell")
 
 #### GUI and events part #######################################################

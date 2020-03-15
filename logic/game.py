@@ -21,6 +21,8 @@ class Game:
         self.me = me
         self.units = []
         self.t = 0
+        self.days_left = 3 #set -1 for an infinite number of days
+        self.current_player = 1
         #
         self.sounds = thorpy.SoundCollection()
         self.deny_sound = self.sounds.add("sounds/ui/deny.wav")[0]
@@ -43,6 +45,33 @@ class Game:
         self.bridge_v, self.bridge_h = None, None
         self.bridges = []
 ##        self.fire.always_drawn_last = True
+
+    def extinguish(self, coord):
+        self.set_fire(coord, 0)
+
+    def end_turn(self):
+        to_extinguish = []
+        for x,y in self.burning:
+            for obj in self.get_cell_at(x,y).objects:
+                if obj.name == "fire":
+                    self.burning[(x,y)] -= 1
+                    if self.burning[(x,y)] == 0:
+                        to_extinguish.append((x,y))
+        for coord in to_extinguish:
+            self.extinguish(coord)
+        if self.current_player == 1:
+            #here process IA or other player if this is clicked by player 1:
+            self.current_player = 2
+        else:
+            self.current_player = 1
+            #process other things to reinitialize each turn:
+            ...
+            if self.days_left == 1:
+                #end game
+                ...
+            elif self.days_left > 1:
+                self.days_left -= 1
+
 
     def build_map(self, map_initializer, fast, use_beach_tiler, load_tilers):
         map_initializer.build_map(self.me, fast, use_beach_tiler, load_tilers)
@@ -90,8 +119,8 @@ class Game:
     def remove_object(self, o):
         o.remove_from_map(self.me)
 
-    def remove_unit(self, u): #just a wrapper
-        u.remove_from_game()
+##    def remove_unit(self, u): #just a wrapper
+##        u.remove_from_game()
 
     def set_fire(self, coord, n):
         #1. remove old fire if necessary
@@ -142,6 +171,8 @@ class Game:
                     if o.name == name:
                         objs.append(o)
         return o
+
+
 
 
 

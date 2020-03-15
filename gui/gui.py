@@ -152,7 +152,6 @@ class Gui:
                                                     e_load,
                                                     e_quit])
         self.menu.center()
-        self.time_remaining = time_remaining
         self.set_map_gui()
 
     def set_map_gui(self):
@@ -161,7 +160,7 @@ class Gui:
         self.hline = thorpy.Line(int(0.75*me.e_box.get_fus_rect().width), "h")
         me.add_gui_element(self.hline, True)
         ########################################################################
-        self.e_end_turn = thorpy.make_button("End turn")
+        self.e_end_turn = thorpy.make_button("End turn", self.game.end_turn)
         self.e_end_turn.set_font_size(int(1.2*guip.TFS))
         self.e_end_turn.set_font_color(guip.TFC)
         self.e_end_turn.scale_to_title()
@@ -181,12 +180,9 @@ class Gui:
         ########################################################################
         me.add_gui_element(self.hline.copy(), True)
         ########################################################################
-        if self.time_remaining > 0:
-            if self.time_remaining == 1:
-                text = "Last day !"
-            else:
-                text = str(self.time_remaining) + " days left"
-            self.e_time_remaining = guip.get_highlight_text(text)
+        text_day = self.get_day_text()
+        if text_day:
+            self.e_time_remaining = guip.get_highlight_text(text_day)
             me.add_gui_element(self.e_time_remaining, True)
         ########################################################################
         self.e_info_day = guip.get_title("Day 1")
@@ -194,10 +190,17 @@ class Gui:
         ########################################################################
         me.menu_button.user_func = self.launch_map_menu
 
+    def get_day_text(self):
+        if self.game.days_left > 0:
+            if self.game.days_left == 1:
+                return "Last day !"
+            else:
+                return str(self.game.days_left) + " days left"
+
     def extinguish(self):
         for o in self.cell_under_cursor.objects:
             if o.str_type == "fire":
-                self.game.set_fire(self.cell_under_cursor.coord, 0)
+                self.game.extinguish(self.cell_under_cursor.coord)
 
     def check_extinguish(self):
         u = self.selected_unit
@@ -393,7 +396,7 @@ class Gui:
                                                  1, ["village"], cell)
 
     def burn(self):
-        self.game.set_fire(self.cell_under_cursor.coord, 2)
+        self.game.set_fire(self.cell_under_cursor.coord, 4)
 
     def help(self, unit):
         print("Not implemented yet")
@@ -583,12 +586,17 @@ class Gui:
 
     def refresh(self):
         self.enhancer.refresh()
+        if self.game.days_left > 0:
+            self.e_time_remaining.set_text(self.get_day_text())
 
 ##    def add_flag(self):
 ##        self.game.add_unit((16,15), self.game.units[0].race["flag"], 1, team=self.game.units[0].team)
 
     def toggle_show_life(self):
         self.show_lifes = not(self.show_lifes)
+        print("*** sdgjksdgjk")
+        tree = self.game.get_cell_at(18,3).objects[0]
+        tree.remove_from_map(self.game.me)
 
     def add_reactions(self):
         reac_click = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, self.lmb,{"button":1})

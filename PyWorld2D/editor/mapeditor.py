@@ -290,6 +290,13 @@ class MapEditor:
         self.img_cursor = self.cursors[self.cursor_color][self.idx_cursor]
         self.cursor_slowness = int(0.3*self.fps)
 
+    def modify_cell(self, x, y):
+        self.lm.rebuild_surfaces(x,y)
+        self.lm.reblit_objects(x,y)
+        for lay in self.lm.layers:
+            lay.rebuild_surfaces(x,y)
+            lay.reblit_objects(x,y)
+
 
     def set_zoom(self, level, refresh_slider=True):
         center_before = self.cam.get_center_coord()

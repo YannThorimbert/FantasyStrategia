@@ -50,9 +50,6 @@ class RandomObjectDistribution:
     def distribute_objects(self, layer, exclusive=False):
         nx,ny = self.master_map.nx, self.master_map.ny
         dx, dy = random.randint(0,nx-1), random.randint(0,ny-1)
-        print("===DISTRIBUTING===")
-        for o in self.objs:
-            print("     ",o.name, o.max_relpos)
         for x,y in self.master_map:
             h = self.hmap[(x+dx)%nx][(y+dy)%ny]
             right_h = False
@@ -69,8 +66,39 @@ class RandomObjectDistribution:
                         if random.random() < self.homogeneity:
                             obj = random.choice(self.objs)
                             obj = obj.add_copy_on_cell(cell)
+                            obj.is_static = True
                             obj.randomize_relpos()
                             layer.static_objects.append(obj)
+
+##class RandomInteractiveObjectDistribution:
+##
+##    def __init__(self, objs, hmap, master_map):
+##        self.objs = objs
+##        self.hmap = hmap
+##        self.master_map = master_map
+##        assert master_map.nx <= len(hmap) and master_map.ny <= len(hmap[0])
+##        self.materials = []
+##        self.max_density = 1
+##        self.homogeneity = 0.5
+##        self.zones_spread = [(0.,1.)]
+##
+##    def distribute_objects(self, game, n_per_cell=1, rand_relpos=True):
+##        nx,ny = self.master_map.nx, self.master_map.ny
+##        dx, dy = random.randint(0,nx-1), random.randint(0,ny-1)
+##        for x,y in self.master_map:
+##            h = self.hmap[(x+dx)%nx][(y+dy)%ny]
+##            right_h = False
+##            for heigth,spread in self.zones_spread:
+##                if abs(h-heigth) < spread:
+##                    right_h = True
+##                    break
+##            if right_h:
+##                cell = self.master_map.cells[x][y]
+##                if cell.material in self.materials:
+##                    for i in range(self.max_density):
+##                        if random.random() < self.homogeneity:
+##                            obj = random.choice(self.objs)
+##                            game.add_object((x,y), obj, n_per_cell, rand_relpos)
 
 def put_static_obj(obj, lm, coord, layer):
     cop = obj.add_copy_on_cell(lm[coord])
@@ -82,7 +110,6 @@ def remove_objects(cell, layer):
         for obj in cell.objects:
             layer.static_objects.remove(obj)
         cell.objects = []
-
 
 class MapObject:
     current_id = 1
@@ -149,6 +176,7 @@ class MapObject:
         self.is_ground = False #always drawn first
         self.can_interact = False
         self.always_drawn_last = False
+        self.is_static = False
 
     def get_cell_coord(self):
         return self.cell.coord
@@ -251,7 +279,11 @@ class MapObject:
 
     def remove_from_map(self, me):
         """To use only for dynamic objects !"""
-        me.dynamic_objects.remove(self)
+        if self.is_static: #shit happens...
+            layer = self.editor.map_initializer._static_objs_layer
+
+        else: #easy
+            me.dynamic_objects.remove(self)
         self.remove_from_cell()
 
     def move_to_cell(self, dest_cell):

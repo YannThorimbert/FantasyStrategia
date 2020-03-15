@@ -132,11 +132,11 @@ class MapInitializer:
         self.bush = PW_PATH + "/mapobjects/images/yar_bush.png"
         self.bush_size = 1.
         self.village1 = PW_PATH + "/mapobjects/images/house0.png"
-        self.village2 = PW_PATH + "/mapobjects/images/house2.png"
-        self.village3 = PW_PATH + "/mapobjects/images/house3.png"
+##        self.village2 = PW_PATH + "/mapobjects/images/house2.png"
+##        self.village3 = PW_PATH + "/mapobjects/images/house3.png"
         self.village1_size = 1.
-        self.village2_size = 1.
-        self.village3_size = 1.
+##        self.village2_size = 1.
+##        self.village3_size = 1.
         self.village_homogeneity = 0.05
 ##        self.village1 = PW_PATH + "/mapobjects/images/pepperRacoon.png
 ##        self.village2 = PW_PATH + "/mapobjects/images/rgbfumes1.png"
@@ -287,9 +287,11 @@ class MapInitializer:
         palm.min_relpos[0] = -0.1
         bush = MapObject(me,self.bush,"bush",self.bush_size)
         village1 = MapObject(me,self.village1, "village",self.village1_size)
-        village2 = MapObject(me,self.village2, "village",self.village2_size)
-        village3 = MapObject(me,self.village3, "village",self.village3_size)
-        for v in [village1,village2,village3]:
+##        village2 = MapObject(me,self.village2, "village",self.village2_size)
+##        village3 = MapObject(me,self.village3, "village",self.village3_size)
+##        all_villages = [village1,village2,village3]
+        all_villages = [village1]
+        for v in all_villages:
             v.max_relpos = [0, 0.15]
             v.min_relpos = [0, 0.1]
         #
@@ -357,13 +359,8 @@ class MapInitializer:
         distributor.zones_spread = [(0., 0.05), (0.3,0.05), (0.6,0.05)]
         distributor.distribute_objects(self._static_objs_layer)
         #villages
-        distributor = objs.get_distributor(me,
-##                                [village1, village1.flip(), village2, village2.flip(),
-##                                 village3, village3.flip(), village4, village4.flip()],
-##                                [village1, village1.flip(), village2, village2.flip(), village3, village3.flip()],
-                                    [village1, village1.flip()],
-##                                 village3, village3.flip(), village4, village4.flip()],
-                                self._forest_map, ["Grass"], limit_relpos_y=False)
+        distributor = objs.get_distributor(me, [village1, village1.flip()],
+                            self._forest_map, ["Grass"], limit_relpos_y=False)
         distributor.max_density = 1
         distributor.homogeneity = self.village_homogeneity
         distributor.zones_spread = [(0.1, 0.05), (0.2,0.05), (0.4,0.05), (0.5,0.05)]
@@ -481,6 +478,10 @@ class MapInitializer:
         update_loading_bar(loading_bar, "Building surfaces", 0.9, graphical_load)
         me.build_surfaces()
         me.build_gui_elements()
+
+    def rebuild_cell(self, me, x, y):
+        rebuild_lm_cell(me, x, y)
+        me.modify_cell(x, y)
 
 
     def h(self, x,y,h):

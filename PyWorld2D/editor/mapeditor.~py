@@ -100,7 +100,7 @@ class MapEditor:
         else:
             if registered != obj.int_type: #conflict
                 print("Object types:", self.object_types)
-                raise Exception("Object type already exists:", obj.object_type)
+                raise Exception("Object type already exists:", obj.int_type)
 
     def get_fn(self):
         return self.name.replace(" ","_")+".map"
@@ -289,6 +289,10 @@ class MapEditor:
         self.idx_cursor = 0
         self.img_cursor = self.cursors[self.cursor_color][self.idx_cursor]
         self.cursor_slowness = int(0.3*self.fps)
+
+    def modify_cell(self, x, y):
+        self.lm.rebuild_surfaces(x,y)
+        self.lm.reblit_objects(x,y)
 
 
     def set_zoom(self, level, refresh_slider=True):
