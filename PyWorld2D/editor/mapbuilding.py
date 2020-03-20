@@ -161,7 +161,6 @@ class MapInitializer:
         ############ End of user-defined parameters
         self.user_objects = []
         self._forest_map = None
-        self._static_objs_layer = None
         self._objects = {}
         self.heights = []
         self.seed_static_objects = self.chunk
@@ -268,9 +267,7 @@ class MapInitializer:
                                             persistance=self.static_objects_persistance,
                                             chunk=self.static_objects_chunk)
         ng.normalize(self._forest_map)
-        #we can use as many layers as we want.
-        #self._static_objs_layer is a superimposed map on which we decide to blit some static objects:
-        self._static_objs_layer = me.add_layer()
+        #me.lm is a superimposed map on which we decide to blit some static objects:
         #3) We build the objects that we want.
         # its up to you to decide what should be the size of the object (3rd arg)
         tree = MapObject(me,self.tree,self.forest_text,self.tree_size)
@@ -279,7 +276,7 @@ class MapInitializer:
         fir1.max_relpos = [0., 0.]
         fir2 = MapObject(me,self.fir2,self.forest_text,self.fir2_size)
         fir2.max_relpos = [0., 0.]
-        firsnow = MapObject(me,self.firsnow,self.forest_snow_text,self.firsnow_size)
+        firsnow = MapObject(me,self.firsnow, self.forest_snow_text, self.firsnow_size)
         firsnow.max_relpos = [0., 0.]
         fir1.set_same_type([fir2, firsnow])
         palm = MapObject(me,self.palm,self.palm_text,self.palm_size)
@@ -326,7 +323,7 @@ class MapInitializer:
         distributor.max_density = self.forest_max_density
         distributor.homogeneity = self.forest_homogeneity
         distributor.zones_spread = self.forest_zones_spread
-        distributor.distribute_objects(self._static_objs_layer, exclusive=True) #here, relpos is randomized for each object distributed
+        distributor.distribute_objects(me.lm, exclusive=True) #here, relpos is randomized for each object distributed
         #more trees in plains
         distributor = objs.get_distributor(me, [tree], self._forest_map, ["Grass"])
         for obj in distributor.objs:
@@ -334,7 +331,7 @@ class MapInitializer:
         distributor.max_density = self.forest_max_density
         distributor.homogeneity = self.forest_homogeneity
         distributor.zones_spread = self.forest_zones_spread
-        distributor.distribute_objects(self._static_objs_layer, exclusive=True)
+        distributor.distribute_objects(me.lm, exclusive=True)
         #snow forest
         distributor = objs.get_distributor(me, [firsnow, firsnow.flip()],
                                         self._forest_map, ["Thin snow","Snow"])
@@ -343,7 +340,7 @@ class MapInitializer:
         distributor.max_density = self.forest_snow_max_density
         distributor.homogeneity = self.forest_snow_homogeneity
         distributor.zones_spread = self.forest_snow_zones_spread
-        distributor.distribute_objects(self._static_objs_layer, exclusive=True)
+        distributor.distribute_objects(me.lm, exclusive=True)
         #palm forest
         distributor = objs.get_distributor(me, [palm, palm.flip()], self._forest_map, ["Sand"])
         for obj in distributor.objs:
@@ -351,20 +348,20 @@ class MapInitializer:
         distributor.max_density = self.palm_max_density
         distributor.homogeneity = self.palm_homogeneity
         distributor.zones_spread = self.palm_zones_spread
-        distributor.distribute_objects(self._static_objs_layer, exclusive=True)
+        distributor.distribute_objects(me.lm, exclusive=True)
         #bushes
         distributor = objs.get_distributor(me, [bush], self._forest_map, ["Grass"])
         distributor.max_density = 2
         distributor.homogeneity = 0.2
         distributor.zones_spread = [(0., 0.05), (0.3,0.05), (0.6,0.05)]
-        distributor.distribute_objects(self._static_objs_layer)
+        distributor.distribute_objects(me.lm)
         #villages
         distributor = objs.get_distributor(me, [village1, village1.flip()],
                             self._forest_map, ["Grass"], limit_relpos_y=False)
         distributor.max_density = 1
         distributor.homogeneity = self.village_homogeneity
         distributor.zones_spread = [(0.1, 0.05), (0.2,0.05), (0.4,0.05), (0.5,0.05)]
-        distributor.distribute_objects(self._static_objs_layer, exclusive=True)
+        distributor.distribute_objects(me.lm, exclusive=True)
         cobbles = [cobble, cobble.flip(True,False),
                     cobble.flip(False,True), cobble.flip(True,True)]
         ############################################################################
@@ -421,7 +418,7 @@ class MapInitializer:
                                     max_length=self.max_river_length)
             if n_roads < self.max_number_of_roads:
                 n_roads += 1
-                add_random_road(me.lm, self._static_objs_layer, cobbles,
+                add_random_road(me.lm, me.lm, cobbles,
                                     (bridge_h,bridge_v),
                                     costs_materials_road,
                                     costs_objects_road,
@@ -441,8 +438,8 @@ class MapInitializer:
             #insert at the beginning because it is the last object
             #think e.g. of a wooden bridge over a river. What the unit sees is
             #the wooden bridge
-##            self._static_objs_layer.static_objects.insert(0,obj)
-            self._static_objs_layer.static_objects.append(obj)
+##            me.lm.static_objects.insert(0,obj)
+            me.lm.static_objects.append(obj)
 
 
     def build_map(self, me, fast=False, use_beach_tiler=True, load_tilers=False,
@@ -479,9 +476,6 @@ class MapInitializer:
         me.build_surfaces()
         me.build_gui_elements()
 
-    def rebuild_cell(self, me, x, y):
-        rebuild_lm_cell(me, x, y)
-        me.modify_cell(x, y)
 
 
     def h(self, x,y,h):

@@ -67,9 +67,6 @@ class Camera:
         self.lm.draw(screen, self.map_rect.topleft, xpix, ypix)
         if show_grid_lines:
             self.draw_grid_lines(screen)
-        for lay in self.lm.layers:
-            lay.draw(screen, self.map_rect.topleft, xpix, ypix)
-
 
     def draw_grid_lines(self, screen):
         coord = self.get_coord_at_pix(self.map_rect.topleft+V2(1,1))
@@ -88,10 +85,6 @@ class Camera:
     def set_mg_pos_from_rcam(self):
         self.lm.current_x = int(self.rcam.x)
         self.lm.current_y = int(self.rcam.y)
-        #
-        for lay in self.lm.layers:
-            lay.current_x = self.lm.current_x
-            lay.current_y = self.lm.current_y
 
     def set_campos_from_rcam(self):
         self.campos = V2(self.rcam.topleft)

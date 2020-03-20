@@ -234,14 +234,14 @@ class MapEditor:
     def set_map(self, logical_map):
         self.cam.set_map_data(logical_map)
 
-    def add_layer(self, white_value=(255,255,255)):
-        outsides = self.materials["outside"].imgs
-        lay = WhiteLogicalMap(self.map_rects, outsides, self.lm.cell_sizes,
-                                self.nframes, self.cam.world_size, white_value)
-##        lay = WhiteLogicalMap(hmap, map_rects, outsides, desired_world_size,
-##                                white_value=white_value)
-        self.lm.add_layer(lay)
-        return lay
+##    def add_layer(self, white_value=(255,255,255)):
+##        outsides = self.materials["outside"].imgs
+##        lay = WhiteLogicalMap(self.map_rects, outsides, self.lm.cell_sizes,
+##                                self.nframes, self.cam.world_size, white_value)
+####        lay = WhiteLogicalMap(hmap, map_rects, outsides, desired_world_size,
+####                                white_value=white_value)
+##        self.lm.add_layer(lay)
+##        return lay
 
 
     def build_camera(self, img_hmap):
@@ -272,15 +272,10 @@ class MapEditor:
 
 
     def build_surfaces(self, sort_objects=True):
-        self.lm.build_surfaces()
+        self.lm.build_surfaces() #build surfaces attribute of graphical maps
 ##        self.lm.build_surfaces_fast()
-        self.lm.blit_objects(sort=sort_objects)
-        for lay in self.lm.layers:
-            lay.build_surfaces()
-             #save BEFORE we blit objects (unless we want the objects to be part of the permanent map)
-##            lay.save_pure_surfaces()
-            lay.blit_objects(sort=sort_objects)
-        #
+        self.lm.blit_objects(sort=sort_objects) #blit objs on graphical maps
+        ########################################################################
         cursors_n = gui.get_cursors(self.cell_rect.inflate((2,2)),
                                         guip.CURSOR_COLOR_NORMAL)
         cursors_s = gui.get_cursors(self.cell_rect.inflate((2,2)),
@@ -290,12 +285,26 @@ class MapEditor:
         self.img_cursor = self.cursors[self.cursor_color][self.idx_cursor]
         self.cursor_slowness = int(0.3*self.fps)
 
-    def modify_cell(self, x, y):
-        self.lm.rebuild_surfaces(x,y)
-        self.lm.reblit_objects(x,y)
-        for lay in self.lm.layers:
-            lay.rebuild_surfaces(x,y)
-            lay.reblit_objects(x,y)
+    def rebuild_cell_graphics(self, cell): #blit_objects doit blitter que sur la cellule qui a change !!!!
+        xc,yc = cell.coord
+        static_objects = {}
+        cells_to_refresh = []
+        print("***RCG", xc,yc)
+        for x in range(xc-2,xc+3):
+            for y in range(yc-2,yc+3):
+                cell = self.lm.get_cell_at(x,y)
+                if cell:
+                    dx, dy = abs(xc-x), abs(yc-y)
+                    if dx < 2 and dy < 2:
+                        cells_to_refresh.append(cell)
+                        self.lm.reblit_material_of_cell(cell)
+                    static_objects[(x,y)] = [o for o in self.lm.static_objects if o.cell is cell]
+        for x in range(xc-2,xc+3):
+            for y in range(yc-2,yc+3):
+                coord = (x,y)
+                if coord in static_objects:
+                    objs = static_objects[(x,y)]
+                    self.lm.blit_objects_only_on_cells(objs, cells_to_refresh)
 
 
     def set_zoom(self, level, refresh_slider=True):
@@ -497,7 +506,6 @@ class MapEditor:
 
     def refresh_derived_parameters(self):
         self.cell_size = self.zoom_cell_sizes[self.zoom_level]
-        print(self.zoom_cell_sizes)
         self.cell_rect = pygame.Rect(0,0,self.cell_size,self.cell_size)
         self.max_minimap_size = (self.max_wanted_minimap_size,)*2
         self.menu_size = (self.menu_width, self.H)

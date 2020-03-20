@@ -115,7 +115,7 @@ class CellInfo:
             self.launched = False
 
     def update_em(self, cell):
-        new_img = cell.extract_all_layers_img_at_zoom(0)
+        new_img = cell.get_current_img_at_zoom(0)
         self.em_mat_img_img.set_image(new_img)
         #
         text = cell.material.name
@@ -212,7 +212,7 @@ class CellInfo:
             text = objs[0]
         self.e_obj_name.set_text(text.capitalize())
         #
-        new_img = cell.extract_all_layers_img_at_zoom(0)
+        new_img = cell.get_static_img_at_zoom(0)
         self.e_mat_img.set_image(new_img)
         if len(objs) > 0:
             thorpy.store(self.e_mat_obj)

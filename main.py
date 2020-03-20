@@ -49,7 +49,10 @@ game = Game(me)
 ################################################################################
 
 
-redessiner objets statiques :(
+##redessiner objets statiques : faire cellules autour. Parcourir dans le bon ordre !
+
+
+##ajouter des objets statiques a la creation...
 
 
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
@@ -151,13 +154,14 @@ game.add_unit((15,9), humans2["infantry"], 15)
 
 
 game.set_fire((9,6), 4)
+game.set_fire((17,9), 4)
 
 ##game.get_cell_at(15,14).set_name("My top cell")
 
 #### GUI and events part #######################################################
 
 ui = gui.Gui(game)
-game.outdoor_sound.play(-1)
+##game.outdoor_sound.play(-1)
 
 def func_reac_time(): #here add wathever you want
     """Function called each frame"""

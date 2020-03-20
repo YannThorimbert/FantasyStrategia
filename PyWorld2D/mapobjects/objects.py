@@ -278,13 +278,14 @@ class MapObject:
             self.cell.unit = None
 
     def remove_from_map(self, me):
-        """To use only for dynamic objects !"""
-        if self.is_static: #shit happens...
-            layer = self.editor.map_initializer._static_objs_layer
-
+        self.remove_from_cell()
+        if self.is_static:
+            print("Removing static object...")
+            if self in me.lm.static_objects:
+                me.lm.static_objects.remove(self)
+            me.rebuild_cell_graphics(self.cell)
         else: #easy
             me.dynamic_objects.remove(self)
-        self.remove_from_cell()
 
     def move_to_cell(self, dest_cell):
 ##        assert dest_cell.unit is None

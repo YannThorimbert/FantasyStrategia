@@ -455,6 +455,9 @@ class Gui:
                                                                     cell.coord[1])
                 if interactibles:
                     if cell.unit is None:
+                        choices = self.get_interaction_choices(interactibles)
+                        if choices:
+                            self.user_make_choice(choices)
                         self.treat_click_destination(cell)
                     else:
                         choices = self.get_interaction_choices(interactibles)
@@ -594,10 +597,9 @@ class Gui:
 
     def toggle_show_life(self):
         self.show_lifes = not(self.show_lifes)
-        print("*** sdgjksdgjk")
-        tree = self.game.get_cell_at(18,3).objects[0]
-##        self.game.remove_static_object(tree)
-        tree.remove_from_map(self.game.me)
+        house = self.game.get_cell_at(27,1).objects[0]
+        print("*** Removing", house.name)
+        house.remove_from_map(self.game.me)
 
     def add_reactions(self):
         reac_click = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, self.lmb,{"button":1})

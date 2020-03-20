@@ -45,11 +45,8 @@ class LogicalCell:
     def get_altitude(self):
         return (self.h-0.6)*2e4
 
-    def get_img_at_zoom(self, level):
-        return self.map.get_img_at_zoom(self.coord, level)
-
-    def extract_all_layers_img_at_zoom(self, level):
-        return self.map.extract_all_layers_img_at_zoom(self.coord, level)
+    def get_static_img_at_zoom(self, level):
+        return self.map.get_static_img_at_zoom(self.coord, level)
 
     def has_object_name(self, name):
         for o in self.objects:
@@ -66,8 +63,8 @@ class WhiteLogicalCell:
         self.map = logical_map
         self.imgs = None
 
-    def get_img_at_zoom(self, level):
-        return self.map.get_img_at_zoom(self.coord, level)
+    def get_static_img_at_zoom(self, level):
+        return self.map.get_static_img_at_zoom(self.coord, level)
 
 
 class GraphicalCell:
@@ -101,8 +98,6 @@ class LogicalMap(BaseGrid):
             self.cell_sizes.append(cell_size)
         self.current_gm = self.graphical_maps[0]
         #
-        self.layers = []
-        #
         self.nframes = len(material_couples[0].get_tilers(0))
         self.t = 0 #in unit of materials frame
         self.t2 = 0 #used for fast animated graphics
@@ -126,9 +121,6 @@ class LogicalMap(BaseGrid):
         elif number == const.SLOW:
             return self.frame_slowness3
 
-    def add_layer(self, lay):
-        lay.frame_slowness = self.frame_slowness
-        self.layers.append(lay)
 
     def get_current_cell_size(self):
         return self.cell_sizes[self.current_zoom_level]
@@ -144,8 +136,6 @@ class LogicalMap(BaseGrid):
             self.current_y = 0
         elif self.current_y > self.ny-2:
             self.current_y = self.ny-2
-        for lay in self.layers:
-            lay.set_zoom(level)
 
     def next_frame(self):
         self.tot_time += 1
@@ -155,8 +145,6 @@ class LogicalMap(BaseGrid):
             self.t3 += 1
         if self.tot_time % self.frame_slowness == 0:
             self.t = (self.t+1) % self.nframes
-            for lay in self.layers:
-                lay.t = self.t
             return True
 
     def refresh_cell_heights(self, hmap):
@@ -217,37 +205,28 @@ class LogicalMap(BaseGrid):
                 gm[x,y].imgs = cell.couple.get_all_frames(zoom, type)
 
 
-    def get_img_at_zoom(self, coord, zoom):
+
+    def get_static_img_at_zoom(self, coord, zoom):
         """Returns the image contained on permanent cell of self.
         Use extract_img_at_zoom if you need the cell plus all what has been
-        drawn on self's surface."""
+        dynamically added (drawn) on self's surface."""
         if self.is_inside(coord):
-            return self.graphical_maps[zoom][coord].imgs[self.t]
+            img = pygame.Surface((self.cell_sizes[0],)*2)
+            self.extract_static_img_at_zoom(coord,zoom,img)
+            return img
+##            return self.graphical_maps[zoom][coord].imgs[self.t]
         else:
             return self.graphical_maps[zoom].outside_imgs[self.t]
 
-    def extract_img_at_zoom(self, coord, zoom, img):
+    def extract_static_img_at_zoom(self, coord, zoom, img):
         """Returns the image of the cell of self plus what has been drawn on
         self's surface.
-        Use get_img_at_zoom if you need the cell only."""
+        Use get_static_img_at_zoom if you need the cell only."""
         if self.is_inside(coord):
-            self.graphical_maps[zoom].extract_img(coord, self.t, img)
+            self.graphical_maps[zoom].extract_static_img(coord, self.t, img)
         else:
             img.blit(self.graphical_maps[zoom].outside_imgs[self.t],(0,0))
 
-    def extract_all_layers_img_at_zoom(self, coord, zoom):
-        """Fusion all the images extracted from all the layers of self."""
-        if self.is_inside(coord):
-            img = pygame.Surface((self.cell_sizes[zoom],)*2)
-            img.blit(self.get_img_at_zoom(coord, zoom), (0,0)) #I dont know why I have to do that to avoid bug of spurious static objects...
-            for lay in [self]+self.layers:
-                lay.extract_img_at_zoom(coord, zoom, img)
-            return img
-        else:
-            img = self.graphical_maps[zoom].outside_imgs[self.t]
-            for lay in self.layers:
-                img.blit(lay[coord].imgs[self.t], (0,0))
-            return img
 
 
     def get_graphical_cell(self, coord, zoom):
@@ -261,9 +240,15 @@ class LogicalMap(BaseGrid):
 
     def build_surfaces(self):
         for gm in self.graphical_maps:
-            print("     Building graphicalmap for size ", gm.cell_size)
+            print("     Logical map building graphical map for size ",
+                    gm.cell_size)
             gm.generate_submaps_parameters(factor=SUBMAP_FACTOR)
             gm.build_surfaces(self.colorkey)
+
+    def reblit_material_of_cell(self, cell):
+        print("REBUILDING MATERIAL OF CELL AT", cell.coord)
+        for gm in self.graphical_maps:
+            gm.reblit_material_of_cell(cell)
 
     def build_surfaces_fast(self):
         """Not that fast..."""
@@ -273,11 +258,6 @@ class LogicalMap(BaseGrid):
         if len(self.graphical_maps) > 1:
             for gm in self.graphical_maps[1:]:
                 gm.build_surfaces_from(self.colorkey, ref)
-
-    def blit_object(self, obj): #this is permanent
-        """Permanently blit obj onto self's surfaces."""
-        for level, gm in enumerate(self.graphical_maps):
-            gm.blit_object(obj)
 
     def save_pure_surfaces(self):
         for gm in self.graphical_maps:
@@ -295,6 +275,21 @@ class LogicalMap(BaseGrid):
             objects.sort(key=lambda x: x.ypos())
         for obj in objects:
             self.blit_object(obj)
+
+    def blit_objects_only_on_cells(self, objs, cells):
+        """Blit objs only on the specified cells, cropping the rest"""
+        for o in objs:
+            for c in cells:
+                for level, gm in enumerate(self.graphical_maps):
+                    gm.blit_object_only_on_cell(o,c)
+
+    def blit_object(self, obj): #this is permanent
+        """Permanently blit obj onto self's surfaces."""
+        for level, gm in enumerate(self.graphical_maps):
+            gm.blit_object(obj)
+
+
+
 ##    def show(self):
 ##        monitor.show()
 
@@ -343,6 +338,23 @@ class GraphicalMap(PygameGrid):
                     surfaces[surfx][surfy][t].set_colorkey(colorkey)
         #
         self.surfaces = surfaces
+
+
+
+    def reblit_material_of_cell(self, cell):
+        """Blit the base surface (terrain)"""
+        x,y = cell.coord
+##        cell_object = self.get_cell_rect_at_coord_in_submap(cell.coord)
+##        cell_object.inflate_ip((self.cell_size//3,)*2)
+##        cell_here = self.get_cell_rect_at_coord_in_submap((x, y))
+##        area_to_be_blitted = cell_here.clip(cell_object)
+        surfx = x*self.cell_size//self.submap_size[0]
+        surfy = y*self.cell_size//self.submap_size[1]
+        xpix = x*self.cell_size - surfx*self.submap_size[0]
+        ypix = y*self.cell_size - surfy*self.submap_size[1]
+        for t in range(self.nframes):
+            img = self[(x,y)].imgs[t]
+            self.surfaces[surfx][surfy][t].blit(img, (xpix,ypix))
 
 
     def build_surfaces_from(self, colorkey, gm):
@@ -400,6 +412,126 @@ class GraphicalMap(PygameGrid):
                         img = obj.imgs_z_t[self.level][t%obj.nframes]
                         self.surfaces[cx][cy][t].blit(img, (x,y))
 
+
+##    def blit_object_at(self, obj, x_cell, y_cell):
+##        """blit image <obj_img> on self's surface, and only on the part of
+##        self's surface belonging to the cell (x_cell,y_cell)."""
+####        if o img_rect touch this cell's rect..., leave this fucking function !
+####        obj_img_rect = obj.
+##        #
+##        relpos = obj.relpos
+##        xobj, yobj = obj.cell.coord
+##        obj_rect = obj.imgs_z_t[self.level][0].get_rect()
+##        obj_rect.center = (self.cell_size//2,)*2
+##        dx, dy = int(relpos[0]*self.cell_size), int(relpos[1]*self.cell_size)
+##        obj_rect.move_ip(dx,dy)
+##        #fill table of surfaces
+##        # ######################################################################
+##        #xpix_tot [pix] : location of xobj in the global map
+##        #surfx [sub] : coord of the subsurface containing xobj
+##        #xpix [pix] : location of xobj in the sub surface (local map)
+##        xpix_tot = xobj*self.cell_size
+##        ypix_tot = yobj*self.cell_size
+##        surfx = xpix_tot//self.submap_size[0]
+##        surfy = ypix_tot//self.submap_size[1]
+##        xpix_sub = xpix_tot - surfx*self.submap_size[0] + obj_rect.x
+##        ypix_sub = ypix_tot - surfy*self.submap_size[1] + obj_rect.y
+##        # ######################################################################
+##        #it is possible that the cell is spread on different subsurfaces !
+##        #hence we loop :
+##        for dx in range(-1,2): #not cell ! Just self's subsurfaces
+##            for dy in range(-1,2): #not cell ! Just self's subsurfaces
+##                cx, cy = surfx+dx, surfy+dy
+##                #cx and cy are the subsurface coord of the current subsurface
+##                #control that the subsurface exists:
+##                if 0 <= cx < self.n_submaps[0] and 0 <= cy < self.n_submaps[1]:
+##                    #x [pix]is the location of the obj image in the subsurface of coord cx,cy
+##                    x = xpix_sub - dx*self.submap_size[0]
+##                    y = ypix_sub - dy*self.submap_size[1]
+##                    for t in range(self.nframes):
+##                        img_obj = obj.imgs_z_t[self.level][t%obj.nframes]
+##                        img_rect = img_obj.get_rect()
+##                        img_rect.topleft = x,y
+##                        cell_rect = self.get_cell_rect_at_coord_in_submap(obj.cell.coord)
+##                        print("RECTs", img_rect, cell_rect)
+##                        area_to_be_blitted = cell_rect.clip(img_rect)
+##        ##                area_to_be_blitted = img_rect.clip(cell_rect)
+##        ##                reste a rebouger en haut a gauche...
+##                        area_to_be_blitted.move_ip((-x,-y))
+##                        print("ATBB", area_to_be_blitted, img_rect)
+##                        self.surfaces[cx][cy][t].blit(img_obj, (x+area_to_be_blitted.x,y+area_to_be_blitted.y), area_to_be_blitted)
+##        ##                self.surfaces[cx][cy][t].blit(img_obj, (x,y))
+
+
+    def blit_object_only_on_cell(self, obj, cell):
+        """blit image <obj_img> on self's surface, and only on the part of
+        self's surface belonging to the cell (x_cell,y_cell)."""
+##        if o img_rect touch this cell's rect..., leave this fucking function !
+        #First we deduce the absolute pos of the obj from its rel pos in the cell
+        relpos = obj.relpos
+        xobj, yobj = obj.cell.coord
+        obj_rect = obj.imgs_z_t[self.level][0].get_rect()
+        obj_rect.center = (self.cell_size//2,)*2
+        dx, dy = int(relpos[0]*self.cell_size), int(relpos[1]*self.cell_size)
+        obj_rect.move_ip(dx,dy)
+        #fill table of surfaces
+        # ######################################################################
+        #xpix_tot [pix] : location of xobj in the global map
+        #surfx [sub] : coord of the subsurface containing xobj
+        #xpix [pix] : location of xobj in the sub surface (local map)
+        xpix_tot = xobj*self.cell_size
+        ypix_tot = yobj*self.cell_size
+        surfx = xpix_tot//self.submap_size[0]
+        surfy = ypix_tot//self.submap_size[1]
+        xpix_sub = xpix_tot - surfx*self.submap_size[0] + obj_rect.x
+        ypix_sub = ypix_tot - surfy*self.submap_size[1] + obj_rect.y
+        # ######################################################################
+##        cell_rect = self.get_cell_rect_at_coord_in_submap(cell.coord)
+##        print("*** ", cell_rect, obj_rect)
+##        if cell_rect.colliderect(obj_rect):
+##            print("COLLIDING ! ", cell.coord, obj.cell.coord, obj.name)
+##        else:
+##            print("     NOT COLLIDING ! ", cell.coord, obj.cell.coord, obj.name)
+##        return
+        #it is possible that the cell is spread on different subsurfaces !
+        #hence we loop :
+        for dx in range(-1,2): #not cell ! Just self's subsurfaces
+            for dy in range(-1,2): #not cell ! Just self's subsurfaces
+                cx, cy = surfx+dx, surfy+dy
+                #cx and cy are the subsurface coord of the current subsurface
+                #control that the subsurface exists:
+                if 0 <= cx < self.n_submaps[0] and 0 <= cy < self.n_submaps[1]:
+                    #x [pix]is the location of the obj image in the subsurface of coord cx,cy
+                    x = xpix_sub - dx*self.submap_size[0]
+                    y = ypix_sub - dy*self.submap_size[1]
+                    for t in range(self.nframes):
+                        img_obj = obj.imgs_z_t[self.level][t%obj.nframes]
+                        #ACCORDING TO ME, WE SHOULD CROP... But it seems to work anyway...
+##                        img_rect = img_obj.get_rect()
+##                        img_rect.topleft = x,y
+##                        cell_rect = self.get_cell_rect_at_coord_in_submap(cell.coord)
+##                        print("***", cell_rect, img_rect)
+##                        if cell_rect.colliderect(obj_rect):
+##                            print("COLLIDING ! ", cell.coord, obj.cell.coord, obj.name)
+##                        else:
+##                            print("     NOT COLLIDING ! ", cell.coord, obj.cell.coord, obj.name)
+
+##                        return
+
+##                        print("RECTs", img_rect, cell_rect)
+##                        area_to_be_blitted = cell_rect.clip(img_rect)
+##                        area_to_be_blitted = img_rect.clip(cell_rect)
+##                        reste a rebouger en haut a gauche...
+##                        area_to_be_blitted.move_ip((-x,-y))
+##                        print("ATBB", area_to_be_blitted, img_rect)
+##                        self.surfaces[cx][cy][t].blit(img_obj, (x+area_to_be_blitted.x,y+area_to_be_blitted.y), area_to_be_blitted)
+                        self.surfaces[cx][cy][t].blit(img_obj, (x,y))
+
+##FINALEMENT :
+##    area to be blitted ne concerne que la partie de l'objet qui disparait qui chevauche les autres cellules.
+##    Les autres cellules, donc, se redessinnent, mais on ne blitte que ca !
+
+
     def draw(self, screen, topleft, x0, y0, xpix, ypix, t):
         delta_x = topleft[0] - xpix - x0*self.cell_size
         delta_y = topleft[1] - ypix - y0*self.cell_size
@@ -410,16 +542,17 @@ class GraphicalMap(PygameGrid):
                 posy = round(y*self.submap_size[1] + delta_y)
                 screen.blit(self.surfaces[x][y][t], (posx,posy))
 
-    def extract_img(self, coord, frame, img):
-        """blit (onto <img>) self'surface cell at <coord>"""
-        nx = int(200/self.cell_size)
-        ny = int(200/self.cell_size)
-        size_x = nx*self.cell_size
-        size_y = ny*self.cell_size
-        surfx = coord[0]*self.cell_size//size_x
-        surfy = coord[1]*self.cell_size//size_y
-        xpix = coord[0]*self.cell_size - surfx*size_x
-        ypix = coord[1]*self.cell_size - surfy*size_y
+    def extract_static_img(self, coord, frame, img):
+        """blit on <img> self's graphics present at <coord>"""
+        cs = self.cell_size
+        nx = int(200/cs)
+        ny = int(200/cs)
+        size_x = nx*cs
+        size_y = ny*cs
+        surfx = coord[0]*cs//size_x
+        surfy = coord[1]*cs//size_y
+        xpix = coord[0]*cs - surfx*size_x
+        ypix = coord[1]*cs - surfy*size_y
         img.blit(self.surfaces[surfx][surfy][frame], (-xpix, -ypix))
 ##        if coord[1] == 7:
 ##            import thorpy
@@ -430,6 +563,16 @@ class GraphicalMap(PygameGrid):
 ##            app.update()
 ##            print(xpix, ypix, coord)
 ##            app.pause()
+
+    def get_cell_rect_at_coord_in_submap(self, cell_coord):
+        xc,yc = cell_coord
+        xpix_tot = xc*self.cell_size
+        ypix_tot = yc*self.cell_size
+        surfx = xpix_tot//self.submap_size[0]
+        surfy = ypix_tot//self.submap_size[1]
+        xpix_sub = xpix_tot - surfx*self.submap_size[0]
+        ypix_sub = ypix_tot - surfy*self.submap_size[1]
+        return pygame.Rect(xpix_sub,ypix_sub,self.cell_size,self.cell_size)
 
 
 class WhiteLogicalMap(LogicalMap):
@@ -455,7 +598,6 @@ class WhiteLogicalMap(LogicalMap):
             white.fill(self.white_value)
             self.whites.append(white)
         self.current_gm = self.graphical_maps[0]
-        self.layers = []
         #
         self.nframes = nframes
         self.t = 0

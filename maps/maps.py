@@ -33,7 +33,12 @@ map1.max_number_of_rivers = 3
 map1.zoom_cell_sizes = [32,]
 map1.seed_static_objects = 11
 map1.add_object("oak", 6, 5)
+map1.add_object("oak", 7, 5)
+map1.add_object("oak", 5, 5)
+map1.add_object("oak", 6, 6)
+map1.add_object("oak", 6, 4)
 ##map1.add_object("bush", 16, 8)
+map1.zoom_cell_sizes = [32,20]
 
 
 # ##############################################################################
@@ -42,6 +47,7 @@ map2.world_size = (256, 128) #with big maps it is better to use lower persistanc
 map2.persistance = 1.3 #The higher, the bigger are the "continents"
 map2.palm_homogeneity = 0.9
 map2.chunk = (12345,0)
+
 
 # ##############################################################################
 map3 = MapInitializer("Third demo map")
