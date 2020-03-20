@@ -434,6 +434,7 @@ class MapInitializer:
             if flip:
                 obj = obj.flip()
             obj = obj.add_copy_on_cell(cell, first=True)
+            obj.is_static=True
             obj.randomize_relpos()
             #insert at the beginning because it is the last object
             #think e.g. of a wooden bridge over a river. What the unit sees is
