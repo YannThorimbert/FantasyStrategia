@@ -1,7 +1,7 @@
 import random, math
 import pygame
 import thorpy
-
+import PyWorld2D.rendering.tilers.tilemanager as tm
 import PyWorld2D.constants as const
 
 
@@ -61,7 +61,7 @@ class RandomObjectDistribution:
                 cell = self.master_map.cells[x][y]
                 if cell.material in self.materials:
                     if exclusive: #remove all other objects
-                        remove_objects(cell, layer)
+                        remove_objects_from_layer(cell, layer)
                     for i in range(self.max_density):
                         if random.random() < self.homogeneity:
                             obj = random.choice(self.objs)
@@ -105,7 +105,7 @@ def put_static_obj(obj, lm, coord, layer):
     layer.static_objects.append(cop)
     return cop
 
-def remove_objects(cell, layer):
+def remove_objects_from_layer(cell, layer):
     if cell.objects:
         for obj in cell.objects:
             layer.static_objects.remove(obj)
@@ -279,13 +279,22 @@ class MapObject:
 
     def remove_from_map(self, me):
         self.remove_from_cell()
-        if self.is_static:
+        if self.name == "bridge" and not(self in me.dynamic_objects):
+            self.is_static = True
+        if self.is_static:# or self.name=="bridge":
             print("Removing static object...")
             if self in me.lm.static_objects:
                 me.lm.static_objects.remove(self)
             me.rebuild_cell_graphics(self.cell)
         else: #easy
             me.dynamic_objects.remove(self)
+
+##        if self.name == "bridge": #then we put a fake river as dynamic object
+##            rivers = me.map_initializer.rivers
+##            orientation = (-1,0)
+##            river_obj = rivers.get(orientation)
+##            me.game.add_object(self.cell.coord, river_obj, 1)
+
 
     def move_to_cell(self, dest_cell):
 ##        assert dest_cell.unit is None

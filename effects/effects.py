@@ -1,6 +1,31 @@
 import thorpy, random, pygame
 from pygame.math import Vector2 as V2
 
+
+class GameSmoke:
+
+    def __init__(self, cam, sg, coord, delta):
+        self.cam = cam
+        self.sg = sg
+        self.coord = coord
+        self.delta = delta
+        self.pos = None
+        self.refresh_pos()
+
+    def refresh_pos(self):
+        self.pos = self.cam.get_rect_at_coord(self.coord).center
+        cs = self.cam.cell_rect.w
+        print("***", self.pos, self.delta, cs)
+        if self.delta:
+            x = self.pos[0]+self.delta[0]*cs
+            y = self.pos[1]+self.delta[1]*cs
+            self.pos = (x,y)
+
+    def generate(self):
+        self.refresh_pos()
+        print(self.pos)
+        self.sg.generate(self.pos)
+
 smokegen_small = None
 smokegen_small_vel = V2(0.5,-3)
 smokegen_large = None
@@ -18,10 +43,10 @@ def refresh_smokes(game):
     if game.t%smokegen_mod == 0:
         smokegen_small.kill_old_elements()
         smokegen_large.kill_old_elements()
-        for sg,pos,i in game.smokegens:
-            sg.generate(V2(pos))
+        for s in game.smokes_log.values():
+            s.generate()
         smokegen_small.update_physics(smokegen_small_vel)
-        smokegen_large.update_physics(smokegen_small_vel)
+        smokegen_large.update_physics(smokegen_large_vel)
     smokegen_small.draw(game.me.screen)
     smokegen_large.draw(game.me.screen)
 

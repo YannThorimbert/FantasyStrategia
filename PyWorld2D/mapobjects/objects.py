@@ -1,7 +1,7 @@
 import random, math
 import pygame
 import thorpy
-
+import PyWorld2D.rendering.tilers.tilemanager as tm
 import PyWorld2D.constants as const
 
 
@@ -279,7 +279,9 @@ class MapObject:
 
     def remove_from_map(self, me):
         self.remove_from_cell()
-        if self.is_static:
+        if self.name == "bridge" and not(self in me.dynamic_objects):
+            self.is_static = True
+        if self.is_static:# or self.name=="bridge":
             print("Removing static object...")
             if self in me.lm.static_objects:
                 me.lm.static_objects.remove(self)

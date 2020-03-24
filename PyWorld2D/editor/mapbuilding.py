@@ -164,6 +164,7 @@ class MapInitializer:
         self._objects = {}
         self.heights = []
         self.seed_static_objects = self.chunk
+        self.rivers = None
 
     def set_terrain_type(self, terrain_type, colorscale):
         for key in terrain_type:
@@ -405,11 +406,12 @@ class MapInitializer:
                                             lm.nframes,
                                             dx*lm.nframes, dy*lm.nframes, #dx, dy
                                             sin=False)
+        self.imgs_river = imgs_river
         material_dict = get_materials_dict(lm)
         while n_roads < self.max_number_of_roads or n_rivers < self.max_number_of_rivers:
             if n_rivers < self.max_number_of_rivers:
                 n_rivers += 1
-                add_random_river(me, me.lm, material_dict, imgs_river,
+                self.rivers = add_random_river(me, me.lm, material_dict, imgs_river,
                                     costs_materials_river,
                                     costs_objects_road,
                                     possible_materials_river,
@@ -616,10 +618,10 @@ def add_random_river(me, layer, material_dict,
                 break
     #
     objs = {}
-    for key in imgs:
-        river_obj = MapObject(me, imgs[key][0], "river", 1.)
+    for delta in imgs: #imgs[(dx,dy)][zoom]
+        river_obj = MapObject(me, imgs[delta][0], "river", 1.)
         river_obj.is_ground = True
-        objs[key] = river_obj
+        objs[delta] = river_obj
     #5) add river cells to map and layer
     for i,cell in enumerate(actual_path):
         dx,dy = get_path_orientation(i, cell, actual_path)
@@ -631,7 +633,7 @@ def add_random_river(me, layer, material_dict,
         layer.static_objects.append(c)
     if path:
         print("RIVER BUILT:", [cell.coord for cell in path])
-        return path
+    return objs
 
 
 

@@ -449,7 +449,7 @@ class Gui:
                     elif d == 1:
                         choices["Attack"] = self.attack
                 elif cell.unit in self.blue_highlights:
-                    if d > 1 and self.selected_unit.help_range[1] >= d: #distant attack
+                    if d > 1 and self.selected_unit.help_range[1] >= d: #distant help
                         choices["Distant help"] = self.help
                     elif d == 1:
                         choices["Help"] = self.help

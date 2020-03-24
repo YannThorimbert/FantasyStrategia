@@ -50,11 +50,7 @@ game = Game(me)
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
 
-
-#to move the map (...) ===> fond d'alert
-#tester ponts qui brulent
-#tester brulage avec zoom petit
-
+#tester blits sur fumee et battle
 
 #ajouter mes effets speciaux de fumees et d'explosion dans battles, et feux de map
 #faire transitions toutes simples entre batailles et map
@@ -153,8 +149,8 @@ game.add_unit((16,9), humans2["villager"], 15)
 game.add_unit((15,9), humans2["infantry"], 15)
 
 
-game.set_fire((15,7), 4)
-game.set_flag((15,7), humans.flag, 1)
+game.set_fire((10,8), 1)
+##game.set_flag((15,7), humans.flag, 1)
 ##game.set_fire((17,9), 1)
 ##game.add_smoke("small", (8,8))
 ##game.add_smoke("large", (10,8))

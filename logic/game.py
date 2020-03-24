@@ -52,35 +52,21 @@ class Game:
         self.fire.relpos=[0,-0.4]
         self.bridge_v, self.bridge_h = None, None
         self.bridges = []
-        self.smokegens = []
-        self.i_smoke = 0
+        #
         self.smokes_log = {}
         effects.initialize_smokegens()
 ##        self.fire.always_drawn_last = True
 
     def add_smoke(self, type_, coord, delta=None, what=""):
-        pos = self.me.cam.get_rect_at_coord(coord).center
-        if delta:
-            pos = (pos[0]+delta[0], pos[1]+delta[1])
         if type_ == "small":
-            self.smokegens.append((effects.smokegen_small, pos, self.i_smoke))
+            sg = effects.smokegen_small
         else:
-            self.smokegens.append((effects.smokegen_large, pos, self.i_smoke))
-        self.smokes_log[coord] = self.i_smoke
-        self.i_smoke += 1
+            sg = effects.smokegen_large
+        smoke = effects.GameSmoke(self.me.cam, sg, coord, delta)
+        self.smokes_log[coord] = smoke
 
-    def remove_smoke(self, coord, ismoke=None):
-        if ismoke is None: #automatically get from coord
-            ismoke = self.smokes_log.get(coord)
-        #if the smoke exists :
-        if ismoke is not None:
-            to_remove = None
-            for index, triplet in enumerate(self.smokegens):
-                if triplet[-1] == ismoke:
-                    to_remove = index
-                    break
-            self.smokegens.pop(to_remove)
-            return to_remove
+    def remove_smoke(self, coord):
+        return self.smokes_log.pop(coord, None)
 
     def refresh_smokes(self):
         effects.refresh_smokes(self)
@@ -116,7 +102,7 @@ class Game:
                     if self.burning[coord] == 0:
                         to_extinguish.append(coord)
                     elif self.burning[coord] == 2:
-                        delta = 0, -self.me.cell_size//3
+                        delta = 0, -0.3
                         self.add_smoke("small", coord, delta, "fire")
                     elif self.burning[coord] == 1:
                         self.remove_smoke(coord)

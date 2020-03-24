@@ -73,7 +73,7 @@ class MapEditor:
         self.box_hmap = None
         #
         self.ap = gui.AlertPool()
-        self.e_ap_move = gui.get_help_text("To move the map, drag it with", "<LMB>",
+        self.e_ap_move = gui.get_infoalert_text("To move the map, drag it with", "<LMB>",
                                         "or hold", "<left shift>", "while moving mouse")
         self.ap.add_alert_countdown(self.e_ap_move, guip.DELAY_HELP * self.fps)
         #

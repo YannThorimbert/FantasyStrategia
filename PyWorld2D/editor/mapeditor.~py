@@ -78,6 +78,7 @@ class MapEditor:
         self.ap.add_alert_countdown(self.e_ap_move, guip.DELAY_HELP * self.fps)
         #
         self.map_initializer = None
+        self.game = None
 
     def initialize_rivers(self):
         lm = self.lm

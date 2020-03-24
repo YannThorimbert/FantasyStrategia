@@ -2,7 +2,7 @@ import pygame, thorpy
 import PyWorld2D.gui.parameters as guip
 
 
-def get_help_text(*texts,start="normal"):
+def get_help_text(*texts, start="normal"):
     if start == "normal":
         state = 0
     else:
@@ -13,6 +13,16 @@ def get_help_text(*texts,start="normal"):
         els.append(get_text[state](text))
         state = 1 if state==0 else 0
     return thorpy.make_group(els)
+
+def get_infoalert_text(*texts, start="normal"):
+    h = get_help_text(*texts, start)
+    e = thorpy.Element("",[h])
+##    e.set_font_size(HFS)
+##    e.set_font_color(HFC)
+    thorpy.store(e)
+    e.set_main_color((200,200,200,50))
+    e.fit_children()
+    return e
 
 def get_help_text_normal(*texts,start="normal"):
     if start == "normal":

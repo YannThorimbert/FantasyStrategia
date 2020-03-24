@@ -279,7 +279,6 @@ class Gui:
             return False
         if c.unit:
             return False
-        print("*** D", self.destinations_lmb)
         rect = self.me.cam.get_rect_at_coord(c.coord)
         if rect.center in self.destinations_lmb:
             return True
