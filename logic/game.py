@@ -20,6 +20,7 @@ class Game:
     def __init__(self, me):
         self.me = me
         me.game = self
+        self.gui = None
         self.units = []
         self.t = 0
         self.days_left = 10 #set -1 for an infinite number of days
@@ -188,6 +189,12 @@ class Game:
 
 ##    def remove_unit(self, u): #just a wrapper
 ##        u.remove_from_game()
+
+    def set_flag(self, coord, flag_template, team):
+        cell = self.get_cell_at(coord[0],coord[1])
+        o = self.add_obj_before_other_if_needed(flag_template,
+                                                 1, ["village"], cell)
+        o.team = team
 
     def set_fire(self, coord, n):
         #1. remove old fire if necessary

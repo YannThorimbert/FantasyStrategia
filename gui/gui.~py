@@ -94,6 +94,7 @@ class Gui:
 
     def __init__(self, game, time_remaining=-1):
         self.game = game
+        game.gui = self
         self.surface = thorpy.get_screen()
         game.me.cam.ui_manager = self
         self.me = game.me
@@ -130,14 +131,14 @@ class Gui:
         self.font_life = pygame.font.SysFont(guip.font_gui_life, self.life_font_size)
         self.refresh_lifes()
         self.show_lifes = True
-        self.actions = {"flag":[("Remove flag",self.remove_flag,
+        self.actions = {"flag":[("Remove flag",self.remove_selected_flag,
                                     self.check_interact_flag),
-                                ("Replace flag",self.set_flag,
+                                ("Replace flag",self.set_flag_on_cell_under_cursor,
                                     self.check_replace_flag)],
                         "fire":[("Extinguish",self.extinguish,
                                     self.check_extinguish)]
                         }
-        self.actions_no_objs = [("Plant flag",self.set_flag,
+        self.actions_no_objs = [("Plant flag",self.set_flag_on_cell_under_cursor,
                                     self.check_plant_flag),
                                 ("Burn",self.burn,
                                     self.check_interact_burn),
@@ -258,16 +259,19 @@ class Gui:
             return c.material.name.lower() in self.game.is_flaggable
 
     def check_plant_flag(self):
-        for o in self.interaction_objs:
+##        for o in self.interaction_objs:
+        for o in self.cell_under_cursor.objects:
             if o.str_type == "flag":
                 return False
         return self.check_interact_flag()
 
     def check_replace_flag(self):
         if self.check_interact_flag():
-            for o in self.interaction_objs:
+##            for o in self.interaction_objs:
+            for o in self.cell_under_cursor.objects:
                 if o.str_type == "flag":
-                    return o.team == self.selected_unit.team
+                    print(o.team, self.selected_unit.team)
+                    return o.team != self.selected_unit.team
 
     def check_interact_gotocell(self):
         c = self.cell_under_cursor
@@ -275,7 +279,10 @@ class Gui:
             return False
         if c.unit:
             return False
-        return True
+        print("*** D", self.destinations_lmb)
+        rect = self.me.cam.get_rect_at_coord(c.coord)
+        if rect.center in self.destinations_lmb:
+            return True
 
     def choice_gotocell(self):
         self.forced_gotocell = True
@@ -409,33 +416,25 @@ class Gui:
         thorpy.get_current_menu().fps = guip.FPS
         self.refresh_lifes()
 
-    def remove_flag(self):
+    def remove_selected_flag(self):
         for o in self.interaction_objs:
             if o.str_type == "flag":
                 o.remove_from_game()
                 break
 
-##    def set_flag(self):
-##        self.remove_flag()
-##        cell = self.cell_under_cursor
-##        self.game.add_object(cell.coord, self.selected_unit.race.flag, 1)
-
-
-    def set_flag(self):
-        xxx
-        #
-        self.remove_flag()
-        cell = self.cell_under_cursor
-        o = self.game.add_obj_before_other_if_needed(self.selected_unit.race.flag,
-                                                 1, ["village"], cell)
-        o.team = self.selected_unit.team
+    def set_flag_on_cell_under_cursor(self):
+        self.remove_selected_flag()
+        self.game.set_flag(self.cell_under_cursor.coord,
+                            self.selected_unit.race.flag,
+                            self.selected_unit.team)
 
     def burn(self):
         self.game.set_fire(self.cell_under_cursor.coord, 4)
 
-    def help(self, unit):
-        print("Not implemented yet")
-        pass
+    def help(self):
+        friend = self.unit_under_cursor()
+        print("helping", friend.name, friend.team == self.selected_unit.team)
+        raise Exception("Not implemented yet")
 
     def get_interaction_choices(self, objs):
         choices = {}
@@ -475,10 +474,7 @@ class Gui:
         func = choices.get(choice, None)
         if func:
             func()
-        if self.forced_gotocell:
-            self.forced_gotocell = False
-            print("*** UMC GTC", self.selected_unit)
-        else:
+        if not self.forced_gotocell:
             self.clear()
 
 
@@ -489,8 +485,8 @@ class Gui:
         cell = self.me.cam.get_cell(pos)
         if cell:
             if self.destinations_lmb: #then the user may be clicking a destination
-                interactibles = self.game.get_interactive_objects( cell.coord[0],
-                                                                    cell.coord[1])
+                interactibles = self.game.get_interactive_objects(cell.coord[0],
+                                                                cell.coord[1])
                 if interactibles:
                     if cell.unit is None:
                         choices = self.get_interaction_choices(interactibles)
@@ -534,6 +530,9 @@ class Gui:
                 choices = self.get_interaction_choices(interactibles)
                 if choices:
                     self.user_make_choice(choices)
+                    if self.forced_gotocell:
+                        self.forced_gotocell = False
+                        self.treat_click_destination(cell)
                 else:
                     return
         self.destinations_mousemotion = []

@@ -51,8 +51,11 @@ game = Game(me)
 ################################################################################
 
 
-#migrer set et remove flag dans game
 #bruler TOUS les objets
+#song psshht
+#to move the map (...) ===> fond d'alert
+#tester ponts qui brulent
+#tester brulage avec zoom petit
 
 
 #ajouter mes effets speciaux de fumees et d'explosion dans battles, et feux de map
