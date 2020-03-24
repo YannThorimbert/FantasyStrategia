@@ -26,7 +26,7 @@ def refresh_smokes(game):
     smokegen_large.draw(game.me.screen)
 
 
-def draw_ashes(game, obj, n=40, frame=0):
+def draw_ashes(game, obj, n=20, frame=0):
     global smokegen_mod
     tmp = smokegen_mod
     smokegen_mod = 2
@@ -35,7 +35,9 @@ def draw_ashes(game, obj, n=40, frame=0):
     ash_color = (178, 190, 181)
     N = 180
     ashlet_size = (2,2)
-    ash_shades = [ash_color, tuple(a-30 for a in ash_color), tuple(a-60 for a in ash_color)]
+    ash_shades = [tuple(a-60 for a in ash_color),
+                  tuple(a-90 for a in ash_color),
+                  tuple(a-120 for a in ash_color)]
     ash_z =[]
     ashlets = [pygame.Surface(ashlet_size) for i in ash_shades]
     for i,c in enumerate(ash_shades):
@@ -49,7 +51,7 @@ def draw_ashes(game, obj, n=40, frame=0):
                                     color_format="RGBA",
                                     alpha_factor=1.,
                                     decay_mode="exponential",
-                                    color=ash_color,
+                                    color=ash_shades[0],
                                     sun_angle=45.,
                                     vertical=True,
                                     angle_mode="flip",
@@ -57,7 +59,7 @@ def draw_ashes(game, obj, n=40, frame=0):
     w,h = ash.get_size()
     for i in range(200):
         x,y = random.randint(0,w-1), random.randint(0,h-1)
-        if ash.get_at((x,y)) == ash_color:
+        if ash.get_at((x,y)) == ash_shades[0]:
             ash.set_at((x,y), random.choice(ash_shades))
     ###
     for i in range(n):

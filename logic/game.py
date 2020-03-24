@@ -32,7 +32,7 @@ class Game:
         #
         self.sounds = thorpy.SoundCollection()
         self.fire_extinguish_sound = self.sounds.add("sounds/psht.wav")[0]
-        self.fire_sound = self.sounds.add("sounds/feuxxx.wav")[0]
+        self.fire_sound = self.sounds.add("sounds/fire.wav")[0]
         self.deny_sound = self.sounds.add("sounds/ui/deny2.wav")[0]
         self.death_sounds = get_sounds("sounds/death/", self.sounds)
         self.hit_sounds = get_sounds("sounds/hits/", self.sounds)
@@ -86,19 +86,17 @@ class Game:
         effects.refresh_smokes(self)
 
     def extinguish(self, coord, natural_end=False):
-        self.set_fire(coord, 0)
-        self.remove_smoke(coord)
+        self.remove_fire(coord)
         if not self.burning:
             self.fire_sound.stop()
         if natural_end: #then the burnable objects are removed
-            print("***Natural extinguish")
-            for o in self.get_cell_at(coord[0],coord[1]).objects:
-                if o.str_type in self.is_burnable:
-                    print("Burning", o.name, o.str_type, self.get_cell_at(coord[0],coord[1]).objects, "to ashes...")
-                    self.fire_extinguish_sound.play()
-                    o.remove_from_map(self.me)
-                    effects.draw_ashes(self, o)
-                    thorpy.get_application().pause(unpause_after=200)
+            objs = self.get_cell_at(coord[0],coord[1]).objects
+            to_burn = [o for o in objs if o.str_type in self.is_burnable]
+            for o in to_burn:
+                self.fire_extinguish_sound.play()
+                o.remove_from_map(self.me)
+                effects.draw_ashes(self, o)
+##                thorpy.get_application().pause(unpause_after=200)
 
     def set_players(self, players, current=0):
         self.players = players
@@ -184,8 +182,6 @@ class Game:
         if cell:
             return cell.unit
 
-    def remove_object(self, o):
-        o.remove_from_map(self.me)
 
 ##    def remove_unit(self, u): #just a wrapper
 ##        u.remove_from_game()
@@ -196,14 +192,18 @@ class Game:
                                                  1, ["village"], cell)
         o.team = team
 
-    def set_fire(self, coord, n):
-        #1. remove old fire if necessary
+    def remove_fire(self, coord):
         if coord in self.burning:
             self.burning.pop(coord)
             for o in self.get_cell_at(coord[0],coord[1]).objects:
                 if o.str_type == "fire":
-                    fire = o
-            self.remove_object(o)
+                    o.remove_from_map(self.me)
+        self.remove_smoke(coord)
+
+
+    def set_fire(self, coord, n):
+        #1. remove old fire if necessary
+        self.remove_fire(coord)
         #2. add new fire
         if n > 0:
             self.fire_sound.play(-1)

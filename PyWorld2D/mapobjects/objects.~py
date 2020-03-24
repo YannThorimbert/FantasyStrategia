@@ -277,7 +277,6 @@ class MapObject:
         if self is self.cell.unit:
             self.cell.unit = None
 
-
     def remove_from_map(self, me):
         self.remove_from_cell()
         if self.is_static:

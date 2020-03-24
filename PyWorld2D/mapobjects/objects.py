@@ -61,7 +61,7 @@ class RandomObjectDistribution:
                 cell = self.master_map.cells[x][y]
                 if cell.material in self.materials:
                     if exclusive: #remove all other objects
-                        remove_objects(cell, layer)
+                        remove_objects_from_layer(cell, layer)
                     for i in range(self.max_density):
                         if random.random() < self.homogeneity:
                             obj = random.choice(self.objs)
@@ -105,7 +105,7 @@ def put_static_obj(obj, lm, coord, layer):
     layer.static_objects.append(cop)
     return cop
 
-def remove_objects(cell, layer):
+def remove_objects_from_layer(cell, layer):
     if cell.objects:
         for obj in cell.objects:
             layer.static_objects.remove(obj)

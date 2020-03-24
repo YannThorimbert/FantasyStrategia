@@ -51,8 +51,6 @@ game = Game(me)
 ################################################################################
 
 
-#bruler TOUS les objets
-#song psshht
 #to move the map (...) ===> fond d'alert
 #tester ponts qui brulent
 #tester brulage avec zoom petit
@@ -63,37 +61,33 @@ game = Game(me)
 
 
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
-#conquete de base, batailles. Pas d'impots ni de destruction d'objets.
-#village peuvent etre conquis et peuvent produire unites
-#ressources : or, population et prestige
-##==> a quoi sert-il de planter des drapeaux, d'ailleurs ? : a augmenter le prestige
-#Ressources ??? : or. Prestige et crainte ne sont que des facteurs. Or uniquement !!!
+#conquete de base et batailles. Pas d'impots ni de gestion hors production unites.
+#village peuvent etre conquis et ***peuvent produire unites***
+# ***ressources : or, population***
+##==> a quoi sert-il de planter des drapeaux, d'ailleurs ? : a conquerir villages.
+##==> ***Tous les villages ont des drapeaux***
+#Ressources ??? : or.
 
 #2. FEUX:
-    #pont, village peut bruler : faire qu'ils disparaissent en mm temps que le feu.
-    #       => laisse une terre brulee
-    #feux fonctionnels : allumables, eteignables, s'eteignent seuls, empechent de passer
     #attention : bruler est une action a part entiere, empeche d'attaquer dans le meme tour
-    #a quoi sert-il de bruler un territoire ? : a interdire son accès pour 2 tours, a detruire l'objet si burnable.
-    #peut-on les eteindre ? ==> Non sauf magicien
 
 #3. VILLAGES:
-
+    #Comment produisent-ils des unites ? (clique droit)
 
 #4. SYSTEME DE JEU ET REGLES:
-    #implementer prestige des drapeaux
     #avant bataille, indiquer les bonus de defense et d'attaque, et autres aides de prevision
-
-
 
 #fusionner les thorpy ICI et git!!!!
 
-
-
 ################################################################################
 ################################################################################
 ################################################################################
 
+
+##Mettre des monuments (objets comme drapeaux mais avec image differente) qui augmentent le prestige(rayonnement).
+## rayonnement = somme( 1. / distance à capitale ennemie de chaque monument). Les monuments coutent cher et sont construits par villageois/ouvriers?.
+
+#Population~nourriture, or~population*impots, rayonnement~monuments, crainte/respect~choix (viols etc)
 
 #murailles: au niveau de l'implementation, sont des types d'unites! (static unit)
 #       Les chateaux sont juste des villages entoures de murailles
@@ -159,7 +153,8 @@ game.add_unit((16,9), humans2["villager"], 15)
 game.add_unit((15,9), humans2["infantry"], 15)
 
 
-##game.set_fire((9,6), 1)
+game.set_fire((15,7), 4)
+game.set_flag((15,7), humans.flag, 1)
 ##game.set_fire((17,9), 1)
 ##game.add_smoke("small", (8,8))
 ##game.add_smoke("large", (10,8))
