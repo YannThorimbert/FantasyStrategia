@@ -34,6 +34,9 @@ class LogicalCell:
         self.unit = None
 ##        self.imgs = None
 
+    def get_game(self):
+        return self.map.me.game
+
     def set_name(self,name):
         self.name = name
         self.map.me.modified_cells.append(self.coord)

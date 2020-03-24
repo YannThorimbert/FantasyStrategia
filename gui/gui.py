@@ -106,6 +106,7 @@ class Gui:
         self.last_destination_score = {}
         self.destinations_mousemotion = []
         self.destinations_lmb = []
+        self.forced_gotocell = False
         self.selected_unit = None
         self.cell_under_cursor = None
         self.blue_highlights = []
@@ -132,14 +133,16 @@ class Gui:
         self.actions = {"flag":[("Remove flag",self.remove_flag,
                                     self.check_interact_flag),
                                 ("Replace flag",self.set_flag,
-                                    self.check_interact_flag)],
+                                    self.check_replace_flag)],
                         "fire":[("Extinguish",self.extinguish,
                                     self.check_extinguish)]
                         }
         self.actions_no_objs = [("Plant flag",self.set_flag,
-                                    self.check_interact_flag),
+                                    self.check_plant_flag),
                                 ("Burn",self.burn,
-                                    self.check_interact_burn)]
+                                    self.check_interact_burn),
+                                ("Go there",self.choice_gotocell,
+                                    self.check_interact_gotocell)]
         self.interaction_objs = []
         #
         #here you can add/remove buttons to/from the menu
@@ -253,6 +256,29 @@ class Gui:
                 if o.str_type == "river":
                     return False
             return c.material.name.lower() in self.game.is_flaggable
+
+    def check_plant_flag(self):
+        for o in self.interaction_objs:
+            if o.str_type == "flag":
+                return False
+        return self.check_interact_flag()
+
+    def check_replace_flag(self):
+        if self.check_interact_flag():
+            for o in self.interaction_objs:
+                if o.str_type == "flag":
+                    return o.team == self.selected_unit.team
+
+    def check_interact_gotocell(self):
+        c = self.cell_under_cursor
+        if self.game.burning.get(c.coord):
+            return False
+        if c.unit:
+            return False
+        return True
+
+    def choice_gotocell(self):
+        self.forced_gotocell = True
 
     def clear(self):
         self.selected_unit = None
@@ -396,10 +422,13 @@ class Gui:
 
 
     def set_flag(self):
+##        xxx
+        #
         self.remove_flag()
         cell = self.cell_under_cursor
-        self.game.add_obj_before_other_if_needed(self.selected_unit.race.flag,
+        o = self.game.add_obj_before_other_if_needed(self.selected_unit.race.flag,
                                                  1, ["village"], cell)
+        o.team = self.selected_unit.team
 
     def burn(self):
         self.game.set_fire(self.cell_under_cursor.coord, 4)
@@ -446,8 +475,11 @@ class Gui:
         func = choices.get(choice, None)
         if func:
             func()
-##        treat outside click to cancel
-        self.clear()
+        if self.forced_gotocell:
+            self.forced_gotocell = False
+            print("*** UMC GTC", self.selected_unit)
+        else:
+            self.clear()
 
 
     def lmb(self, e):
@@ -464,7 +496,8 @@ class Gui:
                         choices = self.get_interaction_choices(interactibles)
                         if choices:
                             self.user_make_choice(choices)
-                        self.treat_click_destination(cell)
+                        if self.selected_unit:
+                            self.treat_click_destination(cell)
                     else:
                         choices = self.get_interaction_choices(interactibles)
                         if choices:

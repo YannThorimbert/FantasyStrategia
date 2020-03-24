@@ -130,10 +130,8 @@ class FireSmokeGenerator(SmokeGenerator):
 
     def __init__(self, samples, n, opac=None, mov=1, grow=0.5, prob=0.2, i=2,
                     color=None, alpha0=255, size0=None, smoothscale=False,
-                    copy=False, black_increase=None):
-        self.black_increase = black_increase
-        if not black_increase:
-            self.black_increase = 1. / n
+                    copy=False, black_increase_factor=1.):
+        self.black_increase = black_increase_factor / n
         if not copy:
             samples = [s.copy() for s in samples]
         self.samples = samples
@@ -361,7 +359,7 @@ def get_smokegen(n=15, color=(99,99,99), grow=0.4, i=2, prob=0.3, alpha0=255,
 
 
 def get_fire_smokegen(n=50, color=(255,200,0), grow=0.4, i=2, prob=0.3, alpha0=255,
-                    size0=None, images=None, black_increase=None):
+                    size0=None, images=None, black_increase_factor=1.):
     if images is None:
         images = [thorpy.load_image(thorpy.style.SMOKE_IMG, (255,255,255))]
     return FireSmokeGenerator(images,
@@ -372,4 +370,4 @@ def get_fire_smokegen(n=50, color=(255,200,0), grow=0.4, i=2, prob=0.3, alpha0=2
                                  color=color,
                                  alpha0=alpha0,
                                  size0=size0,
-                                 black_increase=black_increase)
+                                 black_increase_factor=black_increase_factor)

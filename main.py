@@ -45,13 +45,19 @@ map_initializer.seed_static_objects = 15
 me = map_initializer.configure_map_editor() #me = "Map Editor"
 game = Game(me)
 
+
 ################################################################################
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
 
-#animation pour montrer que feu s'eteint et objet brule (gif anime tas de cendres)
-#faire transitions toutes simples entre batailles et map
+
+#migrer set et remove flag dans game
+#bruler TOUS les objets
+
+
 #ajouter mes effets speciaux de fumees et d'explosion dans battles, et feux de map
+#faire transitions toutes simples entre batailles et map
+
 
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
 #conquete de base, batailles. Pas d'impots ni de destruction d'objets.
@@ -150,8 +156,10 @@ game.add_unit((16,9), humans2["villager"], 15)
 game.add_unit((15,9), humans2["infantry"], 15)
 
 
-game.set_fire((9,6), 1)
-game.set_fire((17,9), 1)
+##game.set_fire((9,6), 1)
+##game.set_fire((17,9), 1)
+##game.add_smoke("small", (8,8))
+##game.add_smoke("large", (10,8))
 
 ##game.get_cell_at(15,14).set_name("My top cell")
 
@@ -161,7 +169,7 @@ players = [ Player(1, "Helmut", humans.color),
             Player(2, "Jean", humans2.color)]
 game.set_players(players)
 ui = gui.Gui(game)
-##game.outdoor_sound.play(-1)
+game.outdoor_sound.play(-1)
 
 def func_reac_time(): #here add wathever you want
     """Function called each frame"""

@@ -115,7 +115,7 @@ class CellInfo:
             self.launched = False
 
     def update_em(self, cell):
-        new_img = cell.get_current_img_at_zoom(0)
+        new_img = cell.get_static_img_at_zoom(0)
         self.em_mat_img_img.set_image(new_img)
         #
         text = cell.material.name
@@ -131,8 +131,12 @@ class CellInfo:
                 if "bridge" in obj.str_type:
                     objs.add("Bridge")
             else:
-                objs.add(obj.name) #split to not take the id
-        text = ",".join([name for name in objs])
+                if obj.name == "fire":
+                    n = obj.game.burning[obj.cell.coord]
+                    objs.add("fire ("+str(n)+" turns)")
+                else:
+                    objs.add(obj.name) #split to not take the id
+        text = ", ".join([name for name in objs])
         self.em_obj_name.set_text(text.capitalize())
         #
         thorpy.store(self.em_mat, mode="h")

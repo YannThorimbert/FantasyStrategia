@@ -34,6 +34,9 @@ class LogicalCell:
         self.unit = None
 ##        self.imgs = None
 
+    def get_game(self):
+        return self.game = self.map.me.game
+
     def set_name(self,name):
         self.name = name
         self.map.me.modified_cells.append(self.coord)
@@ -246,7 +249,6 @@ class LogicalMap(BaseGrid):
             gm.build_surfaces(self.colorkey)
 
     def reblit_material_of_cell(self, cell):
-##        print("REBUILDING MATERIAL OF CELL AT", cell.coord)
         for gm in self.graphical_maps:
             gm.reblit_material_of_cell(cell)
 

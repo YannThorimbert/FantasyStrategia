@@ -78,6 +78,7 @@ class MapEditor:
         self.ap.add_alert_countdown(self.e_ap_move, guip.DELAY_HELP * self.fps)
         #
         self.map_initializer = None
+        self.game = None
 
     def initialize_rivers(self):
         lm = self.lm
@@ -371,6 +372,8 @@ class MapEditor:
         self.cam.draw_grid(self.screen, self.show_grid_lines)
         #blit objects
         self.cam.draw_objects(self.screen, self.dynamic_objects)
+        #blit smoke effects
+        self.game.refresh_smokes()
         #update right pane
         self.update_cell_info()
         #blit right pane and draw rect on minimap

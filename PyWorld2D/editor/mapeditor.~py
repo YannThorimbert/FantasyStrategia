@@ -289,7 +289,6 @@ class MapEditor:
         xc,yc = cell.coord
         static_objects = {}
         cells_to_refresh = []
-        print("***RCG", xc,yc)
         for x in range(xc-2,xc+3):
             for y in range(yc-2,yc+3):
                 cell = self.lm.get_cell_at(x,y)
@@ -372,6 +371,8 @@ class MapEditor:
         self.cam.draw_grid(self.screen, self.show_grid_lines)
         #blit objects
         self.cam.draw_objects(self.screen, self.dynamic_objects)
+        #blit smoke effects
+        self.game.refresh_smokes()
         #update right pane
         self.update_cell_info()
         #blit right pane and draw rect on minimap

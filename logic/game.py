@@ -1,5 +1,5 @@
 import os, random, thorpy
-from FantasyStrategia.effects.effects import draw_ashes
+from FantasyStrategia.effects import effects
 from .unit import InteractiveObject
 
 
@@ -19,6 +19,7 @@ class Game:
 
     def __init__(self, me):
         self.me = me
+        me.game = self
         self.units = []
         self.t = 0
         self.days_left = 10 #set -1 for an infinite number of days
@@ -42,7 +43,7 @@ class Game:
         self.is_flaggable = ["grass", "rock", "sand", "snow", "thin snow"]
         self.is_burnable = ["grass", "bridge_v", "bridge_h", "oak", "fir1",
                             "fir2", "firsnow", "palm", "bush", "village",
-                            "flag", "forest"]
+                            "flag", "forest", "flag"]
         self.burning = {} #e.g. burning[(4,12):2] means 2 remaining turns to burn
         self.fire = InteractiveObject("fire", self.me, "sprites/fire")
         self.fire.min_relpos=[0,-0.4]
@@ -50,41 +51,53 @@ class Game:
         self.fire.relpos=[0,-0.4]
         self.bridge_v, self.bridge_h = None, None
         self.bridges = []
+        self.smokegens = []
+        self.i_smoke = 0
+        self.smokes_log = {}
+        effects.initialize_smokegens()
 ##        self.fire.always_drawn_last = True
 
+    def add_smoke(self, type_, coord, delta=None, what=""):
+        pos = self.me.cam.get_rect_at_coord(coord).center
+        if delta:
+            pos = (pos[0]+delta[0], pos[1]+delta[1])
+        if type_ == "small":
+            self.smokegens.append((effects.smokegen_small, pos, self.i_smoke))
+        else:
+            self.smokegens.append((effects.smokegen_large, pos, self.i_smoke))
+        self.smokes_log[coord] = self.i_smoke
+        self.i_smoke += 1
+
+    def remove_smoke(self, coord, ismoke=None):
+        if ismoke is None: #automatically get from coord
+            ismoke = self.smokes_log.get(coord)
+        #if the smoke exists :
+        if ismoke is not None:
+            to_remove = None
+            for index, triplet in enumerate(self.smokegens):
+                if triplet[-1] == ismoke:
+                    to_remove = index
+                    break
+            self.smokegens.pop(to_remove)
+            return to_remove
+
+    def refresh_smokes(self):
+        effects.refresh_smokes(self)
+
     def extinguish(self, coord, natural_end=False):
+        self.set_fire(coord, 0)
+        self.remove_smoke(coord)
+        if not self.burning:
+            self.fire_sound.stop()
         if natural_end: #then the burnable objects are removed
             print("***Natural extinguish")
             for o in self.get_cell_at(coord[0],coord[1]).objects:
                 if o.str_type in self.is_burnable:
+                    print("Burning", o.name, o.str_type, self.get_cell_at(coord[0],coord[1]).objects, "to ashes...")
                     self.fire_extinguish_sound.play()
                     o.remove_from_map(self.me)
-                    draw_ashes(self.me, o)
-                    thorpy.get_application().pause(unpause_after=1000)
-##                if o.str_type in self.is_burnable:
-##                    cs = self.me.lm.get_current_cell_size()
-##                    rect, img = o.get_fakerect_and_img(cs)
-##                    ashes = draw_ashes(self.me, o)
-##                    o.remove_from_map(self.me)
-##                    import pygame
-##                    clock = pygame.time.Clock()
-##                    self.fire_extinguish_sound.play()
-##                    img = ashes[0][0]
-##                    for i in range(255):
-##                        img.set_alpha(i)
-##                        self.me.draw()
-##                        self.me.screen.blit(img,rect)
-##                        pygame.display.update(rect)
-##                    for img in ashes[0]:
-##                        clock.tick(30)
-##                        self.me.draw()
-##                        self.me.screen.blit(img,rect)
-##                        pygame.display.update(rect)
-##                    thorpy.get_application().pause(unpause_after=1000)
-        self.set_fire(coord, 0)
-        if not self.burning:
-            self.fire_sound.stop()
-
+                    effects.draw_ashes(self, o)
+                    thorpy.get_application().pause(unpause_after=200)
 
     def set_players(self, players, current=0):
         self.players = players
@@ -97,12 +110,19 @@ class Game:
     def end_turn(self):
         self.need_refresh_ui_box = True
         to_extinguish = []
-        for x,y in self.burning:
-            for obj in self.get_cell_at(x,y).objects:
+        for coord in self.burning:
+            for obj in self.get_cell_at(coord[0],coord[1]).objects:
                 if obj.name == "fire":
-                    self.burning[(x,y)] -= 1
-                    if self.burning[(x,y)] == 0:
-                        to_extinguish.append((x,y))
+                    self.burning[coord] -= 1
+                    if self.burning[coord] == 0:
+                        to_extinguish.append(coord)
+                    elif self.burning[coord] == 2:
+                        delta = 0, -self.me.cell_size//3
+                        self.add_smoke("small", coord, delta, "fire")
+                    elif self.burning[coord] == 1:
+                        self.remove_smoke(coord)
+                        delta = 0, -self.me.cell_size//3
+                        self.add_smoke("large", coord, delta, "fire")
         for coord in to_extinguish:
             self.extinguish(coord, natural_end=True)
         self.current_player_i += 1
@@ -206,6 +226,7 @@ class Game:
                         obj.max_relpos = [0, relpos]
                         break
         o = self.add_object(cell.coord, obj, qty, has_other)
+        return o
 
     def get_interactive_objects(self, x, y):
         return [o for o in self.get_cell_at(x,y).objects if o.can_interact]
