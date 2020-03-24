@@ -250,10 +250,11 @@ class UnitInfo: #name, image, nombre(=vie dans FS!)
         self.e_img = thorpy.Image.make(pygame.Surface(cell_size))
 ##        self.e_img = thorpy.Image.make(pygame.Surface((1,1)))
         self.blank_img = pygame.Surface(cell_size)
-        self.e_name = guip.get_text("Unit infos (no unit)")
-        #
-##        self.e_group = thorpy.make_group([self.e_img, self.e_name])
-        ghost = thorpy.Ghost([self.e_img, self.e_name])
+        self.e_name = guip.get_text("")
+        self.e_race = guip.get_text("")
+        self.e_name_and_race = thorpy.Box([self.e_name, self.e_race])
+        self.e_name_and_race.fit_children()
+        ghost = thorpy.Ghost([self.e_img, self.e_name_and_race])
         ghost.finish()
         self.e_img.set_center_pos(ghost.get_fus_center())
         self.e_name.set_center_pos(self.e_img.get_fus_center())
@@ -323,7 +324,9 @@ class UnitInfo: #name, image, nombre(=vie dans FS!)
         new_img = cell.unit.get_current_img()
         self.em_unit_img_img.set_image(new_img)
         self.em_unit_name.set_text(cell.unit.name.capitalize())
-        self.em_unit_race.set_text(cell.unit.race.name)
+        baserace = cell.unit.race.baserace.capitalize()
+        playername = cell.unit.get_all_players()[0].name
+        self.em_unit_race.set_text(baserace + " (" + playername + ")")
         thorpy.store(self.em_unit, mode="h")
         #
         self.em_mat_img_img.set_image(self.me.cell_info.e_mat_img.get_image())
@@ -378,22 +381,30 @@ class UnitInfo: #name, image, nombre(=vie dans FS!)
         changed = False
         if unit:
             name = unit.name + " (" + str(unit.quantity) + ")"
+            ##            baserace = cell.unit.race.baserace.capitalize()
+##            playername = cell.unit.get_all_players()[0].name
+##            self.em_unit_race.set_text(baserace + " (" + playername + ")")
+            raceteam = "caca"
             new_img = unit.get_current_img()
             self.e_img.visible = True
             changed = True
         elif self.unit is not None:
             name = "Unit infos (no unit)"
+            raceteam = ""
             new_img = self.blank_img
             self.e_img.visible = False
             changed = True
         #
         if changed:
             self.e_name.set_text(name)
+            self.e_race.set_text(raceteam)
+            thorpy.store(self.e_name_and_race, margin=2, gap=2)
+            self.e_name_and_race.fit_children()
             self.e_img.set_image(new_img)
             if self.e_img.visible:
                 thorpy.store(self.e_group, mode="h")
             else:
-                thorpy.store(self.e_group, [self.e_name], mode="h")
+                thorpy.store(self.e_group, [self.e_name_and_race], mode="h")
             self.unit = unit
 
 

@@ -118,8 +118,9 @@ class Gui:
         self.dest_period = self.me.lm.nframes * 3.
         self.dest_omega = 2. * math.pi / self.dest_period
         #
-        self.e_cant_move = guip.get_highlight_text("Can't go there")
-        self.e_cant_move_another = guip.get_highlight_text("Another unit is already going there")
+        self.e_cant_move = guip.get_infoalert_text("Can't go there")
+        self.e_cant_move_another = guip.get_infoalert_text("Another unit is already going there")
+        self.e_wrong_team = guip.get_infoalert_text("You cannot command another player's units")
         #
         self.moving_units = []
         self.add_reactions()
@@ -185,8 +186,13 @@ class Gui:
             self.e_time_remaining = guip.get_highlight_text(text_day)
             me.add_gui_element(self.e_time_remaining, True)
         ########################################################################
-        self.e_info_day = guip.get_title("Day 1")
+        self.e_info_day = guip.get_title("Day "+str(self.game.days_elapsed))
         me.add_gui_element(self.e_info_day, True)
+        ########################################################################
+        me.add_gui_element(self.hline.copy(), True)
+        self.e_info_player = guip.get_title(self.game.current_player.name)
+        self.e_info_player.set_font_color(self.game.current_player.color_rgb)
+        me.add_gui_element(self.e_info_player, True)
         ########################################################################
         me.menu_button.user_func = self.launch_map_menu
 
@@ -471,9 +477,13 @@ class Gui:
                 self.selected_unit = None
             elif cell: #else update destinations
                 if cell.unit:
-                    print("update destinations")
-                    self.selected_unit = cell.unit
-                    self.destinations_lmb = self.get_destinations(cell)
+                    if cell.unit.team == self.game.current_player.team:
+                        print("update destinations")
+                        self.selected_unit = cell.unit
+                        self.destinations_lmb = self.get_destinations(cell)
+                    else:
+                        self.add_alert(self.e_wrong_team)
+                        self.game.deny_sound.play()
                 else:
                     print("nothing")
                     self.selected_unit = None
@@ -589,8 +599,18 @@ class Gui:
 
     def refresh(self):
         self.enhancer.refresh()
-        if self.game.days_left > 0:
-            self.e_time_remaining.set_text(self.get_day_text())
+        if self.game.need_refresh_ui_box:
+            self.e_info_day.set_text("Day "+str(self.game.days_elapsed))
+            if self.game.days_left > 0:
+                self.e_time_remaining.set_text(self.get_day_text())
+            if self.game.days_left < 3:
+                self.e_time_remaining.set_font_color((255,0,0))
+            else:
+                self.e_time_remaining.set_font_color((0,0,0))
+            self.e_info_player.set_font_color(self.game.current_player.color_rgb)
+            self.e_info_player.set_text(self.game.current_player.name)
+            thorpy.store(self.me.e_box)
+            self.game.need_refresh_ui_box = False
 
 ##    def add_flag(self):
 ##        self.game.add_unit((16,15), self.game.units[0].race["flag"], 1, team=self.game.units[0].team)

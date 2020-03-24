@@ -49,6 +49,14 @@ def get_small_text(text):
 def get_highlight_text(text):
     return thorpy.make_text(text, HFS, HFC)
 
+def get_infoalert_text(text):
+    e = thorpy.make_button(text)
+    e.set_font_size(HFS)
+    e.set_font_color(HFC)
+    e.set_main_color((200,200,200,50))
+    e.scale_to_title()
+    return e
+
 def get_info_text(text):
     return thorpy.make_text(text, IFS, IFC)
 

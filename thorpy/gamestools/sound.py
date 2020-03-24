@@ -6,7 +6,10 @@ import pygame
 
 class FakeSound(object):
 
-    def play(self):
+    def play(self, loop=0):
+        pass
+
+    def stop(self):
         pass
 
 

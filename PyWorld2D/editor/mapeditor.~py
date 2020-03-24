@@ -303,8 +303,8 @@ class MapEditor:
             for y in range(yc-2,yc+3):
                 coord = (x,y)
                 if coord in static_objects:
-                objs = static_objects[(x,y)]
-                self.lm.blit_objects_only_on_cells(objs, cells_to_refresh)
+                    objs = static_objects[(x,y)]
+                    self.lm.blit_objects_only_on_cells(objs, cells_to_refresh)
 
 
     def set_zoom(self, level, refresh_slider=True):

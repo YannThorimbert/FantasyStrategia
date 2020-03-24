@@ -132,6 +132,9 @@ class Unit(MapObject):
         self._spawn_possible_destinations(x, y, 0., [self.cell.coord], score)
         return score
 
+    def get_all_players(self):
+        return self.game.get_players_from_team(self.team)
+
     def can_fight(self):
         return self.attack_range[0] > 0
 

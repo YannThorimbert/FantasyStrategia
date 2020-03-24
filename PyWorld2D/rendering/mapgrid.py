@@ -246,7 +246,6 @@ class LogicalMap(BaseGrid):
             gm.build_surfaces(self.colorkey)
 
     def reblit_material_of_cell(self, cell):
-        print("REBUILDING MATERIAL OF CELL AT", cell.coord)
         for gm in self.graphical_maps:
             gm.reblit_material_of_cell(cell)
 

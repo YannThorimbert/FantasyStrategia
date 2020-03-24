@@ -26,6 +26,7 @@ from logic.unit import Unit, InteractiveObject
 from logic.races import Race, LUNAR, STELLAR, SOLAR
 from logic.game import Game
 import gui.theme as theme
+from logic.player import Player
 
 theme.set_theme()
 
@@ -48,12 +49,9 @@ game = Game(me)
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
 
-
-##redessiner objets statiques : faire cellules autour. Parcourir dans le bon ordre !
-
-
-##ajouter des objets statiques a la creation...
-
+#animation pour montrer que feu s'eteint et objet brule (gif anime tas de cendres)
+#faire transitions toutes simples entre batailles et map
+#ajouter mes effets speciaux de fumees et d'explosion dans battles, et feux de map
 
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
 #conquete de base, batailles. Pas d'impots ni de destruction d'objets.
@@ -61,7 +59,6 @@ game = Game(me)
 #ressources : or, population et prestige
 ##==> a quoi sert-il de planter des drapeaux, d'ailleurs ? : a augmenter le prestige
 #Ressources ??? : or. Prestige et crainte ne sont que des facteurs. Or uniquement !!!
-
 
 #2. FEUX:
     #pont, village peut bruler : faire qu'ils disparaissent en mm temps que le feu.
@@ -153,13 +150,16 @@ game.add_unit((16,9), humans2["villager"], 15)
 game.add_unit((15,9), humans2["infantry"], 15)
 
 
-game.set_fire((9,6), 4)
-game.set_fire((17,9), 4)
+game.set_fire((9,6), 1)
+game.set_fire((17,9), 1)
 
 ##game.get_cell_at(15,14).set_name("My top cell")
 
 #### GUI and events part #######################################################
 
+players = [ Player(1, "Helmut", humans.color),
+            Player(2, "Jean", humans2.color)]
+game.set_players(players)
 ui = gui.Gui(game)
 ##game.outdoor_sound.play(-1)
 

@@ -289,7 +289,6 @@ class MapEditor:
         xc,yc = cell.coord
         static_objects = {}
         cells_to_refresh = []
-        print("***RCG", xc,yc)
         for x in range(xc-2,xc+3):
             for y in range(yc-2,yc+3):
                 cell = self.lm.get_cell_at(x,y)

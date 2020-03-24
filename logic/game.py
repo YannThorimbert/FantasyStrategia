@@ -1,5 +1,5 @@
 import os, random, thorpy
-
+from FantasyStrategia.effects.effects import draw_ashes
 from .unit import InteractiveObject
 
 
@@ -21,11 +21,17 @@ class Game:
         self.me = me
         self.units = []
         self.t = 0
-        self.days_left = 3 #set -1 for an infinite number of days
-        self.current_player = 1
+        self.days_left = 10 #set -1 for an infinite number of days
+        self.days_elapsed = 1
+        self.current_player = None
+        self.players = None
+        self.current_player_i = None
+        self.need_refresh_ui_box = True
         #
         self.sounds = thorpy.SoundCollection()
-        self.deny_sound = self.sounds.add("sounds/ui/deny.wav")[0]
+        self.fire_extinguish_sound = self.sounds.add("sounds/psht.wav")[0]
+        self.fire_sound = self.sounds.add("sounds/feuxxx.wav")[0]
+        self.deny_sound = self.sounds.add("sounds/ui/deny2.wav")[0]
         self.death_sounds = get_sounds("sounds/death/", self.sounds)
         self.hit_sounds = get_sounds("sounds/hits/", self.sounds)
         self.walk_sounds = get_sounds("sounds/footsteps/", self.sounds)
@@ -36,7 +42,7 @@ class Game:
         self.is_flaggable = ["grass", "rock", "sand", "snow", "thin snow"]
         self.is_burnable = ["grass", "bridge_v", "bridge_h", "oak", "fir1",
                             "fir2", "firsnow", "palm", "bush", "village",
-                            "flag"]
+                            "flag", "forest"]
         self.burning = {} #e.g. burning[(4,12):2] means 2 remaining turns to burn
         self.fire = InteractiveObject("fire", self.me, "sprites/fire")
         self.fire.min_relpos=[0,-0.4]
@@ -46,10 +52,50 @@ class Game:
         self.bridges = []
 ##        self.fire.always_drawn_last = True
 
-    def extinguish(self, coord):
+    def extinguish(self, coord, natural_end=False):
+        if natural_end: #then the burnable objects are removed
+            print("***Natural extinguish")
+            for o in self.get_cell_at(coord[0],coord[1]).objects:
+                if o.str_type in self.is_burnable:
+                    self.fire_extinguish_sound.play()
+                    o.remove_from_map(self.me)
+                    draw_ashes(self.me, o)
+                    thorpy.get_application().pause(unpause_after=1000)
+##                if o.str_type in self.is_burnable:
+##                    cs = self.me.lm.get_current_cell_size()
+##                    rect, img = o.get_fakerect_and_img(cs)
+##                    ashes = draw_ashes(self.me, o)
+##                    o.remove_from_map(self.me)
+##                    import pygame
+##                    clock = pygame.time.Clock()
+##                    self.fire_extinguish_sound.play()
+##                    img = ashes[0][0]
+##                    for i in range(255):
+##                        img.set_alpha(i)
+##                        self.me.draw()
+##                        self.me.screen.blit(img,rect)
+##                        pygame.display.update(rect)
+##                    for img in ashes[0]:
+##                        clock.tick(30)
+##                        self.me.draw()
+##                        self.me.screen.blit(img,rect)
+##                        pygame.display.update(rect)
+##                    thorpy.get_application().pause(unpause_after=1000)
         self.set_fire(coord, 0)
+        if not self.burning:
+            self.fire_sound.stop()
+
+
+    def set_players(self, players, current=0):
+        self.players = players
+        self.current_player = self.players[current]
+        self.current_player_i = current
+
+    def get_players_from_team(self, team):
+        return [p for p in self.players if p.team == team]
 
     def end_turn(self):
+        self.need_refresh_ui_box = True
         to_extinguish = []
         for x,y in self.burning:
             for obj in self.get_cell_at(x,y).objects:
@@ -58,12 +104,13 @@ class Game:
                     if self.burning[(x,y)] == 0:
                         to_extinguish.append((x,y))
         for coord in to_extinguish:
-            self.extinguish(coord)
-        if self.current_player == 1:
-            #here process IA or other player if this is clicked by player 1:
-            self.current_player = 2
-        else:
-            self.current_player = 1
+            self.extinguish(coord, natural_end=True)
+        self.current_player_i += 1
+        self.current_player_i %= len(self.players)
+        self.current_player = self.players[self.current_player_i]
+        if self.current_player_i == 0:
+            self.days_elapsed += 1
+            self.current_player_i = 0
             #process other things to reinitialize each turn:
             ...
             if self.days_left == 1:
@@ -132,6 +179,7 @@ class Game:
             self.remove_object(o)
         #2. add new fire
         if n > 0:
+            self.fire_sound.play(-1)
             cell = self.get_cell_at(coord[0],coord[1])
             self.burning[coord] = n
             names = ("village","bridge","forest")
