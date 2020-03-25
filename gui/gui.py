@@ -648,9 +648,6 @@ class Gui:
 
     def toggle_show_life(self):
         self.show_lifes = not(self.show_lifes)
-        house = self.game.get_cell_at(6,5).objects[0]
-        print("*** Removing", house.name)
-        house.remove_from_map(self.game.me)
 
     def add_reactions(self):
         reac_click = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, self.lmb,{"button":1})

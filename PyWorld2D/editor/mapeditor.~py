@@ -73,7 +73,7 @@ class MapEditor:
         self.box_hmap = None
         #
         self.ap = gui.AlertPool()
-        self.e_ap_move = gui.get_help_text("To move the map, drag it with", "<LMB>",
+        self.e_ap_move = gui.get_infoalert_text("To move the map, drag it with", "<LMB>",
                                         "or hold", "<left shift>", "while moving mouse")
         self.ap.add_alert_countdown(self.e_ap_move, guip.DELAY_HELP * self.fps)
         #
@@ -262,6 +262,7 @@ class MapEditor:
                             self.cell_size, self.viewport_rect, img_hmap,
                                 self.max_minimap_size)
         self.cam = cam
+        cam.me = self
         self.map_rects = map_rects
 
     def set_key_scroll_velocity(self, velnorm):
@@ -334,6 +335,7 @@ class MapEditor:
         self.idx_cursor = 0
         self.img_cursor = self.cursors[self.cursor_color][self.idx_cursor]
         #
+        self.game.recompute_smokes_pos()
         self.unblit_map()
         self.draw_no_update()
 

@@ -20,6 +20,7 @@ class Camera:
         self.nx, self.ny = 0, 0
         self.img_hmap = None
         self.ui_manager = None
+        self.me = None
 
     def set_parameters(self, world_size, cell_size, viewport_rect, img_hmap, max_minimap_size):
         ws, img = get_world_and_minimap_sizes(img_hmap, max_minimap_size)
@@ -106,8 +107,16 @@ class Camera:
 ##                                            "ratio2", (self.rcam.x/self.world_size.x))
 
     def move(self, delta):
+##        print("***", delta)
+##        coord = (0,0)
+##        x1,y1 = self.get_rect_at_coord(coord).topleft
         self.campos += delta
         self.set_rcam_from_campos()
+##        x2,y2 = self.get_rect_at_coord(coord).topleft
+##        delta = (x2-x1, y2-y1)
+##        print("     ", delta)
+##        self.me.game.translate_smokes(delta)
+        self.me.game.recompute_smokes_position()
 
     def get_cell(self, pix):
         if self.map_rect.collidepoint(pix):

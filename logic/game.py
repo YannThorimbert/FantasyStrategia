@@ -71,6 +71,10 @@ class Game:
     def refresh_smokes(self):
         effects.refresh_smokes(self)
 
+    def recompute_smokes_position(self):
+        for s in self.smokes_log.values():
+            s.refresh_pos()
+
     def extinguish(self, coord, natural_end=False):
         self.remove_fire(coord)
         if not self.burning:
@@ -102,12 +106,10 @@ class Game:
                     if self.burning[coord] == 0:
                         to_extinguish.append(coord)
                     elif self.burning[coord] == 2:
-                        delta = 0, -0.3
-                        self.add_smoke("small", coord, delta, "fire")
+                        self.add_smoke("small", coord, (0,-0.3), "fire")
                     elif self.burning[coord] == 1:
                         self.remove_smoke(coord)
-                        delta = 0, -self.me.cell_size//3
-                        self.add_smoke("large", coord, delta, "fire")
+                        self.add_smoke("large", coord, (0,-0.3), "fire")
         for coord in to_extinguish:
             self.extinguish(coord, natural_end=True)
         self.current_player_i += 1

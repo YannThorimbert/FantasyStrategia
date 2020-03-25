@@ -50,9 +50,9 @@ game = Game(me)
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
 
-#tester blits sur fumee et battle
 
 #ajouter mes effets speciaux de fumees et d'explosion dans battles, et feux de map
+#tester blits sur fumee et battle
 #faire transitions toutes simples entre batailles et map
 
 
@@ -149,7 +149,7 @@ game.add_unit((16,9), humans2["villager"], 15)
 game.add_unit((15,9), humans2["infantry"], 15)
 
 
-game.set_fire((10,8), 1)
+game.set_fire((10,8), 5)
 ##game.set_flag((15,7), humans.flag, 1)
 ##game.set_fire((17,9), 1)
 ##game.add_smoke("small", (8,8))

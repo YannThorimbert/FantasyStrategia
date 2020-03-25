@@ -9,22 +9,32 @@ class GameSmoke:
         self.sg = sg
         self.coord = coord
         self.delta = delta
-        self.pos = None
+        self.pos = self.cam.get_rect_at_coord(self.coord).center
+        self.old_pos = V2(self.pos)
         self.refresh_pos()
 
     def refresh_pos(self):
+        #1. Get new pos
         self.pos = self.cam.get_rect_at_coord(self.coord).center
         cs = self.cam.cell_rect.w
-        print("***", self.pos, self.delta, cs)
         if self.delta:
             x = self.pos[0]+self.delta[0]*cs
             y = self.pos[1]+self.delta[1]*cs
             self.pos = (x,y)
+        #2. Get change of position
+        delta_pos = self.pos - self.old_pos
+        self.old_pos = V2(self.pos)
+        #3. Update old smokes
+        self.sg.translate_old_elements(delta_pos)
 
     def generate(self):
-        self.refresh_pos()
-        print(self.pos)
+##        self.refresh_pos()
         self.sg.generate(self.pos)
+
+
+##    def translate(self, delta):
+##        self.refresh_pos()
+##        self.sg.translate_old_elements(delta)
 
 smokegen_small = None
 smokegen_small_vel = V2(0.5,-3)

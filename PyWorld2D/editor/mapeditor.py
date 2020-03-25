@@ -262,6 +262,7 @@ class MapEditor:
                             self.cell_size, self.viewport_rect, img_hmap,
                                 self.max_minimap_size)
         self.cam = cam
+        cam.me = self
         self.map_rects = map_rects
 
     def set_key_scroll_velocity(self, velnorm):
@@ -334,6 +335,7 @@ class MapEditor:
         self.idx_cursor = 0
         self.img_cursor = self.cursors[self.cursor_color][self.idx_cursor]
         #
+        self.game.recompute_smokes_position()
         self.unblit_map()
         self.draw_no_update()
 

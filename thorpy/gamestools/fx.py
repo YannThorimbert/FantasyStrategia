@@ -74,6 +74,10 @@ class SmokeGenerator(object):
         if len(self.smokes) > self.n:
             self.smokes = self.smokes[1::]
 
+    def translate_old_elements(self, delta):
+        for s in self.smokes:
+            s.update_pos_only(delta)
+
     def draw(self, surface):
         for s in self.smokes:
             if not s.dead:
@@ -110,6 +114,11 @@ class Smoke(object):
         self.rect = self.img.get_rect()
         self.rect.center = self.q
         self.dead = False
+
+    def update_pos_only(self, dq):
+        self.q += dq
+        self.rect = self.img.get_rect()
+        self.rect.center = self.q
 
     def update_physics(self, dq):
         if self.t < self.generator.n:
