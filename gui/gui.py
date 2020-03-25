@@ -3,8 +3,7 @@ import PyWorld2D.gui.elements as elements
 import PyWorld2D.gui.parameters as guip
 import PyWorld2D.saveload.io as io
 
-from logic.battle import Battle, DistantBattle
-from logic.unit import DELTA_TO_KEY, DELTAS
+from FantasyStrategia.logic.battle import Battle, DistantBattle
 
 def quit_func():
     io.ask_save(me)

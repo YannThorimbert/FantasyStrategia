@@ -1,6 +1,6 @@
 import os, random, thorpy
 from FantasyStrategia.effects import effects
-from .unit import InteractiveObject
+from FantasyStrategia.logic.unit import InteractiveObject
 
 
 
@@ -56,6 +56,17 @@ class Game:
         self.smokes_log = {}
         effects.initialize_smokegens()
 ##        self.fire.always_drawn_last = True
+
+    def set_ambiant_sounds(self, val):
+        if val:
+            self.outdoor_sound.play(-1)
+            if self.burning:
+                self.fire_sound.play(-1)
+        else:
+            self.outdoor_sound.stop()
+            if self.burning:
+                self.fire_sound.stop()
+
 
     def add_smoke(self, type_, coord, delta=None, what=""):
         if type_ == "small":

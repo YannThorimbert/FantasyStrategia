@@ -8,7 +8,6 @@ is not crucial.
 """
 from __future__ import print_function, division
 import numpy as np
-from numpy.polynomial.polynomial import polyval2d
 import thornoise.numpygen.colorscale as colorscale
 import thornoise.numpygen.noisegen as ng
 

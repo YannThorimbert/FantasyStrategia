@@ -78,10 +78,18 @@ class SmokeGenerator(object):
         for s in self.smokes:
             s.update_pos_only(delta)
 
+##    def draw(self, surface):
+##        for s in self.smokes:
+##            if not s.dead:
+##                surface.blit(s.img, s.rect.topleft)
+
     def draw(self, surface):
-        for s in self.smokes:
-            if not s.dead:
-                surface.blit(s.img, s.rect.topleft)
+        blits = [(s.img, s.rect.topleft) for s in self.smokes if not s.dead]
+        surface.blits(blits)
+
+##        for s in self.smokes:
+##            if not s.dead:
+##                surface.blit(s.img, s.rect.topleft)
 
 ##    def draw(self, surface, parent):
 ##        if len(self.smokes) > self.n:

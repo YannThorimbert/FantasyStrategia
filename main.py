@@ -13,20 +13,13 @@ dc.check_gui("PIL")
 import pygame
 import thorpy #for GUI and other graphics - see www.thorpy.org
 
-
-from PyWorld2D import PW_PATH
-from PyWorld2D.mapobjects.objects import MapObject
-from PyWorld2D.editor.mapeditor import MapEditor #base structure for a map
-from PyWorld2D.editor.mapbuilding import MapInitializer #configuration structure of a map
-
 import maps.maps as maps
 import gui.gui as gui
-from logic.unit import Unit, InteractiveObject
-##from logic.interactiveobject import InteractiveObject
 from logic.races import Race, LUNAR, STELLAR, SOLAR
 from logic.game import Game
 import gui.theme as theme
 from logic.player import Player
+################################################################################
 
 theme.set_theme()
 
@@ -50,6 +43,10 @@ game = Game(me)
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
 
+
+
+#bruit au lancer de projectile et a la collision. Attributs du type de projectile.
+#convertir au blits !!!
 
 #ajouter mes effets speciaux de fumees et d'explosion dans battles, et feux de map
 #tester blits sur fumee et battle
@@ -79,6 +76,7 @@ game = Game(me)
 ################################################################################
 ################################################################################
 
+#blits dans thorpy !! (e.g debris)
 
 ##Mettre des monuments (objets comme drapeaux mais avec image differente) qui augmentent le prestige(rayonnement).
 ## rayonnement = somme( 1. / distance à capitale ennemie de chaque monument). Les monuments coutent cher et sont construits par villageois/ouvriers?.
@@ -111,7 +109,7 @@ game.build_map(map_initializer, fast=False, use_beach_tiler=False, load_tilers=F
 
 
 
-humans = Race("Green team", "human", LUNAR, me, "green", team=1)
+humans = Race("Green team", "human", LUNAR, me, "green", team=1) #LUNAR, STELLAR or SOLAR
 humans.base_material_cost["grass"] = 2
 humans.base_material_cost["forest"] = 5
 humans.dist_factor = 10
@@ -144,14 +142,14 @@ game.add_unit((12,11), humans2["wizard"], 30)
 game.add_unit((17,3), humans["villager"], 10)
 
 game.add_unit((18,8), humans["infantry"], 1)
-game.add_unit((17,10), humans["wizard"], 1)
+game.add_unit((17,10), humans["wizard"], 10)
 game.add_unit((16,9), humans2["villager"], 15)
 game.add_unit((15,9), humans2["infantry"], 15)
 
 
-game.set_fire((10,8), 5)
+##game.set_fire((10,8), 5)
 ##game.set_flag((15,7), humans.flag, 1)
-##game.set_fire((17,9), 1)
+game.set_fire((15,7), 2)
 ##game.add_smoke("small", (8,8))
 ##game.add_smoke("large", (10,8))
 
@@ -163,7 +161,7 @@ players = [ Player(1, "Helmut", humans.color),
             Player(2, "Jean", humans2.color)]
 game.set_players(players)
 ui = gui.Gui(game)
-game.outdoor_sound.play(-1)
+game.set_ambiant_sounds(False)
 
 def func_reac_time(): #here add wathever you want
     """Function called each frame"""

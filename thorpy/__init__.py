@@ -40,7 +40,6 @@ from thorpy.elements.launchers.browserlauncher import BrowserLauncher
 from thorpy.elements.launchers.dropdownlistlauncher import DropDownListLauncher
 from thorpy.elements.launchers.paramsetterlauncher import ParamSetterLauncher
 from thorpy.elements.launchers.colorsetterlauncher import ColorSetterLauncher
-from thorpy.elements.paramsetter import ParamSetter
 from thorpy.elements.background import Background
 from thorpy.elements.image import Image
 from thorpy.elements.box import Box, BarBox

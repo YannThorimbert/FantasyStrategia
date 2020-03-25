@@ -1,4 +1,3 @@
-from thorpy._utils.images import load_image
 from thorpy._utils.interpolation import get_y
 from pygame import surfarray
 import math, pygame

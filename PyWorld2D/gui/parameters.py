@@ -1,4 +1,4 @@
-import thorpy, pygame
+import thorpy
 
 FPS = 60
 

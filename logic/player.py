@@ -1,4 +1,4 @@
-from .unit import COLORS
+from FantasyStrategia.logic.unit import COLORS
 
 class Player:
     def __init__(self, team, name, color):

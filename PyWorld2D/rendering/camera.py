@@ -65,6 +65,7 @@ class Camera:
 
     def draw_grid(self, screen, show_grid_lines):
         xpix, ypix = self.get_dpix()
+        import time
         self.lm.draw(screen, self.map_rect.topleft, xpix, ypix)
         if show_grid_lines:
             self.draw_grid_lines(screen)
@@ -235,17 +236,23 @@ class Camera:
                 to_sort.add((rect,img,o))
             self.log_static_objects_around(o, to_sort, drawn_last)
         #to_sort is on the form [((x,y,right,bottom),surface,object), ...]
-        to_sort = sorted(to_sort, key=lambda x:x[0][3])
-        for rect, img, o in to_sort:
-            screen.blit(img, (rect[0],rect[1]))
-        for rect, img, o in drawn_last:
-            screen.blit(img, (rect[0],rect[1]))
+        drawn_first = [(img,rect) for rect,img,o in to_sort]
+        drawn_first.sort(key=lambda x:x[1][3])
+        screen.blits(drawn_first)
+        #
+        drawn_last = [(img,rect) for rect,img,o in drawn_last]
+        screen.blits(drawn_last)
+        #version without blits: ############################
+##        to_sort = sorted(to_sort, key=lambda x:x[0][3])
+##        for rect, img, o in to_sort:
+##            screen.blit(img, (rect[0],rect[1]))
+##        for rect, img, o in drawn_last:
+##            screen.blit(img, (rect[0],rect[1]))
+##        if self.ui_manager:
+##            self.ui_manager.draw_after_objects(s)
+        ########### end version without blits ###############
         if self.ui_manager:
             self.ui_manager.draw_after_objects(s)
-##        print([(o.cell.coord, o.name) for r,i,o in to_sort])
-##        print([(o.cell.coord, o.name) for r,i,o in drawn_last])
-##        print("***")
-
 
     def get_center_coord(self):
         return self.get_coord_at_pix(self.map_rect.center)

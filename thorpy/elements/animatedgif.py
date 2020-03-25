@@ -9,7 +9,6 @@ except ImportError:
 import pygame
 from thorpy.elements.image import Image as ThorpyImage
 from thorpy.painting.pilgraphics import pil_img_to_pygame_surf
-from thorpy.miscgui.reaction import ConstantReaction
 import thorpy
 
 '''

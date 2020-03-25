@@ -1,7 +1,6 @@
-import random, math
+import random
 import pygame
 import thorpy
-import PyWorld2D.rendering.tilers.tilemanager as tm
 import PyWorld2D.constants as const
 
 

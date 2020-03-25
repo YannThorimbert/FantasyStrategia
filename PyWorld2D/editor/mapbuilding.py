@@ -6,7 +6,6 @@ import PyWorld2D.mapobjects.objects as objs
 from PyWorld2D.editor.mapeditor import MapEditor
 from PyWorld2D import PW_PATH
 from PyWorld2D.ia.path import BranchAndBoundForMap
-import PyWorld2D.rendering.tilers.tilemanager as tm
 
 
 terrain_small = {  "hdeepwater": 0.3, #deep water only below 0.4

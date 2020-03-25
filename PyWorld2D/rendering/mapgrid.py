@@ -240,6 +240,7 @@ class LogicalMap(BaseGrid):
         x0 = self.current_x
         y0 = self.current_y
         self.current_gm.draw(screen, topleft, x0, y0, dx_pix, dy_pix, self.t)
+##        self.current_gm.draw_blits(screen, topleft, x0, y0, dx_pix, dy_pix, self.t)
 
     def build_surfaces(self):
         for gm in self.graphical_maps:
@@ -543,6 +544,18 @@ class GraphicalMap(PygameGrid):
             for y in range(self.n_submaps[1]):
                 posy = round(y*self.submap_size[1] + delta_y)
                 screen.blit(self.surfaces[x][y][t], (posx,posy))
+
+##    def draw_blits(self, screen, topleft, x0, y0, xpix, ypix, t):
+##        delta_x = topleft[0] - xpix - x0*self.cell_size
+##        delta_y = topleft[1] - ypix - y0*self.cell_size
+##        oldposx = delta_x
+##        blits = []
+##        for x in range(self.n_submaps[0]):
+##            posx = round(x*self.submap_size[0] + delta_x)
+##            for y in range(self.n_submaps[1]):
+##                posy = round(y*self.submap_size[1] + delta_y)
+##                blits.append((self.surfaces[x][y][t], (posx,posy)))
+##        screen.blits(blits)
 
     def extract_static_img(self, coord, frame, img):
         """blit on <img> self's graphics present at <coord>"""

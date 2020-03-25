@@ -42,11 +42,15 @@ smokegen_large = None
 smokegen_large_vel = V2(1,-6)
 smokegen_mod = 6
 
+smokegen_wizard = None
+
 def initialize_smokegens():
-    global smokegen_small, smokegen_large
+    global smokegen_small, smokegen_large, smokegen_wizard
     smokegen_small = thorpy.fx.get_fire_smokegen(n=50, color=(200,255,155),
                                             grow=0.5, black_increase_factor=2.)
     smokegen_large = thorpy.fx.get_fire_smokegen(n=50, color=(200,255,155),
+                                            grow=1., black_increase_factor=2.)
+    smokegen_wizard = thorpy.fx.get_fire_smokegen(n=20, color=(200,255,155),
                                             grow=1., black_increase_factor=2.)
 
 def refresh_smokes(game):
@@ -59,6 +63,7 @@ def refresh_smokes(game):
         smokegen_large.update_physics(smokegen_large_vel)
     smokegen_small.draw(game.me.screen)
     smokegen_large.draw(game.me.screen)
+
 
 
 def draw_ashes(game, obj, n=20, frame=0):
@@ -77,7 +82,6 @@ def draw_ashes(game, obj, n=20, frame=0):
     ashlets = [pygame.Surface(ashlet_size) for i in ash_shades]
     for i,c in enumerate(ash_shades):
         ashlets[i].fill(c)
-    clock = pygame.time.Clock()
     cs = me.lm.get_current_cell_size()
     rect, img = obj.get_fakerect_and_img(cs)
     ash = thorpy.graphics.get_shadow(img,
@@ -97,14 +101,22 @@ def draw_ashes(game, obj, n=20, frame=0):
         if ash.get_at((x,y)) == ash_shades[0]:
             ash.set_at((x,y), random.choice(ash_shades))
     ###
+    clock = pygame.time.Clock()
+    n2 = 10
+    for i in range(n2):
+        me.draw()
+        me.screen.blit(ash, rect)
+        pygame.display.flip()
+        clock.tick(30)
     for i in range(n):
+        blits = []
         for k in range(N):
             x,y = random.randint(0,w-1), random.randint(0,h-1)
             ash.set_at((x,y), (0,)*4)
             x = int(random.gauss(w//2, w//8))
             y = int(random.gauss(h, h//8))
-##            ash.set_at((x,y), random.choice(ash_shades))
-            ash.blit(random.choice(ashlets), (x,y))
+            blits.append((random.choice(ashlets), (x,y)))
+        ash.blits(blits)
         me.draw()
         me.screen.blit(ash, rect)
         pygame.display.flip()

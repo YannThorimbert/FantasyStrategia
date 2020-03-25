@@ -1,4 +1,4 @@
-import math, random, os
+import math, os
 import pygame
 from pygame.math import Vector2 as V2
 import thorpy
@@ -8,7 +8,6 @@ from PyWorld2D.rendering.mapgrid import LogicalMap, WhiteLogicalMap
 import PyWorld2D.gui.parameters as guip
 import PyWorld2D.gui.elements as gui
 from PyWorld2D.rendering.camera import Camera
-import PyWorld2D.thornoise.purepython.noisegen as ng
 import PyWorld2D.saveload.io as io
 from PyWorld2D.mapobjects.objects import MapObject
 
@@ -390,6 +389,8 @@ class MapEditor:
         self.cam.draw_grid(self.screen, self.show_grid_lines)
         #blit objects
         self.cam.draw_objects(self.screen, self.dynamic_objects)
+        #blit smoke effects
+        self.game.refresh_smokes()
         #blit right pane and draw rect on minimap
         self.e_box.blit()
 ##        pygame.draw.rect(self.screen, (255,255,255), self.cam.rmouse, 1)

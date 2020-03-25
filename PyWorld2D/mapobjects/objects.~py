@@ -1,4 +1,4 @@
-import random, math
+import random
 import pygame
 import thorpy
 import PyWorld2D.rendering.tilers.tilemanager as tm
@@ -288,13 +288,6 @@ class MapObject:
             me.rebuild_cell_graphics(self.cell)
         else: #easy
             me.dynamic_objects.remove(self)
-
-##        if self.name == "bridge": #then we put a fake river as dynamic object
-##            rivers = me.map_initializer.rivers
-##            orientation = (-1,0)
-##            river_obj = rivers.get(orientation)
-##            me.game.add_object(self.cell.coord, river_obj, 1)
-
 
     def move_to_cell(self, dest_cell):
 ##        assert dest_cell.unit is None

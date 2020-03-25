@@ -1,7 +1,6 @@
 import os
 import pygame
-from . import unit
-import PyWorld2D.constants as const
+from FantasyStrategia.logic import unit
 
 std_material_cost = {'Deep water': float("inf"),
                      'Grass': 1.5,

@@ -2,7 +2,7 @@
 """This example module shows how to generate 2D terrain or noise with
 no dependency, for Python2 and Python3."""
 from __future__ import print_function
-import random, math
+import random
 import thornoise.purepython.noisegen as ng
 
 if __name__ == "__main__":

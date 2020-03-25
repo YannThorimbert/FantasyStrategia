@@ -4,7 +4,7 @@ from __future__ import division
 
 from copy import copy
 
-from pygame import Rect, SRCALPHA
+from pygame import SRCALPHA
 
 from thorpy.painting.fusionner import _Fusionner
 from thorpy.miscgui.title import Title
@@ -12,7 +12,7 @@ from thorpy.elements.ghost import Ghost
 from thorpy.miscgui.state import State
 from thorpy.miscgui._screened import _Screened
 from thorpy.miscgui.reaction import Reaction
-from thorpy.miscgui import constants, functions, parameters, style, painterstyle
+from thorpy.miscgui import constants, functions, parameters, style
 
 
 class Element(_Screened, Ghost):

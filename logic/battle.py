@@ -2,9 +2,9 @@ import random, math, thorpy
 import numpy as np
 import pygame
 from pygame.math import Vector2 as V2
-import bisect
 import PyWorld2D.gui.parameters as guip
-from .unit import Unit
+from FantasyStrategia.logic.unit import Unit
+from FantasyStrategia.effects import effects
 
 ##from .unit import DELTA_TO_KEY, DELTA_TO_KEY_A, KEY_TO_DELTA, DELTAS
 
@@ -507,12 +507,12 @@ class Battle:
         pygame.display.flip()
 ##        thorpy.interactive_pause(3.)
         #######################################################################
-        self.game.outdoor_sound.stop()
+        self.game.set_ambiant_sounds(False)
         self.add_walk_sounds()
         menu.play()
         for s in self.walk_sounds:
             s.stop()
-        self.game.outdoor_sound.play(-1)
+        self.game.set_ambiant_sounds(True)
 
 
 
@@ -585,12 +585,18 @@ class Battle:
             life = 0.
         self.timebar.set_life(life)
 
-    def update_projectiles(self):
+    def update_and_blit_projectiles(self):
         to_delete = []
         semicell = self.cell_size//2
+        sg = effects.smokegen_wizard
+        treat_smokes = self.fight_t%2 == 0
+        if treat_smokes:
+            sg.kill_old_elements()
         for p in self.projectiles:
             if p.can_blit():
-                self.surface.blit(p.img, p.pos)
+##                self.surface.blit(p.img, p.pos)
+                if treat_smokes:
+                    sg.generate(p.pos)
             p.update_pos()
             if p.D < semicell:
                 to_delete.append(p)
@@ -599,6 +605,9 @@ class Battle:
                 to_delete.append(p)
         for p in to_delete:
             self.projectiles.remove(p)
+        if treat_smokes:
+            sg.update_physics(V2(0,0))
+        sg.draw(self.surface)
 
 
     def blit_terrain_and_deads(self):
@@ -622,7 +631,7 @@ class Battle:
         for u in self.f:
             u.draw_move_fight()
         if self.blit_this_frame:
-            self.update_projectiles()
+            self.update_and_blit_projectiles()
             self.refresh_and_blit_gui()
             pygame.display.flip()
         self.refresh_deads()

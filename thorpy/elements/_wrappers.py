@@ -8,7 +8,7 @@ from thorpy.elements.box import Box
 from thorpy.elements.inserter import Inserter
 from thorpy.miscgui.storage import store
 from thorpy.miscgui import constants, style, functions
-from thorpy.painting.painters.imageframe import ButtonImage, ImageFrame
+from thorpy.painting.painters.imageframe import ButtonImage
 import thorpy.painting.graphics as graphics
 
 def make_textbox(text, font_size=None, font_color=None, ok_text="Ok"):
