@@ -27,7 +27,7 @@ W,H = 1200, 700 #screen size
 app = thorpy.Application((W,H))
 
 map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
-map_initializer.chunk = (1322,43944)
+map_initializer.chunk = (1322, 43944)
 map_initializer.max_number_of_roads = 0 #5
 map_initializer.max_number_of_rivers = 0 #5
 map_initializer.village_homogeneity = 0.1
@@ -43,15 +43,9 @@ game = Game(me)
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
 
+##grise mult_RGBA
 
-
-#bruit au lancer de projectile et a la collision. Attributs du type de projectile.
-#convertir au blits !!!
-
-#ajouter mes effets speciaux de fumees et d'explosion dans battles, et feux de map
-#tester blits sur fumee et battle
-#faire transitions toutes simples entre batailles et map
-
+##Fusion units
 
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
 #conquete de base et batailles. Pas d'impots ni de gestion hors production unites.
@@ -76,7 +70,7 @@ game = Game(me)
 ################################################################################
 ################################################################################
 
-#blits dans thorpy !! (e.g debris)
+#archers en priorite !!! (implique d'attacher fumee et sons aux classes de projectils)
 
 ##Mettre des monuments (objets comme drapeaux mais avec image differente) qui augmentent le prestige(rayonnement).
 ## rayonnement = somme( 1. / distance à capitale ennemie de chaque monument). Les monuments coutent cher et sont construits par villageois/ouvriers?.
@@ -141,15 +135,26 @@ game.add_unit((14,1), humans["villager"], 10)
 game.add_unit((12,11), humans2["wizard"], 30)
 game.add_unit((17,3), humans["villager"], 10)
 
-game.add_unit((18,8), humans["infantry"], 1)
+game.add_unit((18,8), humans["infantry"], 10)
 game.add_unit((17,10), humans["wizard"], 10)
 game.add_unit((16,9), humans2["villager"], 15)
 game.add_unit((15,9), humans2["infantry"], 15)
 
 
+gnx,gny = game.get_map_size()
+for obj in game.get_all_objects_by_name("village"):
+    if obj.cell.coord[1] > gny//2 + 2:
+        game.set_flag(obj.cell.coord, humans.flag, humans.team)
+    elif obj.cell.coord[1] < gny//2 - 2:
+        game.set_flag(obj.cell.coord, humans2.flag, humans2.team)
+    #else village is neutral
+
+
+
+
 ##game.set_fire((10,8), 5)
 ##game.set_flag((15,7), humans.flag, 1)
-game.set_fire((15,7), 2)
+##game.set_fire((15,7), 2)
 ##game.add_smoke("small", (8,8))
 ##game.add_smoke("large", (10,8))
 
@@ -173,6 +178,7 @@ thorpy.add_time_reaction(me.e_box, func_reac_time)
 
 
 
+
 #me.e_box includes many default reactions. You can remove them as follow:
 #remove <g> key:
 ##me.e_box.remove_reaction("toggle grid")
@@ -184,7 +190,6 @@ thorpy.add_time_reaction(me.e_box, func_reac_time)
 
 me.set_zoom(level=0)
 m = thorpy.Menu(me.e_box,fps=me.fps)
-print()
 print(me.object_types)
 m.play()
 

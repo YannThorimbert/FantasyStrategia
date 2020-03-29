@@ -149,6 +149,8 @@ class Race:
         self.flag = unit.InteractiveObject(self.name+" flag", self.me,
                                             "sprites/flag", race=self,
                                             str_type="flag")
+        self.flag.max_relpos = [0.7, -0.1]
+        self.flag.min_relpos = [0.7, -0.1]
 ##        self.flag.always_drawn_last = True
 
 

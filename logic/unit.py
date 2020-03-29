@@ -54,6 +54,7 @@ class Unit(MapObject):
         self.stop_animation_func = None
         self.set_animation_type("loop")
         self.animation_step = 0
+        self.grayed = []
         self.highlights = {}
         self.sprites_ref = {}
         if sprites:
@@ -91,6 +92,7 @@ class Unit(MapObject):
         self.team = None
         self.footprint = None
         self.projectile1 = None #projectile used in close battle
+        self.is_grayed = False
         self.id = Unit.unit_id
         Unit.unit_id += 1
 
@@ -285,6 +287,7 @@ class Unit(MapObject):
     def build_imgs(self):
         MapObject.build_imgs(self)
         self.build_highlighted_idles()
+        self.build_grayed_idles()
 
     def build_highlighted_idles(self):
         frame = self.sprites_ref["idle"][0]
@@ -295,16 +298,38 @@ class Unit(MapObject):
             for z in range(len(self.editor.zoom_cell_sizes)):
                 img = self.imgs_z_t[z]
                 img = img[frame]
-##                e = thorpy.Image(img)
-                shad = thorpy.graphics.get_shadow(img, shadow_radius=HIGHLIGHT_BLUR, black=255,
+                shad = thorpy.graphics.get_shadow(img,
+                                    shadow_radius=HIGHLIGHT_BLUR, black=255,
                                     color_format="RGBA", alpha_factor=1.,
                                     decay_mode="exponential", color=rgb,
-                                    sun_angle=45., vertical=True, angle_mode="flip",
+                                    sun_angle=45., vertical=True,
+                                    angle_mode="flip",
                                     mode_value=(False, False))
                 size = shad.get_rect().inflate(HIGHLIGHT_INFLATE,HIGHLIGHT_INFLATE).size
                 shad = pygame.transform.smoothscale(shad, size)
                 self.highlights[color].append(shad)
 
+
+    def build_grayed_idles(self):
+##        frame = self.sprites_ref["idle"][0]
+        for z in range(len(self.editor.zoom_cell_sizes)):
+            self.grayed.append([])
+            imgs = self.imgs_z_t[z]
+            for img in imgs:
+                shad = img.copy()
+                w,h = shad.get_size()
+                TRANSP = (255,)*4
+                K = 0.75
+                for x in range(w):
+                    for y in range(h):
+                        rgba = shad.get_at((x,y))
+                        if rgba != TRANSP:
+                            r,g,b,a = rgba
+                            r = max(0, int(K*r))
+                            g = max(0, int(K*r))
+                            b = max(0, int(K*r))
+                            shad.set_at((x,y), (r,g,b,a))
+                self.grayed[-1].append(shad)
 
     def get_coords_within_range(self, rng):
         dmin,dmax = rng
@@ -440,6 +465,7 @@ class InteractiveObject(Unit):
         self.stop_animation_func = None
         self.set_animation_type("loop")
         self.animation_step = 0
+        self.grayed = []
         self.highlights = {}
         self.sprites_ref = {}
         self.race = race
@@ -456,7 +482,6 @@ class InteractiveObject(Unit):
             img,key = sprites
             sprites = {}
             sprites[key] = [img], const.NORMAL
-        print("SPRITES", sprites)
         if sprites:
             imgs = []
             isprite = 0

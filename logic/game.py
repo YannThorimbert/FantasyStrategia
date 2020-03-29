@@ -31,6 +31,8 @@ class Game:
         self.need_refresh_ui_box = True
         #
         self.sounds = thorpy.SoundCollection()
+        self.flag_sound = self.sounds.add("sounds/hits/new_hits_5.wav")[0]
+        self.start_battle_sound = self.sounds.add("sounds/start_battle.wav")[0]
         self.fire_extinguish_sound = self.sounds.add("sounds/psht.wav")[0]
         self.fire_sound = self.sounds.add("sounds/fire.wav")[0]
         self.deny_sound = self.sounds.add("sounds/ui/deny2.wav")[0]
@@ -38,7 +40,8 @@ class Game:
         self.hit_sounds = get_sounds("sounds/hits/", self.sounds)
         self.walk_sounds = get_sounds("sounds/footsteps/", self.sounds)
         self.outdoor_sound = self.sounds.add("sounds/atmosphere/nature.wav")[0]
-        self.magic_attack_sounds = get_sounds("sounds/attacks/", self.sounds)
+        self.magic_attack_sounds = get_sounds("sounds/magic/attacks/", self.sounds)
+        self.magic_explosion_sounds = get_sounds("sounds/magic/explosions/", self.sounds)
         for s in self.death_sounds:
             s.set_volume(0.5)
         self.is_flaggable = ["grass", "rock", "sand", "snow", "thin snow"]
@@ -56,6 +59,7 @@ class Game:
         self.smokes_log = {}
         effects.initialize_smokegens()
 ##        self.fire.always_drawn_last = True
+        #
 
     def set_ambiant_sounds(self, val):
         if val:
@@ -126,6 +130,9 @@ class Game:
         self.current_player_i += 1
         self.current_player_i %= len(self.players)
         self.current_player = self.players[self.current_player_i]
+        for u in self.units:
+            if u.team == self.current_player.team:
+                u.is_grayed = False
         if self.current_player_i == 0:
             self.days_elapsed += 1
             self.current_player_i = 0
@@ -186,9 +193,11 @@ class Game:
 ##        u.remove_from_game()
 
     def set_flag(self, coord, flag_template, team):
+        self.flag_sound.play()
         cell = self.get_cell_at(coord[0],coord[1])
-        o = self.add_obj_before_other_if_needed(flag_template,
-                                                 1, ["village"], cell)
+##        o = self.add_obj_before_other_if_needed(flag_template,
+##                                                 1, ["village"], cell)
+        o = self.add_object(cell.coord, flag_template, 1, True)
         o.team = team
 
     def remove_fire(self, coord):
@@ -234,18 +243,22 @@ class Game:
         o = self.add_object(cell.coord, obj, qty, has_other)
         return o
 
+
     def get_interactive_objects(self, x, y):
         return [o for o in self.get_cell_at(x,y).objects if o.can_interact]
 
     def get_all_objects_by_name(self, name):
         objs = []
-        for x in self.me.lm.nx:
-            for y in self.me.lm.ny:
+        for x in range(self.me.lm.nx):
+            for y in range(self.me.lm.ny):
                 cell = self.get_cell_at(x,y)
                 for o in cell.objects:
                     if o.name == name:
                         objs.append(o)
-        return o
+        return objs
+
+    def get_map_size(self):
+        return self.me.lm.nx, self.me.lm.ny
 
 
 

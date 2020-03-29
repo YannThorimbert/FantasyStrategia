@@ -37,7 +37,7 @@ MAX_TARGETED_BY2 = 6
 SUMMARY_LIFEBAR_SIZE = (150,25)
 
 P_DEAD_SOUND = 0.5
-P_HIT_SOUND = 0.04
+P_HIT_SOUND = 1.
 
 DFIGHT = 16
 K = 2.
@@ -290,8 +290,10 @@ class FightingUnit:
         ########################################################################
         near_target = abs(delta.x) < DFIGHT and abs(delta.y) < DFIGHT
         if near_target: #fighting (unit doesnt move)
-            if self.battle.game.hit_sounds and random.random() < P_HIT_SOUND:
-                random.choice(self.battle.game.hit_sounds).play()
+            if random.random() < P_HIT_SOUND:
+                s = random.choice(self.battle.game.hit_sounds)
+                self.battle.play_sound(s)
+                self.battle.shocks.append((self.target.rect.center, 0))
             if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
                 self.refresh_direction_target()
             frame = self.get_frame_near_target()
@@ -399,6 +401,15 @@ class Battle:
         self.fight_frame_attack = 0
         self.fight_frame_attack_slow = 0
         self.finished = 0
+        #
+        self.explosion = thorpy.AnimatedGif("sprites/explosion.gif")
+        s = self.game.me.zoom_cell_sizes[self.z]
+        self.explosion.resize_frames((2*s,2*s))
+        self.explosions = [] #contain the pos of explosions
+        #
+        self.shock = thorpy.AnimatedGif("sprites/shock2.gif")
+        self.shocks = [] #contain the pos of shocks
+        #
         self.blood = pygame.image.load("sprites/blood.png")
         self.background = None
         self.mod_display = 1
@@ -426,6 +437,9 @@ class Battle:
         self.timebar = thorpy.LifeBar("Remaining time", size=(self.W//2, 25))
         self.timebar.set_main_color((220,220,220,100))
         self.timebar.stick_to("screen","top", "top")
+        #sound
+        self.current_channel_number = 0
+        self.current_channel = pygame.mixer.Channel(self.current_channel_number)
 
 
     def press_enter(self):
@@ -467,8 +481,19 @@ class Battle:
 
     def fight(self):
         self.prepare_battle()
+        from FantasyStrategia.gui import transitions
+        self.game.start_battle_sound.play()
+        transitions.fade_to_black_screen()
         self.show()
-        self.show_summary()
+        transitions.fade_to_black_screen(t=1.)
+        self.game.me.draw()
+        e, show_death = self.get_summary()
+        e.blit()
+        transitions.fade_from_black_screen(self.surface, t=0.5)
+        thorpy.launch_blocking(e)
+        #manual animation is simpler in this case
+        for unit in show_death:
+            unit.die_after(2.)
 
     def accelerate(self):
         self.mod_display = 10
@@ -560,6 +585,12 @@ class Battle:
                 r.center = u.rect.center
                 self.surface.blit(u.dead_img,u.rect)
 
+    def play_sound(self, s):
+        self.current_channel_number += 1
+        self.current_channel_number %= pygame.mixer.get_num_channels()
+        self.current_channel = pygame.mixer.Channel(self.current_channel_number)
+        self.current_channel.play(s)
+
     def refresh_deads(self):
         if self.finished:
             self.to_remove = []
@@ -567,7 +598,8 @@ class Battle:
         for u in self.to_remove:
             if not u.dead:
                 if self.game.death_sounds and random.random() < P_DEAD_SOUND:
-                    random.choice(self.game.death_sounds).play()
+                    sound = random.choice(self.game.death_sounds)
+                    self.play_sound(sound)
                 u.dead = True
                 if u.target:
                     if u in u.target.targeted_by: #distant fighting units can target without beeing your current opponent
@@ -589,14 +621,11 @@ class Battle:
         to_delete = []
         semicell = self.cell_size//2
         sg = effects.smokegen_wizard
-        treat_smokes = self.fight_t%2 == 0
-        if treat_smokes:
-            sg.kill_old_elements()
+        sg.kill_old_elements()
         for p in self.projectiles:
             if p.can_blit():
-##                self.surface.blit(p.img, p.pos)
-                if treat_smokes:
-                    sg.generate(p.pos)
+##                self.surface.blit(p.img, p.pos) #arrow
+                sg.generate(p.pos)
             p.update_pos()
             if p.D < semicell:
                 to_delete.append(p)
@@ -605,10 +634,35 @@ class Battle:
                 to_delete.append(p)
         for p in to_delete:
             self.projectiles.remove(p)
-        if treat_smokes:
-            sg.update_physics(V2(0,0))
+        sg.update_physics(V2(0,0))
         sg.draw(self.surface)
+        self.draw_explosions()
+        self.draw_shocks()
 
+
+    def draw_explosions(self):
+        for i in range(len(self.explosions)-1,-1,-1):
+            pos, frame = self.explosions[i]
+            img = self.explosion.frames[frame]
+            self.surface.blit(img, pos)
+            if self.fight_t%4 == 0:
+                frame += 1
+            if frame >= len(self.explosion.frames):
+                self.explosions.pop(i)
+            else:
+                self.explosions[i] = (pos, frame)
+
+    def draw_shocks(self):
+        for i in range(len(self.shocks)-1,-1,-1):
+            pos, frame = self.shocks[i]
+            img = self.shock.frames[frame]
+            self.surface.blit(img, pos)
+            if self.fight_t%4 == 0:
+                frame += 1
+            if frame >= len(self.shock.frames):
+                self.shocks.pop(i)
+            else:
+                self.shocks[i] = (pos, frame)
 
     def blit_terrain_and_deads(self):
         self.surface.blit(self.terrain, (0,0))
@@ -899,7 +953,7 @@ class Battle:
                 uside.quantity -= 1
 
 
-    def show_summary(self):
+    def get_summary(self):
         #
         e1 = thorpy.make_text("Battle summary", 36)
         e2 = thorpy.Line(2*e1.get_rect().width // 3, "h")
@@ -943,12 +997,11 @@ class Battle:
                     thorpy.Line(2*e1.get_rect().width // 3, "h"),group_bottom])
         e.set_main_color((255,255,255,100))
         e.center()
-        b = self.game.me.draw()
-        pygame.display.flip()
-        thorpy.launch_blocking(e)
-        #manual animation is simpler in this case
-        for unit in show_death:
-            unit.die_after(2.)
+        return e, show_death
+
+
+
+
 
 
 
@@ -1058,7 +1111,8 @@ class DistantFightingUnit(FightingUnit):
 
     def fight_against_target_distant(self):
         if self.time_from_last_shot > self.unit.shot_frequency:
-            random.choice(self.battle.game.magic_attack_sounds).play()
+            s = random.choice(self.battle.game.magic_attack_sounds)
+            self.battle.play_sound(s)
             projectile = self.battle.projectile_class(self, self.target)
             self.battle.projectiles.append(projectile)
             self.time_from_last_shot = 0
@@ -1152,14 +1206,19 @@ class Projectile:
         self.D = (self.pos - self.target_pos).length()
 
     def kill_unit_here(self):
-        self_is_defending = self.target.battle.defender is self.fired_by.unit
+        b = self.target.battle
+        pos = (self.pos[0]-b.cell_size, self.pos[1]-b.cell_size)
+        b.explosions.append((pos, 0))
+        self_is_defending = b.defender is self.fired_by.unit
+        s = random.choice(b.game.magic_explosion_sounds)
+        b.play_sound(s)
         damage = self.fired_by.unit.get_distant_attack_result(self.target.unit,
                                             self.fired_by.terrain_bonus,
                                             self.target.terrain_bonus,
                                             self_is_defending)
         DISTANT_FIGHT_DEAD_PROBABILITY = 0.3
         if random.random() < damage*DISTANT_FIGHT_DEAD_PROBABILITY:
-            self.target.battle.to_remove.append(self.target)
+            b.to_remove.append(self.target)
 
 
 class DistantBattleProjectile(Projectile):

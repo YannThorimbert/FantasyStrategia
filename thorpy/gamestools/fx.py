@@ -293,9 +293,13 @@ class DebrisGenerator(object):
         for d in to_remove:
             self.debris.remove(d)
 
+##    def draw(self, surface):
+##        for d in self.debris:
+##            surface.blit(d.img, d.rect.topleft)
+
     def draw(self, surface):
-        for d in self.debris:
-            surface.blit(d.img, d.rect.topleft)
+        blits = [(d.img, d.rect.topleft) for d in self.debris]
+        surface.blits(blits)
 
     def update_physics(self,dt):
         for d in self.debris:

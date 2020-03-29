@@ -140,9 +140,9 @@ class Gui:
         self.actions_no_objs = [("Plant flag",self.set_flag_on_cell_under_cursor,
                                     self.check_plant_flag),
                                 ("Burn",self.burn,
-                                    self.check_interact_burn),
-                                ("Go there",self.choice_gotocell,
-                                    self.check_interact_gotocell)]
+                                    self.check_interact_burn)]
+##                                ("Go there",self.choice_gotocell,
+##                                    self.check_interact_gotocell)]
         self.interaction_objs = []
         #
         #here you can add/remove buttons to/from the menu
@@ -246,16 +246,18 @@ class Gui:
 
     def check_interact_flag(self):
         c = self.cell_under_cursor
+        if c.coord != self.selected_unit.cell.coord:
+            return False
         if self.game.burning.get(c.coord):
             return False
         if c.unit:
             if c.unit.team != self.selected_unit.team:
                 return False
-        if self.selected_unit.cell.distance_to(c) <= 1:
-            for o in c.objects:
-                if o.str_type == "river":
-                    return False
-            return c.material.name.lower() in self.game.is_flaggable
+##        if self.selected_unit.cell.distance_to(c) <= 1:
+        for o in c.objects:
+            if o.str_type == "river":
+                return False
+        return c.material.name.lower() in self.game.is_flaggable
 
     def check_plant_flag(self):
 ##        for o in self.interaction_objs:
@@ -353,6 +355,7 @@ class Gui:
         for u in to_remove:
             self.moving_units.remove(u)
             self.game.walk_sounds[0].stop()
+            u.is_grayed = True
 
 
     def treat_click_destination(self, cell):
@@ -434,7 +437,7 @@ class Gui:
         print("helping", friend.name, friend.team == self.selected_unit.team)
         raise Exception("Not implemented yet")
 
-    def get_interaction_choices(self, objs):
+    def get_interaction_choices(self, objs, exceptions=""):
         choices = {}
         cell = self.cell_under_cursor
         d = cell.distance_to(self.selected_unit.cell)
@@ -455,10 +458,14 @@ class Gui:
                 if o != cell.unit:
                     if o.str_type in self.actions:
                         for name, func, check in self.actions[o.str_type]:
+                            if name in exceptions:
+                                continue
                             if check():
                                 choices[name] = func
             self.interaction_objs = objs
         for name, func, check in self.actions_no_objs:
+            if name in exceptions:
+                continue
             if check():
                 choices[name] = func
         return choices
@@ -482,18 +489,20 @@ class Gui:
         pos = e.pos
         cell = self.me.cam.get_cell(pos)
         if cell:
-            if self.destinations_lmb: #then the user may be clicking a destination
+            if self.destinations_lmb: #user may be clicking a destination
                 interactibles = self.game.get_interactive_objects(cell.coord[0],
                                                                 cell.coord[1])
-                if interactibles:
+                if interactibles: #there are objects interactibles at the dest.
                     if cell.unit is None:
-                        choices = self.get_interaction_choices(interactibles)
+                        choices = self.get_interaction_choices(interactibles,
+                                                    exceptions=["Burn"])
                         if choices:
                             self.user_make_choice(choices)
                         if self.selected_unit:
                             self.treat_click_destination(cell)
-                    else:
-                        choices = self.get_interaction_choices(interactibles)
+                    else: #there is already a unit in the destination
+                        choices = self.get_interaction_choices(interactibles,
+                                                    exceptions=["Burn"])
                         if choices:
                             self.user_make_choice(choices)
                 else:
@@ -565,6 +574,15 @@ class Gui:
         rect.center = unit.get_current_rect_center(s)
         self.surface.blit(img, rect.topleft)
 
+    def draw_grayed(self, unit, s):
+        if unit.is_grayed:
+            i = unit.get_current_frame() + unit.current_isprite
+            img = unit.race[unit.name].grayed[self.game.me.zoom_level][i]
+            rect = img.get_rect()
+            rect.center = unit.get_current_rect_center(s)
+            self.surface.blit(img, rect.topleft)
+
+
     def refresh_lifes(self):
         self.lifes = []
         for u in self.game.units:
@@ -626,6 +644,8 @@ class Gui:
             self.refresh_lifes()
             for img, coord in self.lifes:
                 self.surface.blit(img, coord)
+        for u in self.game.units:
+            self.draw_grayed(u, s)
 
     def refresh(self):
         self.enhancer.refresh()
