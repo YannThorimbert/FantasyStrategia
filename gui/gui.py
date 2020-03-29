@@ -122,6 +122,7 @@ class Gui:
         self.e_cant_move = guip.get_infoalert_text("Can't go there")
         self.e_cant_move_another = guip.get_infoalert_text("Another unit is already going there")
         self.e_wrong_team = guip.get_infoalert_text("You cannot command another player's units")
+        self.e_already_moved = guip.get_infoalert_text("This unit has already moved in this turn")
         #
         self.moving_units = []
         self.add_reactions()
@@ -157,6 +158,8 @@ class Gui:
                                                     e_quit])
         self.menu.center()
         self.set_map_gui()
+        self.has_moved = []
+        self.footstep = None
 
     def set_map_gui(self):
         me = self.me
@@ -293,6 +296,7 @@ class Gui:
         self.blue_highlights = []
         self.red_highlights = []
         self.interaction_objs = []
+        self.has_moved = []
 
     def get_destinations(self, cell):
         destinations = []
@@ -300,6 +304,8 @@ class Gui:
         self.blue_highlights = []
         if cell.unit:
             if cell.unit.anim_path: #moving unit, let her alone...
+                return []
+            elif cell.unit in self.has_moved:
                 return []
             if not self.selected_unit:
                 ref_unit = self.cell_under_cursor.unit
@@ -355,7 +361,7 @@ class Gui:
         for u in to_remove:
             self.moving_units.remove(u)
             self.game.walk_sounds[0].stop()
-            u.is_grayed = True
+            self.has_moved.append(u)
 
 
     def treat_click_destination(self, cell):
@@ -403,6 +409,7 @@ class Gui:
         units_in_battle.append(defender)
         b = Battle(self.game, units_in_battle, defender, distance)
         b.fight()
+        self.selected_unit.is_grayed = True
         self.clear()
         thorpy.get_current_menu().fps = guip.FPS
         self.refresh_lifes()
@@ -413,6 +420,7 @@ class Gui:
         units_in_battle = [self.selected_unit, defender]
         b = DistantBattle(self.game, units_in_battle, defender, distance)
         b.fight()
+        self.selected_unit.is_grayed = True
         self.clear()
         thorpy.get_current_menu().fps = guip.FPS
         self.refresh_lifes()
@@ -422,6 +430,7 @@ class Gui:
             if o.str_type == "flag":
                 o.remove_from_game()
                 break
+        self.selected_unit.is_grayed = True
 
     def set_flag_on_cell_under_cursor(self):
         self.remove_selected_flag()
@@ -431,9 +440,11 @@ class Gui:
 
     def burn(self):
         self.game.set_fire(self.cell_under_cursor.coord, 4)
+        self.selected_unit.is_grayed = True
 
     def help(self):
         friend = self.unit_under_cursor()
+        self.selected_unit.is_grayed = True
         print("helping", friend.name, friend.team == self.selected_unit.team)
         raise Exception("Not implemented yet")
 
@@ -514,9 +525,13 @@ class Gui:
             elif cell: #else update destinations
                 if cell.unit:
                     if cell.unit.team == self.game.current_player.team:
-                        print("update destinations")
-                        self.selected_unit = cell.unit
-                        self.destinations_lmb = self.get_destinations(cell)
+                        if cell.unit in self.has_moved:
+##                            self.add_alert(self.e_already_moved)
+                            self.actions_only()
+                        else:
+                            print("update destinations")
+                            self.selected_unit = cell.unit
+                            self.destinations_lmb = self.get_destinations(cell)
                     else:
                         self.add_alert(self.e_wrong_team)
                         self.game.deny_sound.play()
@@ -574,13 +589,18 @@ class Gui:
         rect.center = unit.get_current_rect_center(s)
         self.surface.blit(img, rect.topleft)
 
-    def draw_grayed(self, unit, s):
+    def draw_actions_possibility(self, unit, s):
         if unit.is_grayed:
             i = unit.get_current_frame() + unit.current_isprite
             img = unit.race[unit.name].grayed[self.game.me.zoom_level][i]
             rect = img.get_rect()
             rect.center = unit.get_current_rect_center(s)
             self.surface.blit(img, rect.topleft)
+        if unit in self.has_moved:
+            x,y = unit.get_current_rect_center(s)
+            x -= s//2
+##            y += s//4
+            self.surface.blit(self.footstep, (x,y))
 
 
     def refresh_lifes(self):
@@ -645,7 +665,7 @@ class Gui:
             for img, coord in self.lifes:
                 self.surface.blit(img, coord)
         for u in self.game.units:
-            self.draw_grayed(u, s)
+            self.draw_actions_possibility(u, s)
 
     def refresh(self):
         self.enhancer.refresh()

@@ -43,9 +43,17 @@ game = Game(me)
 ######################## OBJECTIF IMMEDIAT #####################################
 ################################################################################
 
-##grise mult_RGBA
+##Taille de footstep oscillante ?
+##Montrer epees oscillantes et croix-rouge oscillante pour les actions possibles pour toutes les destinations possibles
+
+
+## bug apres combat unit meurt grise ?
 
 ##Fusion units
+
+##enter = ok dans menus
+
+#infoalert + opaque
 
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
 #conquete de base et batailles. Pas d'impots ni de gestion hors production unites.
@@ -176,7 +184,8 @@ def func_reac_time(): #here add wathever you want
     pygame.display.flip()
 thorpy.add_time_reaction(me.e_box, func_reac_time)
 
-
+game.gui.footstep = pygame.image.load("sprites/footstep.png")
+game.gui.footstep = pygame.transform.smoothscale(game.gui.footstep, (6,16))
 
 
 #me.e_box includes many default reactions. You can remove them as follow:
