@@ -240,7 +240,7 @@ class LogicalMap(BaseGrid):
         x0 = self.current_x
         y0 = self.current_y
         self.current_gm.draw(screen, topleft, x0, y0, dx_pix, dy_pix, self.t)
-        self.current_gm.draw_blits(screen, topleft, x0, y0, dx_pix, dy_pix, self.t)
+##        self.current_gm.draw_blits(screen, topleft, x0, y0, dx_pix, dy_pix, self.t)
 
     def build_surfaces(self):
         for gm in self.graphical_maps:

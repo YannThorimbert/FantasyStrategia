@@ -1,7 +1,31 @@
-import os, random, thorpy
+import os, random, pygame, thorpy
 from FantasyStrategia.effects import effects
 from FantasyStrategia.logic.unit import InteractiveObject
 
+def get_sprite_frames(fn, deltas=None, s=32, ckey=(255,255,255),
+                        resize_factor=None):
+    imgs = []
+    sprites = pygame.image.load(fn)
+    n = sprites.get_width() // s
+    h = sprites.get_height()
+    if resize_factor:
+        s = int(resize_factor*s)
+        w,h = sprites.get_size()
+        w = int(resize_factor*w)
+        h = int(resize_factor*h)
+        sprites = pygame.transform.scale(sprites, (w,h))
+    if not deltas:
+        deltas = [(0,0) for i in range(n)]
+    x = 0
+    for i in range(n):
+        surf = pygame.Surface((s,h))
+        surf.fill(ckey)
+        surf.set_colorkey(ckey)
+        dx, dy = deltas[i]
+        surf.blit(sprites, (dx,dy), pygame.Rect(x,0,s,h))
+        imgs.append(surf)
+        x += s
+    return imgs
 
 
 def get_sounds(root, sc):
@@ -192,8 +216,9 @@ class Game:
 ##    def remove_unit(self, u): #just a wrapper
 ##        u.remove_from_game()
 
-    def set_flag(self, coord, flag_template, team):
-        self.flag_sound.play()
+    def set_flag(self, coord, flag_template, team, sound=False):
+        if sound:
+            self.flag_sound.play()
         cell = self.get_cell_at(coord[0],coord[1])
 ##        o = self.add_obj_before_other_if_needed(flag_template,
 ##                                                 1, ["village"], cell)

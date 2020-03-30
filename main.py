@@ -16,7 +16,7 @@ import thorpy #for GUI and other graphics - see www.thorpy.org
 import maps.maps as maps
 import gui.gui as gui
 from logic.races import Race, LUNAR, STELLAR, SOLAR
-from logic.game import Game
+from logic.game import Game, get_sprite_frames
 import gui.theme as theme
 from logic.player import Player
 ################################################################################
@@ -40,20 +40,17 @@ game = Game(me)
 
 
 ################################################################################
-######################## OBJECTIF IMMEDIAT #####################################
+############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
-
-##Taille de footstep oscillante ?
-##Montrer epees oscillantes et croix-rouge oscillante pour les actions possibles pour toutes les destinations possibles
-
-
-## bug apres combat unit meurt grise ?
-
-##Fusion units
 
 ##enter = ok dans menus
 
 #infoalert + opaque
+## bug apres combat unit meurt grise ?
+
+##Fusion units
+
+
 
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
 #conquete de base et batailles. Pas d'impots ni de gestion hors production unites.
@@ -184,8 +181,10 @@ def func_reac_time(): #here add wathever you want
     pygame.display.flip()
 thorpy.add_time_reaction(me.e_box, func_reac_time)
 
-game.gui.footstep = pygame.image.load("sprites/footstep.png")
-game.gui.footstep = pygame.transform.smoothscale(game.gui.footstep, (6,16))
+game.gui.footstep = get_sprite_frames("sprites/footstep.png", s=12,
+                                        resize_factor=0.6)
+game.gui.sword = get_sprite_frames("sprites/sword_shine.png")
+game.gui.medic = get_sprite_frames("sprites/medic.png", s=16)
 
 
 #me.e_box includes many default reactions. You can remove them as follow:

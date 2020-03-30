@@ -160,6 +160,10 @@ class Gui:
         self.set_map_gui()
         self.has_moved = []
         self.footstep = None
+        self.sword = None
+        self.medic = None
+        self.can_be_fought = []
+        self.can_be_helped = []
 
     def set_map_gui(self):
         me = self.me
@@ -297,11 +301,15 @@ class Gui:
         self.red_highlights = []
         self.interaction_objs = []
         self.has_moved = []
+        self.can_be_fought = []
+        self.can_be_helped = []
 
     def get_destinations(self, cell):
         destinations = []
         self.red_highlights = []
         self.blue_highlights = []
+        self.can_be_fought = []
+        self.can_be_helped = []
         if cell.unit:
             if cell.unit.anim_path: #moving unit, let her alone...
                 return []
@@ -321,6 +329,16 @@ class Gui:
                 if ref_unit:
                     self.update_possible_interactions(ref_unit, coord)
         return destinations
+
+    def update_possible_help_and_fight(self, ref_unit, coord):
+        for other in self.game.units:
+            if other is not ref_unit:
+                d = other.cell.distance_to_coord(coord)
+                if other.team == ref_unit.team:
+                    if d <= ref_unit.help_range[1]:
+                        self.can_be_helped.append(other)
+                elif d <= ref_unit.attack_range[1]:
+                    self.can_be_fought.append(other)
 
     def update_possible_interactions(self, ref_unit, coord):
         #interactions possible for <ref_unit> when located at hypothetic position <coord>
@@ -436,7 +454,8 @@ class Gui:
         self.remove_selected_flag()
         self.game.set_flag(self.cell_under_cursor.coord,
                             self.selected_unit.race.flag,
-                            self.selected_unit.team)
+                            self.selected_unit.team,
+                            sound=True)
 
     def burn(self):
         self.game.set_fire(self.cell_under_cursor.coord, 4)
@@ -521,6 +540,8 @@ class Gui:
                 self.destinations_lmb = [] #clear destinations
                 self.red_highlights = []
                 self.blue_highlights = []
+                self.can_be_fought = []
+                self.can_be_helped = []
                 self.selected_unit = None
             elif cell: #else update destinations
                 if cell.unit:
@@ -574,6 +595,7 @@ class Gui:
                     for coord in path:
                         rect = self.me.cam.get_rect_at_coord(coord)
                         self.destinations_mousemotion.append(rect.center)
+                        self.update_possible_help_and_fight(self.selected_unit, cell.coord)
             else:
                 self.destinations_mousemotion = self.get_destinations(cell)
         else:
@@ -590,6 +612,7 @@ class Gui:
         self.surface.blit(img, rect.topleft)
 
     def draw_actions_possibility(self, unit, s):
+        x,y = unit.get_current_rect_center(s)
         if unit.is_grayed:
             i = unit.get_current_frame() + unit.current_isprite
             img = unit.race[unit.name].grayed[self.game.me.zoom_level][i]
@@ -597,11 +620,21 @@ class Gui:
             rect.center = unit.get_current_rect_center(s)
             self.surface.blit(img, rect.topleft)
         if unit in self.has_moved:
-            x,y = unit.get_current_rect_center(s)
-            x -= s//4
-##            y += s//4
-            self.surface.blit(self.footstep, (x,y))
-
+##            x,y = unit.get_current_rect_center(s)
+            t = self.game.me.lm.t3 % len(self.footstep)
+            self.surface.blit(self.footstep[t], (x-s//2,y))
+        if unit in self.can_be_fought:
+            t = self.game.me.lm.t % len(self.sword)
+            img = self.sword[t]
+            rect = img.get_rect()
+            rect.center = (x,y)
+            self.surface.blit(img, rect)
+        elif unit in self.can_be_helped:
+            t = self.game.me.lm.t3 % len(self.medic)
+            img = self.medic[t]
+            rect = img.get_rect()
+            rect.center = (x,y)
+            self.surface.blit(img, rect)
 
     def refresh_lifes(self):
         self.lifes = []

@@ -408,7 +408,6 @@ class Unit(MapObject):
         return [u for u in self.get_all_surrounding_units() if u.team != self.team]
 
 
-
 def get_unit_sprites(fn,  colors="blue", deltas=None, s=32, ckey=(255,255,255)):
     imgs = []
     sprites = pygame.image.load(fn)
@@ -433,7 +432,7 @@ def get_unit_sprites(fn,  colors="blue", deltas=None, s=32, ckey=(255,255,255)):
         x += s
     return imgs
 
-def load_sprites(fn, colors="blue", h=const.FAST, v=const.FAST, i=const.SLOW):
+def load_unit_sprites(fn, colors="blue", h=const.FAST, v=const.FAST, i=const.SLOW):
 ##    deltas_lr =  [(0,0), (0,-1), (0,-2), (0,-1), (0,0), (0,0)]
     left = get_unit_sprites(fn+"_left.png",colors)#, deltas_lr)
     right = get_unit_sprites(fn+"_right.png",colors)

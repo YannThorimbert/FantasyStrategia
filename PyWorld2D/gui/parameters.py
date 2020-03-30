@@ -53,7 +53,7 @@ def get_infoalert_text(text):
     e = thorpy.make_button(text)
     e.set_font_size(HFS)
     e.set_font_color(HFC)
-    e.set_main_color((200,200,200,50))
+    e.set_main_color((200,200,200,100))
     e.scale_to_title()
     return e
 

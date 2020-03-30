@@ -20,7 +20,7 @@ def get_infoalert_text(*texts, start="normal"):
 ##    e.set_font_size(HFS)
 ##    e.set_font_color(HFC)
     thorpy.store(e)
-    e.set_main_color((200,200,200,50))
+    e.set_main_color((200,200,200,100))
     e.fit_children()
     return e
 

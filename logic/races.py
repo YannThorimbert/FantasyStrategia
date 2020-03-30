@@ -156,7 +156,7 @@ class Race:
 
 
     def add_type(self, type_name, imgs_fn, factor=1.):
-        imgs = unit.load_sprites(imgs_fn, self.color)
+        imgs = unit.load_unit_sprites(imgs_fn, self.color)
         assert type_name not in self.unit_types
         unit_name = type_name
 ##        unit_name = self.name + " " +  type_name
