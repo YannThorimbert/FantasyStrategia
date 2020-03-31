@@ -490,8 +490,9 @@ class Battle:
         e, show_death = self.get_summary()
         e.blit()
         transitions.fade_from_black_screen(self.surface, t=0.5)
-        thorpy.launch_blocking(e)
+        thorpy.launch_blocking(e, add_ok_enter=True)
         #manual animation is simpler in this case
+        print("UNIT SHOW DEAT", show_death)
         for unit in show_death:
             unit.die_after(2.)
 

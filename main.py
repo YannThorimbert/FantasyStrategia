@@ -43,15 +43,22 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-##enter = ok dans menus
 
-#infoalert + opaque
-## bug apres combat unit meurt grise ?
+
+## bug apres combat unit meurt grise
+
+#finir actions-mouvement
 
 ##Fusion units
 
+#affichage villages, update income (sous partent des villages vers l'icone money)
 
+#production d'unites
 
+#sons: cris de guerre. SoundSnap, acheter quand meme ?
+
+#summary_pre_battle
+################################################################################
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
 #conquete de base et batailles. Pas d'impots ni de gestion hors production unites.
 #village peuvent etre conquis et ***peuvent produire unites***
@@ -71,6 +78,16 @@ game = Game(me)
 
 #fusionner les thorpy ICI et git!!!!
 
+#TEST !! - V a1
+
+#load/save
+#editeur terrain
+
+#TEST - V a2
+
+#puis suite...
+
+
 ################################################################################
 ################################################################################
 ################################################################################
@@ -88,15 +105,13 @@ game = Game(me)
 
 #rappel : il n'y a pas de haches/epees/lances etc ; c'est la race qui change ca dans sa propre infanterie !!!
 
-#sons: cris de guerre. SoundSnap, acheter quand meme ?
-
-#tester !!!
+#certaines unites ne sont produites que dans les donjons : (arch)wizards, kings, ...
 
 #impots, incendie, viols ==> depend de ce qu'on cherche a avoir, de la popularite
 #       aupres de ses soldats deja existants ou bien des futurs ressortissants des villes prises
 #3 scores : score militaire, score moral, score economique
 
-#chateaux : villages entoures de murailles, avec armes de jet a l'interieur
+#chateaux : villages/donjons entoures de murailles, avec armes de jet a l'interieur
 
 
 ################################################################################

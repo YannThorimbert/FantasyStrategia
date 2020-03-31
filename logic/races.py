@@ -35,7 +35,7 @@ std_attack_range = {'villager':(1,1),
                     'infantry':(1,1),
                     'archer':(2,4),
                     'cavalry':(1,1),
-                    'mounted archer':(2,4),
+                    'mounted archer':(2,3),
                     'wizard':(1,2),
                     'arch_wizard':(1,5),
                     'king':(1,1),
@@ -43,6 +43,7 @@ std_attack_range = {'villager':(1,1),
                     'doctor':(0,0),
                     'transport_boat':(0,0),
                     'attack_boat':(1,3)}
+
 
 
 std_shot_frequency = {'villager':1,
@@ -96,6 +97,20 @@ std_defense =  {'villager':0.6,
                 'doctor':0.3,
                 'transport_boat':1,
                 'attack_boat':1} #attack boat only attack other boats
+
+
+std_cost = {'villager':1, #does not tell where units can be produced
+            'infantry':3,
+            'archer':4,
+            'cavalry':6,
+            'mounted archer':6,
+            'wizard':8,
+            'arch_wizard':10,
+            'king':float("inf"),
+            'cook':1,
+            'doctor':3,
+            'transport_boat':4,
+            'attack_boat':4}
 
 std_object_defense = {"bush":1.3,
                       "forest":1.5,

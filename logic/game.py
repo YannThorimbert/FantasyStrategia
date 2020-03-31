@@ -282,8 +282,37 @@ class Game:
                         objs.append(o)
         return objs
 
+    def get_all_objects_by_str_type(self, str_type):
+        objs = []
+        for x in range(self.me.lm.nx):
+            for y in range(self.me.lm.ny):
+                cell = self.get_cell_at(x,y)
+                for o in cell.objects:
+                    if o.str_type == str_type:
+                        objs.append(o)
+        return objs
+
     def get_map_size(self):
         return self.me.lm.nx, self.me.lm.ny
+
+    def count_villages(self, team):
+        counter = 0
+        for f in self.get_all_objects_by_str_type("flag"):
+            if f.team == team:
+                for o in f.cell.objects:
+                    if o.name == "village":
+                        counter += 1
+                        break
+        return counter
+
+
+    def update_players_income(self):
+        for p in self.players:
+            v = self.count_villages(p.team)
+            INCOME_PER_VILLAGE = 100
+            tax_per_village = 1. #for the moment
+            p.money += v*INCOME_PER_VILLAGE * tax_per_village
+            update_gui_villages_money(v, p.money)
 
 
 
