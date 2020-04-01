@@ -43,10 +43,6 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-
-
-## bug apres combat unit meurt grise
-
 #finir actions-mouvement
 
 ##Fusion units

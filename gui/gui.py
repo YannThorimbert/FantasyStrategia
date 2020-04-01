@@ -427,7 +427,8 @@ class Gui:
         units_in_battle.append(defender)
         b = Battle(self.game, units_in_battle, defender, distance)
         b.fight()
-        self.selected_unit.is_grayed = True
+        if self.selected_unit.quantity > 0:
+            self.selected_unit.is_grayed = True
         self.clear()
         thorpy.get_current_menu().fps = guip.FPS
         self.refresh_lifes()
@@ -438,7 +439,8 @@ class Gui:
         units_in_battle = [self.selected_unit, defender]
         b = DistantBattle(self.game, units_in_battle, defender, distance)
         b.fight()
-        self.selected_unit.is_grayed = True
+        if self.selected_unit.quantity > 0:
+            self.selected_unit.is_grayed = True
         self.clear()
         thorpy.get_current_menu().fps = guip.FPS
         self.refresh_lifes()

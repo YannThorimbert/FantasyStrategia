@@ -427,7 +427,8 @@ class Gui:
         units_in_battle.append(defender)
         b = Battle(self.game, units_in_battle, defender, distance)
         b.fight()
-        self.selected_unit.is_grayed = True
+        if self.selected_unit.quantity > 0:
+            self.selected_unit.is_grayed = True
         self.clear()
         thorpy.get_current_menu().fps = guip.FPS
         self.refresh_lifes()
@@ -591,6 +592,8 @@ class Gui:
             if self.destinations_lmb: #then the user may be tracing the path
                 value = self.last_destination_score.get(cell.coord, None)
                 if value:
+                    self.can_be_fought = []
+                    self.can_be_helped = []
                     cost, path = value
                     for coord in path:
                         rect = self.me.cam.get_rect_at_coord(coord)
