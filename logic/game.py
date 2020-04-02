@@ -2,6 +2,14 @@ import os, random, pygame, thorpy
 from FantasyStrategia.effects import effects
 from FantasyStrategia.logic.unit import InteractiveObject
 
+
+def sgn(x):
+    if x > 0:
+        return 1
+    elif x < 0:
+        return -1
+    return 0
+
 def get_sprite_frames(fn, deltas=None, s=32, ckey=(255,255,255),
                         resize_factor=None):
     imgs = []
@@ -55,6 +63,7 @@ class Game:
         self.need_refresh_ui_box = True
         #
         self.sounds = thorpy.SoundCollection()
+        self.coin_sound = self.sounds.add("sounds/ui/coin2.wav")[0]
         self.flag_sound = self.sounds.add("sounds/hits/new_hits_5.wav")[0]
         self.start_battle_sound = self.sounds.add("sounds/start_battle.wav")[0]
         self.fire_extinguish_sound = self.sounds.add("sounds/psht.wav")[0]
@@ -122,10 +131,9 @@ class Game:
             objs = self.get_cell_at(coord[0],coord[1]).objects
             to_burn = [o for o in objs if o.str_type in self.is_burnable]
             for o in to_burn:
-                self.fire_extinguish_sound.play()
+                self.fire_extinguish_sound.play_next_channel()
                 o.remove_from_map(self.me)
                 effects.draw_ashes(self, o)
-##                thorpy.get_application().pause(unpause_after=200)
 
     def set_players(self, players, current=0):
         self.players = players
@@ -135,8 +143,7 @@ class Game:
     def get_players_from_team(self, team):
         return [p for p in self.players if p.team == team]
 
-    def end_turn(self):
-        self.need_refresh_ui_box = True
+    def update_fire_logic(self):
         to_extinguish = []
         for coord in self.burning:
             for obj in self.get_cell_at(coord[0],coord[1]).objects:
@@ -151,12 +158,19 @@ class Game:
                         self.add_smoke("large", coord, (0,-0.3), "fire")
         for coord in to_extinguish:
             self.extinguish(coord, natural_end=True)
+
+
+    def end_turn(self):
+        self.need_refresh_ui_box = True
+        self.update_fire_logic()
         self.current_player_i += 1
         self.current_player_i %= len(self.players)
         self.current_player = self.players[self.current_player_i]
+        from_ = self.current_player.money
+        nvillages = self.count_villages(self.current_player.team)
+        self.gui.e_pop_txt.set_text(str(nvillages))
         for u in self.units:
-            if u.team == self.current_player.team:
-                u.is_grayed = False
+            u.is_grayed = False
         if self.current_player_i == 0:
             self.days_elapsed += 1
             self.current_player_i = 0
@@ -167,6 +181,20 @@ class Game:
                 ...
             elif self.days_left > 1:
                 self.days_left -= 1
+        self.gui.has_moved = []
+        #
+        self.gui.refresh()
+        self.me.func_reac_time()
+        pygame.display.flip()
+        self.update_player_income(self.current_player)
+        self.gui.show_animation_income(from_, self.current_player.money)
+        self.gui.e_gold_txt.set_text(str(self.current_player.money))
+
+    def func_reac_time(self):
+        self.gui.refresh()
+        self.me.func_reac_time()
+        self.t += 1
+        pygame.display.flip()
 
 
     def build_map(self, map_initializer, fast, use_beach_tiler, load_tilers):
@@ -306,13 +334,21 @@ class Game:
         return counter
 
 
-    def update_players_income(self):
-        for p in self.players:
-            v = self.count_villages(p.team)
-            INCOME_PER_VILLAGE = 100
-            tax_per_village = 1. #for the moment
-            p.money += v*INCOME_PER_VILLAGE * tax_per_village
-            update_gui_villages_money(v, p.money)
+##    def update_players_income(self):
+##        for p in self.players:
+##            v = self.count_villages(p.team)
+##            INCOME_PER_VILLAGE = 100
+##            tax_per_village = 1. #for the moment
+##            p.money += v*INCOME_PER_VILLAGE * tax_per_village
+####            update_gui_villages_money(v, p.money)
+
+
+    def update_player_income(self, p):
+        v = self.count_villages(p.team)
+        INCOME_PER_VILLAGE = 100
+        tax_per_village = 1. #for the moment
+        p.money += int(v*INCOME_PER_VILLAGE * tax_per_village)
+
 
 
 

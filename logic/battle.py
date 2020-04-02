@@ -29,6 +29,7 @@ STOP_TARGET_DIST_FACTOR = 0.2
 NFRAMES_DIRECTIONS = 16
 TIME_AFTER_FINISH = 1000
 BATTLE_DURATION = 1000
+DISTANT_BATTLE_DURATION = 500
 DEFENSE_START_RUNNING = BATTLE_DURATION + TIME_AFTER_FINISH + 1 #for the moment, I deactivate this feature
 
 MAX_TARGETED_BY = 10
@@ -210,7 +211,7 @@ class FightingUnit:
                     self.pos -= K * force
 
     def draw_move_fight_notarget(self):
-        if self.battle.fight_t < BATTLE_DURATION:
+        if self.battle.fight_t < self.battle_duration:
             if len(self.opponents) > 0:
                 self.direction = "idle"
                 self.dxdy = (0,0)
@@ -292,7 +293,7 @@ class FightingUnit:
         if near_target: #fighting (unit doesnt move)
             if random.random() < P_HIT_SOUND:
                 s = random.choice(self.battle.game.hit_sounds)
-                self.battle.play_sound(s)
+                s.play_next_channel()
                 self.battle.shocks.append((self.target.rect.center, 0))
             if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
                 self.refresh_direction_target()
@@ -364,6 +365,7 @@ class Battle:
 
 
     def __init__(self, game, units, defender, distance, zoom_level=0):
+        self.battle_duration = BATTLE_DURATION
         self.projectile_class = Projectile
         self.distance = distance
         self.defender = defender
@@ -438,8 +440,8 @@ class Battle:
         self.timebar.set_main_color((220,220,220,100))
         self.timebar.stick_to("screen","top", "top")
         #sound
-        self.current_channel_number = 0
-        self.current_channel = pygame.mixer.Channel(self.current_channel_number)
+##        self.current_channel_number = 0
+##        self.current_channel = pygame.mixer.Channel(self.current_channel_number)
 
 
     def press_enter(self):
@@ -585,11 +587,11 @@ class Battle:
                 r.center = u.rect.center
                 self.surface.blit(u.dead_img,u.rect)
 
-    def play_sound(self, s):
-        self.current_channel_number += 1
-        self.current_channel_number %= pygame.mixer.get_num_channels()
-        self.current_channel = pygame.mixer.Channel(self.current_channel_number)
-        self.current_channel.play(s)
+##    def play_sound(self, s):
+##        self.current_channel_number += 1
+##        self.current_channel_number %= pygame.mixer.get_num_channels()
+##        self.current_channel = pygame.mixer.Channel(self.current_channel_number)
+##        self.current_channel.play(s)
 
     def refresh_deads(self):
         if self.finished:
@@ -599,7 +601,7 @@ class Battle:
             if not u.dead:
                 if self.game.death_sounds and random.random() < P_DEAD_SOUND:
                     sound = random.choice(self.game.death_sounds)
-                    self.play_sound(sound)
+                    sound.play_next_channel()
                 u.dead = True
                 if u.target:
                     if u in u.target.targeted_by: #distant fighting units can target without beeing your current opponent
@@ -612,7 +614,7 @@ class Battle:
         self.to_remove = []
 
     def refresh_timebar(self):
-        life = 1. - self.fight_t / BATTLE_DURATION
+        life = 1. - self.fight_t / self.battle_duration
         if life < 0:
             life = 0.
         self.timebar.set_life(life)
@@ -704,7 +706,7 @@ class Battle:
             self.blit_this_frame = False
         self.f.sort(key=lambda x:x.rect.bottom) #peut etre pas besoin selon systeme de cible
         extermination = len(self.f1) == 0 or len(self.f2) == 0
-        if extermination or self.fight_t > BATTLE_DURATION:
+        if extermination or self.fight_t > self.battle_duration:
             if self.finished == 0:
                 self.finished = self.fight_t
                 self.finish_battle()
@@ -1008,6 +1010,7 @@ class Battle:
 class DistantBattle(Battle):
     def __init__(self, game, units, defender, distance, zoom_level=0):
         Battle.__init__(self, game, units, defender, distance, zoom_level)
+        self.battle_duration = DISTANT_BATTLE_DURATION
         self.projectile_class = DistantBattleProjectile
         self.separation_line = pygame.Surface((30,self.surface.get_height()))
         self.sep_line_x = (self.surface.get_width() - self.separation_line.get_width())/2
@@ -1112,7 +1115,7 @@ class DistantFightingUnit(FightingUnit):
     def fight_against_target_distant(self):
         if self.time_from_last_shot > self.unit.shot_frequency:
             s = random.choice(self.battle.game.magic_attack_sounds)
-            self.battle.play_sound(s)
+            s.play_next_channel()
             projectile = self.battle.projectile_class(self, self.target)
             self.battle.projectiles.append(projectile)
             self.time_from_last_shot = 0
@@ -1211,7 +1214,7 @@ class Projectile:
         b.explosions.append((pos, 0))
         self_is_defending = b.defender is self.fired_by.unit
         s = random.choice(b.game.magic_explosion_sounds)
-        b.play_sound(s)
+        s.play_next_channel()
         damage = self.fired_by.unit.get_distant_attack_result(self.target.unit,
                                             self.fired_by.terrain_bonus,
                                             self.target.terrain_bonus,

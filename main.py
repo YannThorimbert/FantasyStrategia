@@ -43,15 +43,17 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-#finir actions-mouvement
+#augment nchannels (la que 2)...
 
-##Fusion units
+#finir actions-mouvement : bugs il me semble. Et affiche epee-medic !
 
 #affichage villages, update income (sous partent des villages vers l'icone money)
 
 #production d'unites
 
 #sons: cris de guerre. SoundSnap, acheter quand meme ?
+
+#plus d'effets toons sur les coups
 
 #summary_pre_battle
 ################################################################################
@@ -94,6 +96,17 @@ game = Game(me)
 ## rayonnement = somme( 1. / distance à capitale ennemie de chaque monument). Les monuments coutent cher et sont construits par villageois/ouvriers?.
 
 #Population~nourriture, or~population*impots, rayonnement~monuments, crainte/respect~choix (viols etc)
+
+#barre de choix d'impots : (c = curseur)
+##Low tax, raise people popularity <------c----------------> High tax, lower people popularity
+
+#pour augmenter le respect, il faut soi-même participer aux batailles de temps a autres
+#2 popularites : celle du peuple (people popularity) et celle de l'armee (army popularity)
+# case a cocher : allow rapes, allow pillages, ==> curseur entre celle du peuple et de l'armee
+
+#au final, la popularite totale (armee + people) determine:
+##    *les rebellions spontanees (villages soudain neutres)
+##    *si on peut debloquer certains unites/fonctions/ameliorations
 
 #murailles: au niveau de l'implementation, sont des types d'unites! (static unit)
 #       Les chateaux sont juste des villages entoures de murailles
@@ -184,18 +197,13 @@ game.set_players(players)
 ui = gui.Gui(game)
 game.set_ambiant_sounds(False)
 
-def func_reac_time(): #here add wathever you want
-    """Function called each frame"""
-    ui.refresh()
-    me.func_reac_time()
-    game.t += 1
-    pygame.display.flip()
-thorpy.add_time_reaction(me.e_box, func_reac_time)
+thorpy.add_time_reaction(me.e_box, game.func_reac_time)
 
 game.gui.footstep = get_sprite_frames("sprites/footstep.png", s=12,
                                         resize_factor=0.6)
 game.gui.sword = get_sprite_frames("sprites/sword_shine.png")
 game.gui.medic = get_sprite_frames("sprites/medic.png", s=16)
+
 
 
 #me.e_box includes many default reactions. You can remove them as follow:

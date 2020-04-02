@@ -7,6 +7,3 @@ class Player:
         self.color = color
         self.color_rgb = COLORS[color][0]
         self.money = 0
-
-    def update_money(self, game):
-        self.money += game.count_income(self.team)

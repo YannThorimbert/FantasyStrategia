@@ -395,10 +395,10 @@ class UnitInfo: #name, image, nombre(=vie dans FS!)
         changed = False
         if unit:
             name = unit.name + " (" + str(unit.quantity) + ")"
-            ##            baserace = cell.unit.race.baserace.capitalize()
-##            playername = cell.unit.get_all_players()[0].name
-##            self.em_unit_race.set_text(baserace + " (" + playername + ")")
-            raceteam = "caca"
+            baserace = unit.race.baserace.capitalize()
+            playername = unit.get_all_players()[0].name
+            raceteam = baserace + " (" + playername + ")"
+##            raceteam = "caca"
             new_img = unit.get_current_img()
             self.e_img.visible = True
             changed = True

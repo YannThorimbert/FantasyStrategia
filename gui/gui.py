@@ -1,4 +1,5 @@
 import pygame, thorpy, math
+from pygame.math import Vector2 as V2
 import PyWorld2D.gui.elements as elements
 import PyWorld2D.gui.parameters as guip
 import PyWorld2D.saveload.io as io
@@ -84,11 +85,6 @@ class GuiGraphicsEnhancement:
                         self.footprints[u.cell.coord] = footprint
 
 
-
-
-
-
-
 class Gui:
 
     def __init__(self, game, time_remaining=-1):
@@ -172,7 +168,7 @@ class Gui:
         me.add_gui_element(self.hline, True)
         ########################################################################
         self.e_end_turn = thorpy.make_button("End turn", self.game.end_turn)
-        self.e_end_turn.set_font_size(int(1.2*guip.TFS))
+        self.e_end_turn.set_font_size(int(1.1*guip.TFS))
         self.e_end_turn.set_font_color(guip.TFC)
         self.e_end_turn.scale_to_title()
         w,h = self.e_end_turn.get_fus_size()
@@ -183,7 +179,19 @@ class Gui:
         ########################################################################
         me.add_gui_element(self.hline.copy(), True)
         ########################################################################
-        self.e_gold_txt = thorpy.make_text("124")
+        self.e_show_players = thorpy.make_button("More statistics",
+                                                 self.show_players_infos)
+        me.add_gui_element(self.e_show_players, True)
+        ########################################################################
+        n = self.game.count_villages(self.game.current_player.team)
+        self.e_pop_txt = thorpy.make_text(str(n))
+        img = pygame.image.load("sprites/house.png")
+        img = pygame.transform.scale(img, (32,32))
+        self.e_pop_img = thorpy.Image(img, colorkey=(255,255,255))
+        self.e_pop = thorpy.make_group([self.e_pop_img, self.e_pop_txt])
+        me.add_gui_element(self.e_pop, True)
+        ########################################################################
+        self.e_gold_txt = thorpy.make_text(str(self.game.current_player.money))
         self.e_gold_img = thorpy.Image("sprites/coin1.png",
                                         colorkey=(255,255,255))
         self.e_gold = thorpy.make_group([self.e_gold_img, self.e_gold_txt])
@@ -205,6 +213,10 @@ class Gui:
         me.add_gui_element(self.e_info_player, True)
         ########################################################################
         me.menu_button.user_func = self.launch_map_menu
+
+
+    def show_players_infos(self):
+        ...
 
     def get_day_text(self):
         if self.game.days_left > 0:
@@ -300,7 +312,6 @@ class Gui:
         self.blue_highlights = []
         self.red_highlights = []
         self.interaction_objs = []
-        self.has_moved = []
         self.can_be_fought = []
         self.can_be_helped = []
 
@@ -311,7 +322,7 @@ class Gui:
         self.can_be_fought = []
         self.can_be_helped = []
         if cell.unit:
-            if cell.unit.anim_path: #moving unit, let her alone...
+            if cell.unit.anim_path: #moving unit, let it alone...
                 return []
             elif cell.unit in self.has_moved:
                 return []
@@ -330,7 +341,10 @@ class Gui:
                     self.update_possible_interactions(ref_unit, coord)
         return destinations
 
-    def update_possible_help_and_fight(self, ref_unit, coord):
+    def update_possible_help_and_fight(self, coord):
+        ref_unit = self.selected_unit
+        if not ref_unit:
+            ref_unit = self.cell_under_cursor
         for other in self.game.units:
             if other is not ref_unit:
                 d = other.cell.distance_to_coord(coord)
@@ -402,7 +416,11 @@ class Gui:
                             break
             if can_move:
                 if friend: #the user wants to fusion units
-                    #check that same type and sum of quantities does not exceed max_quantity
+##                    #check that same type and sum of quantities does not exceed max_quantity
+##                    u1 = self.selected_unit
+##                    u2 = friend
+##                    MAX_QUANTITY = 20
+##                    ok = u2.str_type == u1.str_type and u1.quantity + u2.quantity <= MAX_QUANTITY
                     ok = False
                     if ok:
                         self.go_to_cell(self.selected_unit, path[1:])
@@ -516,14 +534,14 @@ class Gui:
 
 
     def lmb(self, e):
-        print("LMB", self.game.t)
+        print("LMB", self.game.t, self.selected_unit)
         self.destinations_mousemotion = []
         pos = e.pos
         cell = self.me.cam.get_cell(pos)
         if cell:
             if self.destinations_lmb: #user may be clicking a destination
                 interactibles = self.game.get_interactive_objects(cell.coord[0],
-                                                                cell.coord[1])
+                                                                  cell.coord[1])
                 if interactibles: #there are objects interactibles at the dest.
                     if cell.unit is None:
                         choices = self.get_interaction_choices(interactibles,
@@ -545,15 +563,28 @@ class Gui:
                 self.can_be_fought = []
                 self.can_be_helped = []
                 self.selected_unit = None
-            elif cell: #else update destinations
+            else:
+                if self.selected_unit:
+                    self.update_possible_help_and_fight(self.selected_unit.cell.coord)
+##                    self.draw_actions_possibility(self.selected_unit, self.game.me.cell_size)
+##                    pygame.display.flip()
+                    if cell.unit in self.can_be_fought:
+                        d = cell.distance_to(self.selected_unit.cell)
+                        if d > 1:
+                            self.distant_attack()
+                        else:
+                            self.attack()
+                        return
+                    elif cell.unit in self.can_be_helped:
+                        self.help()
+                        return
                 if cell.unit:
                     if cell.unit.team == self.game.current_player.team:
+                        self.selected_unit = cell.unit
                         if cell.unit in self.has_moved:
-##                            self.add_alert(self.e_already_moved)
-                            self.actions_only()
+                            pass
                         else:
                             print("update destinations")
-                            self.selected_unit = cell.unit
                             self.destinations_lmb = self.get_destinations(cell)
                     else:
                         self.add_alert(self.e_wrong_team)
@@ -565,13 +596,11 @@ class Gui:
 
     def rmb(self, e):
         if self.selected_unit:
-##            cell = self.me.cam.get_cell(e.pos)
-##            assert cell is self.cell_under_cursor
             cell = self.cell_under_cursor
             if cell:
                 print("treat interaction RMB")
-                interactibles = self.game.get_interactive_objects( cell.coord[0],
-                                                                    cell.coord[1])
+                interactibles = self.game.get_interactive_objects(cell.coord[0],
+                                                                  cell.coord[1])
                 choices = self.get_interaction_choices(interactibles)
                 if choices:
                     self.user_make_choice(choices)
@@ -599,11 +628,12 @@ class Gui:
                     for coord in path:
                         rect = self.me.cam.get_rect_at_coord(coord)
                         self.destinations_mousemotion.append(rect.center)
-                        self.update_possible_help_and_fight(self.selected_unit, cell.coord)
+                    self.update_possible_help_and_fight(path[-1])
             else:
                 self.destinations_mousemotion = self.get_destinations(cell)
         else:
             self.cell_under_cursor = None
+
 
     def get_alpha_dest(self):
         t = self.me.lm.tot_time
@@ -759,6 +789,62 @@ class Gui:
         self.me.draw()
         self.menu.blit()
         pygame.display.flip()
+
+
+    def show_animation_income(self, from_, to, fps=60):
+        game = self.game
+        COIN_PER_VILLAGE = 3
+        MOD_SPAWN = 10
+        MAX_VEL = 10
+        STOP_DIST = 10
+        p = game.current_player
+        img = self.e_gold_img.get_image()
+        sources = {}
+        target = self.e_gold_img.get_fus_rect().topleft
+        for f in game.get_all_objects_by_str_type("flag"):
+            if f.team == p.team:
+                for o in f.cell.objects:
+                    if o.name == "village":
+                        sources[o.cell.coord] = 0
+                    break
+        delta_coin = int((to - from_) / (COIN_PER_VILLAGE * len(sources)))
+        print(game.current_player.name, "FROM", from_, "TO", to, "DELTA", delta_coin)
+        coins_flying = []
+        done = False
+        clock = pygame.time.Clock()
+        i_anim = 0
+        money = from_
+        self.e_gold_txt.set_text(str(money))
+        while not done:
+            self.refresh()
+            game.me.func_reac_time()
+            clock.tick(fps)
+            if i_anim%MOD_SPAWN == 0:
+                for src in sources:
+                    if sources[src] < COIN_PER_VILLAGE:
+                        cam_coord = game.me.cam.get_rect_at_coord(src).topleft
+                        coins_flying.append(cam_coord)
+                        sources[src] += 1
+            new_coins_flying = []
+            for x,y in coins_flying:
+                game.me.screen.blit(img, (x,y))
+                delta = V2(target) - (x,y)
+                L = delta.length()
+                if L > MAX_VEL:
+                    delta.scale_to_length(MAX_VEL)
+                if L > STOP_DIST:
+                    x += delta.x
+                    y += delta.y
+                    new_coins_flying.append((x,y))
+                else:
+                    money += delta_coin
+                    game.coin_sound.play_next_channel()
+                    self.e_gold_txt.set_text(str(money))
+            coins_flying = new_coins_flying
+            pygame.display.flip()
+            i_anim += 1
+            if not coins_flying:
+                done = True
 
 
 
