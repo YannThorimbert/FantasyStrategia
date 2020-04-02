@@ -211,7 +211,7 @@ class FightingUnit:
                     self.pos -= K * force
 
     def draw_move_fight_notarget(self):
-        if self.battle.fight_t < self.battle_duration:
+        if self.battle.fight_t < self.battle.battle_duration:
             if len(self.opponents) > 0:
                 self.direction = "idle"
                 self.dxdy = (0,0)

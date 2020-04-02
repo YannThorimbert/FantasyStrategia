@@ -36,12 +36,14 @@ def get_sprite_frames(fn, deltas=None, s=32, ckey=(255,255,255),
     return imgs
 
 
-def get_sounds(root, sc):
+def get_sounds(root, sc, volume=None):
     sounds = []
     for fn in os.listdir(root):
         if fn.endswith(".wav") or fn.endswith(".mp3"):
             sound, fake = sc.add(os.path.join(root,fn))
             if not fake:
+                if volume is not None:
+                    sound.set_volume(volume)
                 sounds.append(sound)
     return sounds
 
@@ -159,6 +161,9 @@ class Game:
         for coord in to_extinguish:
             self.extinguish(coord, natural_end=True)
 
+    def refresh_village_gui(self):
+        nvillages = self.count_villages(self.current_player.team)
+        self.gui.e_pop_txt.set_text(str(nvillages))
 
     def end_turn(self):
         self.need_refresh_ui_box = True
@@ -166,9 +171,7 @@ class Game:
         self.current_player_i += 1
         self.current_player_i %= len(self.players)
         self.current_player = self.players[self.current_player_i]
-        from_ = self.current_player.money
-        nvillages = self.count_villages(self.current_player.team)
-        self.gui.e_pop_txt.set_text(str(nvillages))
+        self.refresh_village_gui()
         for u in self.units:
             u.is_grayed = False
         if self.current_player_i == 0:
@@ -183,9 +186,7 @@ class Game:
                 self.days_left -= 1
         self.gui.has_moved = []
         #
-        self.gui.refresh()
-        self.me.func_reac_time()
-        pygame.display.flip()
+        from_ = self.current_player.money
         self.update_player_income(self.current_player)
         self.gui.show_animation_income(from_, self.current_player.money)
         self.gui.e_gold_txt.set_text(str(self.current_player.money))

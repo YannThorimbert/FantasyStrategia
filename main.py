@@ -42,13 +42,6 @@ game = Game(me)
 ################################################################################
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
-
-#augment nchannels (la que 2)...
-
-#finir actions-mouvement : bugs il me semble. Et affiche epee-medic !
-
-#affichage villages, update income (sous partent des villages vers l'icone money)
-
 #production d'unites
 
 #sons: cris de guerre. SoundSnap, acheter quand meme ?
@@ -204,7 +197,8 @@ game.gui.footstep = get_sprite_frames("sprites/footstep.png", s=12,
 game.gui.sword = get_sprite_frames("sprites/sword_shine.png")
 game.gui.medic = get_sprite_frames("sprites/medic.png", s=16)
 
-
+game.update_player_income(game.current_player)
+game.gui.e_gold_txt.set_text(str(game.current_player.money))
 
 #me.e_box includes many default reactions. You can remove them as follow:
 #remove <g> key:

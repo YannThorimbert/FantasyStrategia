@@ -153,6 +153,7 @@ class MapEditor:
             elements.insert(0, self.e_zoom)
         self.e_box = thorpy.Element.make(elements=elements,
                                         size=self.menu_rect.size)
+        self.e_box.set_main_color((200,200,200,160))
         thorpy.store(self.e_box)
         self.e_box.stick_to("screen","right","right")
         ########################################################################

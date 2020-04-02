@@ -168,11 +168,11 @@ class Gui:
         me.add_gui_element(self.hline, True)
         ########################################################################
         self.e_end_turn = thorpy.make_button("End turn", self.game.end_turn)
-        self.e_end_turn.set_font_size(int(1.1*guip.TFS))
+        self.e_end_turn.set_font_size(int(1.2*guip.TFS))
         self.e_end_turn.set_font_color(guip.TFC)
         self.e_end_turn.scale_to_title()
         w,h = self.e_end_turn.get_fus_size()
-        self.e_end_turn.set_size((w,w))
+        self.e_end_turn.set_size((w,int(0.75*w)))
 ##        nothing = thorpy.make_text("",20)
 ##        self.e_end_turn = thorpy.make_group([e_end_turn, nothing], "v")
         me.add_gui_element(self.e_end_turn, True)
@@ -469,6 +469,7 @@ class Gui:
                 o.remove_from_game()
                 break
         self.selected_unit.is_grayed = True
+        self.game.refresh_village_gui()
 
     def set_flag_on_cell_under_cursor(self):
         self.remove_selected_flag()
@@ -476,6 +477,7 @@ class Gui:
                             self.selected_unit.race.flag,
                             self.selected_unit.team,
                             sound=True)
+        self.game.refresh_village_gui()
 
     def burn(self):
         self.game.set_fire(self.cell_under_cursor.coord, 4)
@@ -485,7 +487,7 @@ class Gui:
         friend = self.unit_under_cursor()
         self.selected_unit.is_grayed = True
         print("helping", friend.name, friend.team == self.selected_unit.team)
-        raise Exception("Not implemented yet")
+##        raise Exception("Not implemented yet")
 
     def get_interaction_choices(self, objs, exceptions=""):
         choices = {}
@@ -566,8 +568,6 @@ class Gui:
             else:
                 if self.selected_unit:
                     self.update_possible_help_and_fight(self.selected_unit.cell.coord)
-##                    self.draw_actions_possibility(self.selected_unit, self.game.me.cell_size)
-##                    pygame.display.flip()
                     if cell.unit in self.can_be_fought:
                         d = cell.distance_to(self.selected_unit.cell)
                         if d > 1:
@@ -578,11 +578,14 @@ class Gui:
                     elif cell.unit in self.can_be_helped:
                         self.help()
                         return
+                    else:
+                        self.rmb(None)
+                        return
                 if cell.unit:
                     if cell.unit.team == self.game.current_player.team:
                         self.selected_unit = cell.unit
                         if cell.unit in self.has_moved:
-                            pass
+                            self.update_possible_help_and_fight(self.selected_unit.cell.coord)
                         else:
                             print("update destinations")
                             self.destinations_lmb = self.get_destinations(cell)
@@ -630,7 +633,10 @@ class Gui:
                         self.destinations_mousemotion.append(rect.center)
                     self.update_possible_help_and_fight(path[-1])
             else:
-                self.destinations_mousemotion = self.get_destinations(cell)
+                if self.selected_unit:
+                    self.update_possible_help_and_fight(self.selected_unit.cell.coord)
+                else:
+                    self.destinations_mousemotion = self.get_destinations(cell)
         else:
             self.cell_under_cursor = None
 
