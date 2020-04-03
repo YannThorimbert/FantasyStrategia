@@ -98,6 +98,18 @@ class Unit(MapObject):
         self.id = Unit.unit_id
         Unit.unit_id += 1
 
+    def make_grayed(self):
+        self.is_grayed = True
+        self.hide = True
+        imgs = self.race[self.name].grayed
+        obj = MapObject(self.game.me, imgs[self.game.me.zoom_level])
+        obj.imgs_z_t = imgs
+        obj = self.game.add_object(self.cell.coord, obj, 1)
+        obj.set_frame_refresh_type(self._refresh_frame_type)
+        obj.get_map_time = self.get_map_time
+        obj.get_current_from = self.get_current_frame
+        obj.name = "grayed_"+self.name
+
 
     def _spawn_possible_destinations(self, x, y, tot_cost, path_to_here, score):
         for dx,dy in DELTAS:
@@ -318,11 +330,12 @@ class Unit(MapObject):
 
     def build_grayed_idles(self):
 ##        frame = self.sprites_ref["idle"][0]
+        isprite, n, frame_type = self.sprites_ref["idle"]
         for z in range(len(self.editor.zoom_cell_sizes)):
             self.grayed.append([])
             imgs = self.imgs_z_t[z]
-            for img in imgs:
-                shad = img.copy()
+            for i in range(isprite, isprite+n):
+                shad = imgs[i].copy()
                 w,h = shad.get_size()
                 TRANSP = (255,)*4
                 K = 0.75

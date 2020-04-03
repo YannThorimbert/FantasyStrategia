@@ -167,6 +167,13 @@ class Game:
         self.gui.e_pop_txt.set_text(str(nvillages))
 
     def end_turn(self):
+        self.gui.clear()
+        to_remove = []
+        for o in self.me.dynamic_objects:
+            if o.name.startswith("grayed_"):
+                to_remove.append(o)
+        for o in to_remove:
+            o.remove_from_map(self.me)
         self.need_refresh_ui_box = True
         self.update_fire_logic()
         self.current_player_i += 1
@@ -175,6 +182,7 @@ class Game:
         self.refresh_village_gui()
         for u in self.units:
             u.is_grayed = False
+            u.hide = False
         if self.current_player_i == 0:
             self.days_elapsed += 1
             self.current_player_i = 0

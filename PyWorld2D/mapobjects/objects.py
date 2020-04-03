@@ -176,6 +176,7 @@ class MapObject:
         self.can_interact = False
         self.always_drawn_last = False
         self.is_static = False
+        self.hide = False
 
     def get_cell_coord(self):
         return self.cell.coord

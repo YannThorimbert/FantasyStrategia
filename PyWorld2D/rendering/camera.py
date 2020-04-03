@@ -229,6 +229,8 @@ class Camera:
         to_sort = set()
         drawn_last = set()
         for o in objs:
+            if o.hide:
+                continue
             rect, img = o.get_fakerect_and_img(s)
             if o.always_drawn_last:
                 drawn_last.add((rect,img,o))
@@ -236,11 +238,11 @@ class Camera:
                 to_sort.add((rect,img,o))
             self.log_static_objects_around(o, to_sort, drawn_last)
         #to_sort is on the form [((x,y,right,bottom),surface,object), ...]
-        drawn_first = [(img,rect) for rect,img,o in to_sort]
+        drawn_first = [(img,rect) for rect,img,o in to_sort if not o.hide]
         drawn_first.sort(key=lambda x:x[1][3])
         screen.blits(drawn_first)
         #
-        drawn_last = [(img,rect) for rect,img,o in drawn_last]
+        drawn_last = [(img,rect) for rect,img,o in drawn_last if not o.hide]
         screen.blits(drawn_last)
         #version without blits: ############################
 ##        to_sort = sorted(to_sort, key=lambda x:x[0][3])
