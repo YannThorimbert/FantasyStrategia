@@ -164,7 +164,7 @@ class Ghost(object):
     def append_element(self, e):
         if e in self._elements:
             functions.debug_msg(e, " is already in ", self)
-            raise Exception("Element already in parent.")
+            raise Exception("Element already in parent :", e, " is already in ", self)
         else:
             self._elements.append(e)
             self._blit_after.append(e)

@@ -2,6 +2,7 @@ import os, random, pygame, thorpy
 from FantasyStrategia.effects import effects
 from FantasyStrategia.logic.unit import InteractiveObject
 
+INCOME_PER_VILLAGE = 100
 
 def sgn(x):
     if x > 0:
@@ -225,6 +226,7 @@ class Game:
         u.team = u.race.team
         u.game = self
         self.units.append(u)
+        return u
 
     def add_object(self, coord, obj, quantity, rand_relpos=False):
         o = self.me.add_dynamic_object(coord, obj, quantity)
@@ -346,11 +348,18 @@ class Game:
 
     def update_player_income(self, p):
         v = self.count_villages(p.team)
-        INCOME_PER_VILLAGE = 100
         tax_per_village = 1. #for the moment
         p.money += int(v*INCOME_PER_VILLAGE * tax_per_village)
 
 
+    def get_units_of_player(self, p):
+        for u in self.units:
+            if u.team == p.team:
+                yield u
+
+    def get_race_of_player(self, p):
+        for u in self.get_units_of_player(p):
+            return u.race
 
 
 

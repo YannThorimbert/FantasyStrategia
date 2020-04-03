@@ -1,6 +1,7 @@
 import os
 import pygame
 from FantasyStrategia.logic import unit
+from FantasyStrategia.gui import texts
 
 std_material_cost = {'Deep water': float("inf"),
                      'Grass': 1.5,
@@ -18,18 +19,31 @@ std_material_cost = {'Deep water': float("inf"),
                      'river':10,
                      'bush':5}
 
+std_unit_descr = {'villager':texts.DESCR_VILLAGER,
+                'infantry':texts.DESCR_INFANTRY,
+                'archer':1,
+                'cavalry':2,
+                'mounted archer':2,
+                'wizard':texts.DESCR_WIZARD,
+                'arch wizard':1,
+                'king':1,
+                'cook':0.5,
+                'doctor':0.5,
+                'transport boat':1.5,
+                'attack boat':2}
+
 std_max_dist = {'villager':0.8,
                 'infantry':1,
                 'archer':1,
                 'cavalry':2,
                 'mounted archer':2,
                 'wizard':1,
-                'arch_wizard':1,
+                'arch wizard':1,
                 'king':1,
                 'cook':0.5,
                 'doctor':0.5,
-                'transport_boat':1.5,
-                'attack_boat':2}
+                'transport boat':1.5,
+                'attack boat':2}
 
 std_attack_range = {'villager':(1,1),
                     'infantry':(1,1),
@@ -37,12 +51,12 @@ std_attack_range = {'villager':(1,1),
                     'cavalry':(1,1),
                     'mounted archer':(2,3),
                     'wizard':(1,2),
-                    'arch_wizard':(1,5),
+                    'arch wizard':(1,5),
                     'king':(1,1),
                     'cook':(0,0),
                     'doctor':(0,0),
-                    'transport_boat':(0,0),
-                    'attack_boat':(1,3)}
+                    'transport boat':(0,0),
+                    'attack boat':(1,3)}
 
 
 
@@ -52,12 +66,12 @@ std_shot_frequency = {'villager':1,
                     'cavalry':1,
                     'mounted archer':100,
                     'wizard':50,
-                    'arch_wizard':30,
+                    'arch wizard':30,
                     'king':1,
                     'cook':1,
                     'doctor':1,
-                    'transport_boat':1,
-                    'attack_boat':30}
+                    'transport boat':1,
+                    'attack boat':30}
 
 std_help_range = {  'villager':(1,1),
                     'infantry':(1,1),
@@ -65,12 +79,12 @@ std_help_range = {  'villager':(1,1),
                     'cavalry':(1,1),
                     'mounted archer':(1,1),
                     'wizard':(1,2),
-                    'arch_wizard':(1,5),
+                    'arch wizard':(1,5),
                     'king':(1,1),
                     'cook':(1,1),
                     'doctor':(1,1),
-                    'transport_boat':(1,1),
-                    'attack_boat':(1,1)}
+                    'transport boat':(1,1),
+                    'attack boat':(1,1)}
 
 std_strength = {'villager':0.6,
                 'infantry':1,
@@ -78,12 +92,12 @@ std_strength = {'villager':0.6,
                 'cavalry':2,
                 'mounted archer':1,
                 'wizard':1,
-                'arch_wizard':2,
+                'arch wizard':2,
                 'king':2,
                 'cook':0.3,
                 'doctor':0.3,
-                'transport_boat':0,
-                'attack_boat':1} #attack boat only attack other boats
+                'transport boat':0,
+                'attack boat':1} #attack boat only attack other boats
 
 std_defense =  {'villager':0.6,
                 'infantry':1,
@@ -91,13 +105,12 @@ std_defense =  {'villager':0.6,
                 'cavalry':2,
                 'mounted archer':1,
                 'wizard':1,
-                'arch_wizard':2,
+                'arch wizard':2,
                 'king':5,
                 'cook':0.3,
                 'doctor':0.3,
-                'transport_boat':1,
-                'attack_boat':1} #attack boat only attack other boats
-
+                'transport boat':1,
+                'attack boat':1} #attack boat only attack other boats
 
 std_cost = {'villager':1, #does not tell where units can be produced
             'infantry':3,
@@ -105,12 +118,25 @@ std_cost = {'villager':1, #does not tell where units can be produced
             'cavalry':6,
             'mounted archer':6,
             'wizard':8,
-            'arch_wizard':10,
+            'arch wizard':10,
             'king':float("inf"),
             'cook':1,
             'doctor':3,
-            'transport_boat':4,
-            'attack_boat':4}
+            'transport boat':4,
+            'attack boat':4}
+
+std_number = {'villager':20, #does not tell where units can be produced
+            'infantry':20,
+            'archer':20,
+            'cavalry':20,
+            'mounted archer':20,
+            'wizard':5,
+            'arch wizard':1,
+            'king':1,
+            'cook':1,
+            'doctor':1,
+            'transport boat':10,
+            'attack boat':10}
 
 std_object_defense = {"bush":1.3,
                       "forest":1.5,
@@ -167,6 +193,7 @@ class Race:
         self.flag.max_relpos = [0.7, -0.1]
         self.flag.min_relpos = [0.7, -0.1]
 ##        self.flag.always_drawn_last = True
+        self.unit_descr = std_unit_descr.copy()
 
 
 
@@ -194,6 +221,10 @@ class Race:
     def finalize(self):
         for type_name in self.unit_types:
             u = self[type_name]
+            if u.cost is None:
+                u.cost = std_cost[type_name]
+            if u.base_number is None:
+                u.base_number = std_number[type_name]
             if u.max_dist is None:
                 u.max_dist = self.dist_factor * std_max_dist[type_name]
             if u.attack_range is None:

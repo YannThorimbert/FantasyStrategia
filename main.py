@@ -42,12 +42,16 @@ game = Game(me)
 ################################################################################
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
-#production d'unites
+#production d'unites - profiter pour mettre infos sur units + attack_range, help_range, etc.
+
+#grayed units sont pas blit derriere villages
 
 #sons: cris de guerre. SoundSnap, acheter quand meme ?
 
 #plus d'effets toons sur les coups
 
+#villages pas blitte devant units en mode bataille. Quid des arbres ? Pont ?
+#avant bataille, laisser le temps de voir les troupes
 #summary_pre_battle
 ################################################################################
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage

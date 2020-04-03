@@ -3,8 +3,8 @@ from pygame.math import Vector2 as V2
 import PyWorld2D.gui.elements as elements
 import PyWorld2D.gui.parameters as guip
 import PyWorld2D.saveload.io as io
-
 from FantasyStrategia.logic.battle import Battle, DistantBattle
+from FantasyStrategia.logic.game import INCOME_PER_VILLAGE
 
 def quit_func():
     io.ask_save(me)
@@ -172,7 +172,7 @@ class Gui:
         self.e_end_turn.set_font_color(guip.TFC)
         self.e_end_turn.scale_to_title()
         w,h = self.e_end_turn.get_fus_size()
-        self.e_end_turn.set_size((w,w))
+        self.e_end_turn.set_size((w,int(0.75*w)))
 ##        nothing = thorpy.make_text("",20)
 ##        self.e_end_turn = thorpy.make_group([e_end_turn, nothing], "v")
         me.add_gui_element(self.e_end_turn, True)
@@ -307,6 +307,7 @@ class Gui:
         self.forced_gotocell = True
 
     def clear(self):
+        print("CLEAR")
         self.selected_unit = None
         self.cell_under_cursor = None
         self.blue_highlights = []
@@ -535,6 +536,28 @@ class Gui:
             self.clear()
 
 
+
+    def lmb_unit_already_moved(self, cell):
+        if self.selected_unit.is_grayed:
+            self.clear()
+        else:
+            self.update_possible_help_and_fight(self.selected_unit.cell.coord)
+            if cell.unit in self.can_be_fought:
+                d = cell.distance_to(self.selected_unit.cell)
+                if d > 1:
+                    self.distant_attack()
+                else:
+                    self.attack()
+                self.clear()
+            elif cell.unit in self.can_be_helped:
+                self.help()
+                self.clear()
+            else:
+                self.rmb(None)
+            self.can_be_fought = []
+            self.can_be_helped = []
+
+
     def lmb(self, e):
         print("LMB", self.game.t, self.selected_unit)
         self.destinations_mousemotion = []
@@ -565,22 +588,9 @@ class Gui:
                 self.can_be_fought = []
                 self.can_be_helped = []
                 self.selected_unit = None
-            else:
+            else:#no path (destination) is drawn for lmb
                 if self.selected_unit:
-                    self.update_possible_help_and_fight(self.selected_unit.cell.coord)
-                    if cell.unit in self.can_be_fought:
-                        d = cell.distance_to(self.selected_unit.cell)
-                        if d > 1:
-                            self.distant_attack()
-                        else:
-                            self.attack()
-                        return
-                    elif cell.unit in self.can_be_helped:
-                        self.help()
-                        return
-                    else:
-                        self.rmb(None)
-                        return
+                    self.lmb_unit_already_moved(cell)
                 if cell.unit:
                     if cell.unit.team == self.game.current_player.team:
                         self.selected_unit = cell.unit
@@ -593,7 +603,14 @@ class Gui:
                         self.add_alert(self.e_wrong_team)
                         self.game.deny_sound.play()
                 else:
-                    print("nothing")
+                    for o in cell.objects:
+                        if o.name == "village":
+                            for o2 in cell.objects:
+                                if o2.str_type == "flag":
+                                    if o2.team == self.game.current_player.team:
+                                        self.production(o)
+                                        self.selected_unit = None
+                                        return
                     self.selected_unit = None
 
 
@@ -636,9 +653,62 @@ class Gui:
                 if self.selected_unit:
                     self.update_possible_help_and_fight(self.selected_unit.cell.coord)
                 else:
+##                    for o in cell.objects:
+##                        if o.name == "village":
+##                            return
                     self.destinations_mousemotion = self.get_destinations(cell)
         else:
             self.cell_under_cursor = None
+
+    def production(self, o):
+        from FantasyStrategia.logic.races import std_cost, std_number
+        e_title = guip.get_title("Recruitment")
+        e_line = thorpy.Line(100, "h")
+        choices = []
+        race = self.game.get_race_of_player(self.game.current_player)
+        def produce_unit(type_):
+            self.game.coin_sound.play()
+            u = self.game.add_unit(o.cell.coord, race[type_], std_number[type_])
+            u.is_grayed = True
+            self.game.current_player.money -= u.cost * INCOME_PER_VILLAGE
+            self.e_gold_txt.set_text(str(self.game.current_player.money))
+            self.refresh()
+            thorpy.functions.quit_menu_func()
+        for unit_type in std_cost:
+            if not "boat" in unit_type and not "king" in unit_type:
+                if unit_type in race.unit_types:
+                    text = str(std_number[unit_type]) + " " +unit_type.capitalize()
+                    cost = std_cost[unit_type] * INCOME_PER_VILLAGE
+                    grayed = cost > self.game.current_player.money
+                    cost = str(cost) + " $"
+                    e_text = thorpy.OneLineText(text + "    (" + cost+")")
+                    img = race.unit_types[unit_type].imgs_z_t[0][0]
+                    e_img = thorpy.Image(img)
+                    e_ghost = thorpy.make_group([e_img, e_text])
+                    if grayed:
+                        button = thorpy.Pressable(elements=[e_ghost])
+                        button.fit_children()
+                        button.active = False
+                        button.set_pressed_state()
+                    else:
+                        button = thorpy.Clickable(elements=[e_ghost])
+                        button.fit_children()
+##                        helper = thorpy.Element(race.unit_descr[unit_type])
+##                        helper.scale_to_title()
+##                        helper.set_help_of(button)
+##                        helper._jail = None
+                        button.add_basic_help(race.unit_descr[unit_type])
+                    button.user_func = produce_unit
+                    button.user_params = {"type_":unit_type}
+                    choices.append(button)
+        def click_outside(event):
+            if not e.get_fus_rect().collidepoint(event.pos):
+                thorpy.functions.quit_menu_func()
+        e = thorpy.make_ok_box([e_title, e_line]+choices)
+        e.center()
+        reac = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, click_outside)
+        e.add_reaction(reac)
+        thorpy.launch_blocking(e, add_ok_enter=True)
 
 
     def get_alpha_dest(self):

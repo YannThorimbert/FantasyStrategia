@@ -2,7 +2,7 @@ import random, os
 import pygame, thorpy
 from PyWorld2D.mapobjects.objects import MapObject
 import PyWorld2D.constants as const
-from .races import RACE_FIGHT_FACTOR
+from FantasyStrategia.logic.races import RACE_FIGHT_FACTOR
 
 
 
@@ -76,6 +76,8 @@ class Unit(MapObject):
         self.attack_range = None
         self.shot_frequency = None
         self.help_range = None
+        self.cost = None
+        self.base_number = None
         self.material_cost = {}
         self.terrain_attack = {}
         self.object_defense = {}
@@ -166,6 +168,8 @@ class Unit(MapObject):
         obj.highlights = self.highlights
         obj.team = self.team
         #
+        obj.cost = self.cost
+        obj.base_number = self.base_number
         obj.material_cost = self.material_cost.copy()
         obj.max_dist = self.max_dist
         obj.help_range = self.help_range
@@ -209,6 +213,8 @@ class Unit(MapObject):
         obj.always_drawn_last = self.always_drawn_last
         obj.team = self.team
         #
+        obj.cost = self.cost
+        obj.base_number = self.base_number
         obj.material_cost = self.material_cost.copy()
         obj.max_dist = self.max_dist
         obj.help_range = self.help_range
@@ -495,6 +501,8 @@ class InteractiveObject(Unit):
         MapObject.__init__(self, editor, imgs, name, factor, relpos, build,
                             new_type, str_type)
         #
+        self.cost = None
+        self.base_number = None
         self.max_dist = None
         self.attack_range = None
         self.shot_frequency = None

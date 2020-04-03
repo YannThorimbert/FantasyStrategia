@@ -153,6 +153,7 @@ class MapEditor:
             elements.insert(0, self.e_zoom)
         self.e_box = thorpy.Element.make(elements=elements,
                                         size=self.menu_rect.size)
+        self.e_box.set_main_color((200,200,200,160))
         thorpy.store(self.e_box)
         self.e_box.stick_to("screen","right","right")
         ########################################################################
@@ -357,7 +358,12 @@ class MapEditor:
             if cell.unit:
                 self.cursor_color = 1
             else:
-                self.cursor_color = 0
+                for o in cell.o.objects:
+                    if o.name == "village":
+                        self.cursor_color = 1
+                        break
+                else:
+                    self.cursor_color = 0
             self.img_cursor = self.cursors[self.cursor_color][self.idx_cursor]
     ##        if cell.objects:
     ##            print(cell.objects)
