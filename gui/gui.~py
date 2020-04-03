@@ -447,7 +447,7 @@ class Gui:
         b = Battle(self.game, units_in_battle, defender, distance)
         b.fight()
         if self.selected_unit.quantity > 0:
-            self.selected_unit.is_grayed = True
+            self.selected_unit.make_grayed()
         self.clear()
         thorpy.get_current_menu().fps = guip.FPS
         self.refresh_lifes()
@@ -459,7 +459,7 @@ class Gui:
         b = DistantBattle(self.game, units_in_battle, defender, distance)
         b.fight()
         if self.selected_unit.quantity > 0:
-            self.selected_unit.is_grayed = True
+            self.selected_unit.make_grayed()
         self.clear()
         thorpy.get_current_menu().fps = guip.FPS
         self.refresh_lifes()
@@ -484,11 +484,11 @@ class Gui:
 
     def burn(self):
         self.game.set_fire(self.cell_under_cursor.coord, 4)
-        self.selected_unit.is_grayed = True
+        self.selected_unit.make_grayed()
 
     def help(self):
         friend = self.unit_under_cursor()
-        self.selected_unit.is_grayed = True
+        self.selected_unit.make_grayed()
         print("helping", friend.name, friend.team == self.selected_unit.team)
 ##        raise Exception("Not implemented yet")
 
@@ -671,7 +671,7 @@ class Gui:
         def produce_unit(type_):
             self.game.coin_sound.play()
             u = self.game.add_unit(o.cell.coord, race[type_], std_number[type_])
-            u.is_grayed = True
+            self.selected_unit.make_grayed()
             self.game.current_player.money -= u.cost * INCOME_PER_VILLAGE
             self.e_gold_txt.set_text(str(self.game.current_player.money))
             self.refresh()
@@ -725,14 +725,7 @@ class Gui:
 
     def draw_actions_possibility(self, unit, s):
         x,y = unit.get_current_rect_center(s)
-##        if unit.is_grayed:
-##            i = unit.get_current_frame() + unit.current_isprite
-##            img = unit.race[unit.name].grayed[self.game.me.zoom_level][i]
-##            rect = img.get_rect()
-##            rect.center = unit.get_current_rect_center(s)
-##            self.surface.blit(img, rect.topleft)
         if unit in self.has_moved:
-##            x,y = unit.get_current_rect_center(s)
             t = self.game.me.lm.t3 % len(self.footstep)
             self.surface.blit(self.footstep[t], (x-s//2,y))
         if unit in self.can_be_fought:

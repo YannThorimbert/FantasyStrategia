@@ -98,17 +98,20 @@ class Unit(MapObject):
         self.id = Unit.unit_id
         Unit.unit_id += 1
 
+    def get_race_unit(self):
+        return self.race[self.str_type]
+
     def make_grayed(self):
         self.is_grayed = True
         self.hide = True
-        imgs = self.race[self.name].grayed
+        imgs = self.get_race_unit().grayed
         obj = MapObject(self.game.me, imgs[self.game.me.zoom_level])
         obj.imgs_z_t = imgs
         obj = self.game.add_object(self.cell.coord, obj, 1)
         obj.set_frame_refresh_type(self._refresh_frame_type)
         obj.get_map_time = self.get_map_time
         obj.get_current_from = self.get_current_frame
-        obj.name = "grayed_"+self.name
+        obj.name = "grayed_"+self.str_type
 
 
     def _spawn_possible_destinations(self, x, y, tot_cost, path_to_here, score):

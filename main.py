@@ -43,13 +43,11 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-#unit devrait storer unit_type, parce que name peut etre reecrit ==> modifier "production" et partout ou u.name et unit.name
+#villages pas blitte devant units en mode bataille. Quid des arbres ? Pont ? :
+    #centraler dans une liste tous les elements a blitter. Trier, puis blits.
 
 #sons: cris de guerre. SoundSnap, acheter quand meme ?
 
-#plus d'effets toons sur les coups
-
-#villages pas blitte devant units en mode bataille. Quid des arbres ? Pont ?
 
 #avant bataille, laisser le temps de voir les troupes
 #summary_pre_battle
@@ -166,6 +164,9 @@ game.add_unit((18,8), humans["infantry"], 10)
 game.add_unit((17,10), humans["wizard"], 10)
 game.add_unit((16,9), humans2["villager"], 15)
 game.add_unit((15,9), humans2["infantry"], 15)
+
+game.add_unit((12,2), humans["infantry"], 20)
+game.add_unit((13,2), humans2["infantry"], 20)
 
 
 gnx,gny = game.get_map_size()

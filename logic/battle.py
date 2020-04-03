@@ -294,7 +294,7 @@ class FightingUnit:
             if random.random() < P_HIT_SOUND:
                 s = random.choice(self.battle.game.hit_sounds)
                 s.play_next_channel()
-                self.battle.shocks.append((self.target.rect.center, 0))
+                self.battle.shocks.append((self.target.rect.topleft, 0))
             if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
                 self.refresh_direction_target()
             frame = self.get_frame_near_target()
@@ -409,7 +409,7 @@ class Battle:
         self.explosion.resize_frames((2*s,2*s))
         self.explosions = [] #contain the pos of explosions
         #
-        self.shock = thorpy.AnimatedGif("sprites/shock2.gif")
+        self.shock = thorpy.AnimatedGif("sprites/shock3.gif")
         self.shocks = [] #contain the pos of shocks
         #
         self.blood = pygame.image.load("sprites/blood.png")
@@ -712,8 +712,6 @@ class Battle:
                 self.finish_battle()
             elif self.fight_t - self.finished > TIME_AFTER_FINISH:
                 thorpy.functions.quit_menu_func()
-##        if self.fight_t % 20 == 0:
-##            print(self.fight_t)
 
     def finish_battle(self):
         self.slow()

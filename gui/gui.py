@@ -679,7 +679,7 @@ class Gui:
         for unit_type in std_cost:
             if not "boat" in unit_type and not "king" in unit_type:
                 if unit_type in race.unit_types:
-                    text = str(std_number[unit_type]) + " " +unit_type.capitalize()
+                    text = str(std_number[unit_type]) + " " + unit_type.capitalize()
                     cost = std_cost[unit_type] * INCOME_PER_VILLAGE
                     grayed = cost > self.game.current_player.money
                     cost = str(cost) + " $"
@@ -695,10 +695,6 @@ class Gui:
                     else:
                         button = thorpy.Clickable(elements=[e_ghost])
                         button.fit_children()
-##                        helper = thorpy.Element(race.unit_descr[unit_type])
-##                        helper.scale_to_title()
-##                        helper.set_help_of(button)
-##                        helper._jail = None
                         button.add_basic_help(race.unit_descr[unit_type])
                     button.user_func = produce_unit
                     button.user_params = {"type_":unit_type}
@@ -725,14 +721,7 @@ class Gui:
 
     def draw_actions_possibility(self, unit, s):
         x,y = unit.get_current_rect_center(s)
-##        if unit.is_grayed:
-##            i = unit.get_current_frame() + unit.current_isprite
-##            img = unit.race[unit.name].grayed[self.game.me.zoom_level][i]
-##            rect = img.get_rect()
-##            rect.center = unit.get_current_rect_center(s)
-##            self.surface.blit(img, rect.topleft)
         if unit in self.has_moved:
-##            x,y = unit.get_current_rect_center(s)
             t = self.game.me.lm.t3 % len(self.footstep)
             self.surface.blit(self.footstep[t], (x-s//2,y))
         if unit in self.can_be_fought:
