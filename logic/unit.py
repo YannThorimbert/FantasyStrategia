@@ -291,7 +291,7 @@ class Unit(MapObject):
 
     def remove_from_game(self):
         self.game.units.remove(self)
-        self.game.me.dynamic_objects.remove(self)
+        self.game.me.remove_dynamic_object(self)
         self.remove_from_cell_objects()
 
     def die_after(self, duration):

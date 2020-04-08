@@ -141,7 +141,7 @@ class CellInfo:
                 if "bridge" in obj.str_type:
                     objs.add("Bridge")
             else:
-                if obj.name == "fire":
+                if obj.str_type == "fire":
                     n = obj.game.burning[obj.cell.coord]
                     objs.add("fire ("+str(n)+" turns)")
                 else:

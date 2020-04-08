@@ -595,11 +595,10 @@ class Gui:
                 if cell.unit:
                     if cell.unit.team == self.game.current_player.team:
                         self.selected_unit = cell.unit
-                        if cell.unit in self.has_moved:
-                            self.update_possible_help_and_fight(self.selected_unit.cell.coord)
-                        else:
+                        if not(cell.unit in self.has_moved):
                             print("update destinations")
                             self.destinations_lmb = self.get_destinations(cell)
+                        self.update_possible_help_and_fight(self.selected_unit.cell.coord)
                     else:
                         self.add_alert(self.e_wrong_team)
                         self.game.deny_sound.play()
@@ -617,11 +616,14 @@ class Gui:
     def rmb(self, e):
         if self.selected_unit:
             cell = self.cell_under_cursor
+            if self.selected_unit in self.has_moved:
+                self.update_possible_interactions(self.selected_unit, cell.coord)
             if cell:
                 print("treat interaction RMB")
                 interactibles = self.game.get_interactive_objects(cell.coord[0],
                                                                   cell.coord[1])
                 choices = self.get_interaction_choices(interactibles)
+                print("     ", choices)
                 if choices:
                     self.user_make_choice(choices)
                     if self.forced_gotocell:

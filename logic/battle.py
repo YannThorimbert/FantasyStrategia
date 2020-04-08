@@ -267,7 +267,9 @@ class FightingUnit:
             self.battle.to_remove.append(self)
         elif result > 0:
             self.battle.to_remove.append(self.target)
-
+            if self_is_defending:
+                if self in self.battle.to_remove:
+                    self.battle.to_remove.remove(self)
 
 
     def refresh_not_near_target(self):
@@ -1113,7 +1115,39 @@ class DistantFightingUnit(FightingUnit):
         self.time_frome_last_direction_change += 1
         self.time_from_last_shot += 1
 
+class FightUnitAtRest(FightingUnit): juste faire qu'il se tourne face a l'adversaire, contrairement a CannotFightUnit
 
+
+    def refresh_direction_notarget(self):
+        self.direction = DELTA_TO_KEY[self.dxdy]
+        self.refresh_sprite_type()
+        self.time_frome_last_direction_change = 0
+
+    def draw_move_fight(self):
+                #random target otherwise they all focus on the same
+        if self.opponents:
+            self.target = random.choice(self.opponents)
+        if self.battle.fight_t == self.start_to_run:
+            self.vel = self.final_vel
+        if self.target is None or self.target.dead:
+            self.draw_move_fight_notarget()
+            self.time_frome_last_direction_change += 1
+            return
+        target_pos = V2(self.target.rect.center)
+        self_pos = V2(self.rect.center)
+        delta = target_pos - self_pos
+        self.refresh_dxdy(delta.x, delta.y)
+        ########################################################################
+        if not self.target.dead and not self.dead:
+            if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
+                self.refresh_direction_target()
+            frame = self.get_frame_near_target()
+        self.rect.center = self.pos
+        frame += self.isprite
+        img = self.unit.imgs_z_t[self.z][frame]
+        if self.battle.blit_this_frame: #bug potentiel ???????????
+            self.log_blit(img)
+        self.time_frome_last_direction_change += 1
 
 class CannotFightUnit(FightingUnit):
 
@@ -1241,7 +1275,7 @@ class DistantBattleProjectile(Projectile):
 def get_img(cell, z):
     splash = False
     footprint = False
-    for obj in cell.objects:
+    for obj in cell.objects: #ok
         if obj.str_type == "river":
             img = obj.imgs_z_t[z][0]
             splash = True

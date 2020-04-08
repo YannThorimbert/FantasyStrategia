@@ -131,7 +131,7 @@ class Game:
         if not self.burning:
             self.fire_sound.stop()
         if natural_end: #then the burnable objects are removed
-            objs = self.get_cell_at(coord[0],coord[1]).objects
+            objs = self.get_cell_at(coord[0],coord[1]).objects #ok
             to_burn = [o for o in objs if o.str_type in self.is_burnable]
             for o in to_burn:
                 self.fire_extinguish_sound.play_next_channel()
@@ -149,16 +149,14 @@ class Game:
     def update_fire_logic(self):
         to_extinguish = []
         for coord in self.burning:
-            for obj in self.get_cell_at(coord[0],coord[1]).objects:
-                if obj.name == "fire":
-                    self.burning[coord] -= 1
-                    if self.burning[coord] == 0:
-                        to_extinguish.append(coord)
-                    elif self.burning[coord] == 2:
-                        self.add_smoke("small", coord, (0,-0.3), "fire")
-                    elif self.burning[coord] == 1:
-                        self.remove_smoke(coord)
-                        self.add_smoke("large", coord, (0,-0.3), "fire")
+            self.burning[coord] -= 1
+            if self.burning[coord] == 0:
+                to_extinguish.append(coord)
+            elif self.burning[coord] == 2:
+                self.add_smoke("small", coord, (0,-0.3), "fire")
+            elif self.burning[coord] == 1:
+                self.remove_smoke(coord)
+                self.add_smoke("large", coord, (0,-0.3), "fire")
         for coord in to_extinguish:
             self.extinguish(coord, natural_end=True)
 
@@ -205,6 +203,8 @@ class Game:
         self.me.func_reac_time()
         self.t += 1
         pygame.display.flip()
+        if self.t%100 == 0:
+            self.check_integrity()
 
 
     def build_map(self, map_initializer, fast, use_beach_tiler, load_tilers):
@@ -253,17 +253,13 @@ class Game:
         if cell:
             return cell.unit
 
-
-##    def remove_unit(self, u): #just a wrapper
-##        u.remove_from_game()
-
     def remove_flag(self, coord, sound=False):
-        for o in self.get_cell_at(coord[0],coord[1]).objects:
-            if o.str_type == "flag":
-                o.remove_from_game()
-                if sound:
-                    self.flag_sound.play()
-                return o
+        flag = self.get_object("flag", coord)
+        if flag:
+            flag.remove_from_game()
+            if sound:
+                self.flag_sound.play()
+            return flag
 
     def set_flag(self, coord, flag_template, team, sound=False):
         self.remove_flag(coord, sound=False)
@@ -278,9 +274,8 @@ class Game:
     def remove_fire(self, coord):
         if coord in self.burning:
             self.burning.pop(coord)
-            for o in self.get_cell_at(coord[0],coord[1]).objects:
-                if o.str_type == "fire":
-                    o.remove_from_map(self.me)
+            fire = self.get_object("fire", coord)
+            fire.remove_from_map(self.me)
         self.remove_smoke(coord)
 
 
@@ -297,7 +292,7 @@ class Game:
 
     def add_obj_before_other_if_needed(self, obj, qty, other_names, cell):
         has_other = False
-        for o in cell.objects:
+        for o in cell.objects: #ok
             for n in other_names:
                 if o.name == n:
                     if o.relpos[1] >= obj.relpos[1]:
@@ -327,20 +322,13 @@ class Game:
         for x in range(self.me.lm.nx):
             for y in range(self.me.lm.ny):
                 cell = self.get_cell_at(x,y)
-                for o in cell.objects:
+                for o in cell.objects: #ok
                     if o.name == name:
                         objs.append(o)
         return objs
 
     def get_all_objects_by_str_type(self, str_type):
-        objs = []
-        for x in range(self.me.lm.nx):
-            for y in range(self.me.lm.ny):
-                cell = self.get_cell_at(x,y)
-                for o in cell.objects:
-                    if o.str_type == str_type:
-                        objs.append(o)
-        return objs
+        return self.me.objects_dict[str_type].values()
 
     def get_map_size(self):
         return self.me.lm.nx, self.me.lm.ny
@@ -349,20 +337,9 @@ class Game:
         counter = 0
         for f in self.get_all_objects_by_str_type("flag"):
             if f.team == team:
-                for o in f.cell.objects:
-                    if o.name == "village":
-                        counter += 1
-                        break
+                if self.get_object("village", f.cell.coord):
+                    counter += 1
         return counter
-
-
-##    def update_players_income(self):
-##        for p in self.players:
-##            v = self.count_villages(p.team)
-##            INCOME_PER_VILLAGE = 100
-##            tax_per_village = 1. #for the moment
-##            p.money += v*INCOME_PER_VILLAGE * tax_per_village
-####            update_gui_villages_money(v, p.money)
 
 
     def update_player_income(self, p):
@@ -397,9 +374,11 @@ class Game:
         #o1 contains the same objects as o2
         od = []
         for entry in self.me.objects_dict.keys():
-            for coord in self.me.objects_dict[entry]:
-                od.append(self.me.get_object(entry, coord))
-                assert od[-1] in o1
+            for o in self.me.objects_dict[entry].values():
+                od.append(o)
+                if not (o in o1):
+                    print(o, o.name, o.str_type, o.cell.coord)
+                    assert o in o1
 ##        for o in o1:
 ##            print(o, o.name, o.str_type, o.cell.coord)
 ##            assert o in od

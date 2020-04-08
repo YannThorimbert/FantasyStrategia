@@ -43,19 +43,11 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-#map : footprint derriere arbres... : juste ne pas faire footprints si static dans le coin
-#map : statics["forest"][(12,3)] = [...] a changer que a l'ajout / enleve d'objets
-#gui: epee medic mm si deplacement zero
-#gui: permettre click droit apres deplacement si 1 unit est selectionnee
-
-#battle : + eviter les double morts
 #battle : unites dans village ou foret ou buisson sont mieux protegees et ne courent pas si attaquees.
 
 #preconstruire boutons de village ? ou en tout cas afficher un truc tout de suite car la ca lag
 
-
-
-
+#penser a enlever check integrity dans func time
 
 #avant bataille, laisser le temps de voir les troupes
 #summary_pre_battle
@@ -138,7 +130,7 @@ game = Game(me)
 #<use_beach_tiler>: quality much better if true, loading much slower. Req. Numpy!
 #<load_tilers> : Very slow but needed if you don't have Numpy but still want hi quality.
 
-game.build_map(map_initializer, fast=False, use_beach_tiler=False, load_tilers=False)
+game.build_map(map_initializer, fast=False, use_beach_tiler=True, load_tilers=False)
 
 
 
