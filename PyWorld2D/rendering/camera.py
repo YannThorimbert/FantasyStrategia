@@ -228,6 +228,7 @@ class Camera:
             self.ui_manager.draw_before_objects(s)
         to_sort = set()
         drawn_last = set()
+        force_drawn_first = set()
         for o in objs:
             if o.hide:
                 continue
@@ -235,9 +236,14 @@ class Camera:
             if o.always_drawn_last:
                 drawn_last.add((rect,img,o))
             else:
-                to_sort.add((rect,img,o))
+                if "bridge" in o.str_type:
+                    force_drawn_first.add((rect,img,o))
+                else:
+                    to_sort.add((rect,img,o))
             self.log_static_objects_around(o, to_sort, drawn_last)
         #to_sort is on the form [((x,y,right,bottom),surface,object), ...]
+        force_drawn_first = [(img,rect) for rect,img,o in force_drawn_first if not o.hide]
+        screen.blits(force_drawn_first)
         drawn_first = [(img,rect) for rect,img,o in to_sort if not o.hide]
         drawn_first.sort(key=lambda x:x[1][3])
         screen.blits(drawn_first)

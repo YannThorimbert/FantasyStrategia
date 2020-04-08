@@ -28,8 +28,8 @@ app = thorpy.Application((W,H))
 
 map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
 map_initializer.chunk = (1322, 43944)
-map_initializer.max_number_of_roads = 0 #5
-map_initializer.max_number_of_rivers = 0 #5
+map_initializer.max_number_of_roads = 5 #5
+map_initializer.max_number_of_rivers = 5 #5
 map_initializer.village_homogeneity = 0.1
 map_initializer.seed_static_objects = 15
 
@@ -43,15 +43,24 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-#villages pas blitte devant units en mode bataille. Quid des arbres ? Pont ? :
-    #centraler dans une liste tous les elements a blitter. Trier, puis blits.
+#map : footprint derriere arbres... : juste ne pas faire footprints si static dans le coin
+#map : statics["forest"][(12,3)] = [...] a changer que a l'ajout / enleve d'objets
+#gui: epee medic mm si deplacement zero
+#gui: permettre click droit apres deplacement si 1 unit est selectionnee
 
-#sons: cris de guerre. SoundSnap, acheter quand meme ?
+#battle : + eviter les double morts
+#battle : unites dans village ou foret ou buisson sont mieux protegees et ne courent pas si attaquees.
+
+
+
 
 
 #avant bataille, laisser le temps de voir les troupes
 #summary_pre_battle
 #demander confirmation d'attaque dans le summary pre battle ! possibilite d'annuler a ce moment
+
+#sons: cris de guerre. SoundSnap, acheter quand meme ?
+
 ################################################################################
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
 #conquete de base et batailles. Pas d'impots ni de gestion hors production unites.
@@ -85,6 +94,9 @@ game = Game(me)
 ################################################################################
 ################################################################################
 ################################################################################
+
+#refaire thorpy avec le seul changement que on enleve tous les pygame.update. C'est l'utilisateur qui fait un flip.
+#et il n'y a pas de unblit. On reblit tout chaque frame.
 
 #archers en priorite !!! (implique d'attacher fumee et sons aux classes de projectils)
 
@@ -160,13 +172,23 @@ game.add_unit((14,1), humans["villager"], 10)
 game.add_unit((12,11), humans2["wizard"], 30)
 game.add_unit((17,3), humans["villager"], 10)
 
+game.add_unit((18,7), humans2["infantry"], 10)
 game.add_unit((18,8), humans["infantry"], 10)
 game.add_unit((17,10), humans["wizard"], 10)
 game.add_unit((16,9), humans2["villager"], 15)
 game.add_unit((15,9), humans2["infantry"], 15)
 
-game.add_unit((12,2), humans["infantry"], 20)
-game.add_unit((13,2), humans2["infantry"], 20)
+game.add_unit((22,2), humans["infantry"], 10)
+game.add_unit((23,2), humans2["infantry"], 20)
+game.add_unit((23,4), humans["wizard"], 1)
+
+game.add_unit((20,10), humans2["infantry"], 10)
+game.add_unit((20,11), humans["infantry"], 10)
+
+game.add_unit((24,19), humans2["infantry"], 10)
+game.add_unit((25,19), humans["infantry"], 10)
+game.add_unit((23,20), humans["infantry"], 10)
+game.add_unit((24,20), humans2["infantry"], 10)
 
 
 gnx,gny = game.get_map_size()
@@ -177,7 +199,7 @@ for obj in game.get_all_objects_by_name("village"):
         game.set_flag(obj.cell.coord, humans2.flag, humans2.team)
     #else village is neutral
 
-
+game.set_flag((18,5), humans.flag, humans.team)
 
 
 ##game.set_fire((10,8), 5)
@@ -214,6 +236,32 @@ game.gui.e_gold_txt.set_text(str(game.current_player.money))
 #remove +/- numpad keys for zoom, replacing <sign> by plus or minus:
 ##me.e_box.remove_reaction("k <sign>")
 #remember to modify/deactivate the help text corresponding to the removed reac
+
+
+
+
+##units_in_battle = defender.get_all_surrounding_ennemies()
+##units_in_battle.append(defender)
+from FantasyStrategia.logic.battle import Battle, DistantBattle
+##from FantasyStrategia.logic.fakebattle import Battle as FakeBattle
+##from FantasyStrategia.logic.fakebattle import DistantBattle as FakeDistantBattle
+
+attacker = game.get_unit_at(18,7)
+defender = game.get_unit_at(18,8)
+distance = defender.distance_to(attacker)
+units_in_battle = [attacker, defender]
+
+print("START")
+##b = FakeDistantBattle(game, units_in_battle, defender, distance)
+##b.fight()
+
+##b = DistantBattle(game, units_in_battle, defender, distance)
+##b.fight()
+
+##b = Battle(game, units_in_battle, defender, distance)
+##b.fight()
+
+
 
 me.set_zoom(level=0)
 m = thorpy.Menu(me.e_box,fps=me.fps)

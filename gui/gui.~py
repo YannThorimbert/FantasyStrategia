@@ -80,6 +80,9 @@ class GuiGraphicsEnhancement:
                 ################### Footprints #################################
                 if self.show_footprints:
                     if t == "sand" or "snow" in t:
+                        for o in u.cell.objects:
+                            if "forest" in o.str_type:
+                                return
                         rect = u.get_current_rect(self.zoom)
                         footprint = Footprint(u, 0, rect.center)
                         self.footprints[u.cell.coord] = footprint
@@ -323,6 +326,8 @@ class Gui:
         self.can_be_fought = []
         self.can_be_helped = []
         if cell.unit:
+            if cell.unit.is_grayed:
+                return []
             if cell.unit.anim_path: #moving unit, let it alone...
                 return []
             elif cell.unit in self.has_moved:
@@ -671,7 +676,7 @@ class Gui:
         def produce_unit(type_):
             self.game.coin_sound.play()
             u = self.game.add_unit(o.cell.coord, race[type_], std_number[type_])
-            self.selected_unit.make_grayed()
+            u.make_grayed()
             self.game.current_player.money -= u.cost * INCOME_PER_VILLAGE
             self.e_gold_txt.set_text(str(self.game.current_player.money))
             self.refresh()
@@ -679,7 +684,7 @@ class Gui:
         for unit_type in std_cost:
             if not "boat" in unit_type and not "king" in unit_type:
                 if unit_type in race.unit_types:
-                    text = str(std_number[unit_type]) + " " +unit_type.capitalize()
+                    text = str(std_number[unit_type]) + " " + unit_type.capitalize()
                     cost = std_cost[unit_type] * INCOME_PER_VILLAGE
                     grayed = cost > self.game.current_player.money
                     cost = str(cost) + " $"
@@ -695,10 +700,6 @@ class Gui:
                     else:
                         button = thorpy.Clickable(elements=[e_ghost])
                         button.fit_children()
-##                        helper = thorpy.Element(race.unit_descr[unit_type])
-##                        helper.scale_to_title()
-##                        helper.set_help_of(button)
-##                        helper._jail = None
                         button.add_basic_help(race.unit_descr[unit_type])
                     button.user_func = produce_unit
                     button.user_params = {"type_":unit_type}

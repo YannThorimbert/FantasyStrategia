@@ -176,6 +176,7 @@ class MapObject:
         self.can_interact = False
         self.always_drawn_last = False
         self.is_static = False
+        self.hide = False
 
     def get_cell_coord(self):
         return self.cell.coord
@@ -283,8 +284,9 @@ class MapObject:
         if self.is_static:# or self.name=="bridge":
             print("Removing static object...")
             if self in me.lm.static_objects:
-                me.lm.static_objects.remove(self)
+                me.lm.remove_static_object(self)
             me.rebuild_cell_graphics(self.cell)
+
         else: #easy
             me.dynamic_objects.remove(self)
 

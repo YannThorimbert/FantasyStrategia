@@ -284,7 +284,7 @@ class MapObject:
         if self.is_static:# or self.name=="bridge":
             print("Removing static object...")
             if self in me.lm.static_objects:
-                me.lm.static_objects.remove(self)
+                me.lm.remove_static_object(self)
             me.rebuild_cell_graphics(self.cell)
         else: #easy
             me.dynamic_objects.remove(self)

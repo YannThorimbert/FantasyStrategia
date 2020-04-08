@@ -110,8 +110,9 @@ class Unit(MapObject):
         obj = self.game.add_object(self.cell.coord, obj, 1)
         obj.set_frame_refresh_type(self._refresh_frame_type)
         obj.get_map_time = self.get_map_time
-        obj.get_current_from = self.get_current_frame
+        obj.get_current_frame = obj._get_current_frame3
         obj.name = "grayed_"+self.str_type
+        obj.is_grayed = True
 
 
     def _spawn_possible_destinations(self, x, y, tot_cost, path_to_here, score):

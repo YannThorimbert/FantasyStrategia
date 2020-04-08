@@ -209,6 +209,18 @@ class Race:
             u.footprint = pygame.image.load(imgs_fn+"_footprint.png")
         else:
             u.footprint = pygame.image.load("sprites/footprint.png")
+        #
+        R = 7
+        fp = pygame.Surface((R,R)).convert_alpha()
+        for x in range(R):
+            for y in range(R):
+                d = ((x-R/2)**2 + (y-R/2)**2)**0.5
+                alpha = int(200 * (1 - d / (R/2)))
+                if alpha < 0:
+                    alpha = 0
+                fp.set_at((x,y), (0,0,0,alpha))
+        u.footprint = fp
+
         if os.path.exists(imgs_fn+"_projectile1.png"):
             u.projectile1 = pygame.image.load(imgs_fn+"_projectile1.png")
         else:

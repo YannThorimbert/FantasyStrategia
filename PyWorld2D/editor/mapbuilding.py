@@ -441,7 +441,8 @@ class MapInitializer:
             #think e.g. of a wooden bridge over a river. What the unit sees is
             #the wooden bridge
 ##            me.lm.static_objects.insert(0,obj)
-            me.lm.static_objects.append(obj)
+            me.lm.add_static_object(obj)
+##            me.lm.static_objects.append(obj)
 
 
     def build_map(self, me, fast=False, use_beach_tiler=True, load_tilers=False,

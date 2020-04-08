@@ -209,6 +209,7 @@ class Game:
 
     def build_map(self, map_initializer, fast, use_beach_tiler, load_tilers):
         map_initializer.build_map(self.me, fast, use_beach_tiler, load_tilers)
+        self.me.lm.build_objects_dict()
         for obj in self.me.lm.static_objects:
             if obj.str_type == "bridge_h":
                 if self.bridge_h is None:
@@ -228,6 +229,7 @@ class Game:
                     self.bridge_v.is_ground = True
                 self.add_object(obj.cell.coord, self.bridge_v, 1)
                 self.bridges.append(obj.cell.coord)
+
 
     def add_unit(self, coord, unit, quantity):
         u = self.me.add_unit(coord, unit, quantity)
@@ -255,7 +257,16 @@ class Game:
 ##    def remove_unit(self, u): #just a wrapper
 ##        u.remove_from_game()
 
+    def remove_flag(self, coord, sound=False):
+        for o in self.get_cell_at(coord[0],coord[1]).objects:
+            if o.str_type == "flag":
+                o.remove_from_game()
+                if sound:
+                    self.flag_sound.play()
+                return o
+
     def set_flag(self, coord, flag_template, team, sound=False):
+        self.remove_flag(coord, sound=False)
         if sound:
             self.flag_sound.play()
         cell = self.get_cell_at(coord[0],coord[1])

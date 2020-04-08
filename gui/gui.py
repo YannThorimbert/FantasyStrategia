@@ -80,9 +80,15 @@ class GuiGraphicsEnhancement:
                 ################### Footprints #################################
                 if self.show_footprints:
                     if t == "sand" or "snow" in t:
-                        rect = u.get_current_rect(self.zoom)
-                        footprint = Footprint(u, 0, rect.center)
-                        self.footprints[u.cell.coord] = footprint
+                        has_forest = False
+                        for o in u.cell.objects:
+                            if "forest" in o.str_type:
+                                has_forest = True
+                                break
+                        if not has_forest:
+                            rect = u.get_current_rect(self.zoom)
+                            footprint = Footprint(u, 0, rect.center)
+                            self.footprints[u.cell.coord] = footprint
 
 
 class Gui:
@@ -323,6 +329,8 @@ class Gui:
         self.can_be_fought = []
         self.can_be_helped = []
         if cell.unit:
+            if cell.unit.is_grayed:
+                return []
             if cell.unit.anim_path: #moving unit, let it alone...
                 return []
             elif cell.unit in self.has_moved:
@@ -671,7 +679,7 @@ class Gui:
         def produce_unit(type_):
             self.game.coin_sound.play()
             u = self.game.add_unit(o.cell.coord, race[type_], std_number[type_])
-            self.selected_unit.make_grayed()
+            u.make_grayed()
             self.game.current_player.money -= u.cost * INCOME_PER_VILLAGE
             self.e_gold_txt.set_text(str(self.game.current_player.money))
             self.refresh()

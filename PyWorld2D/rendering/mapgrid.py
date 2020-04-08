@@ -118,6 +118,31 @@ class LogicalMap(BaseGrid):
         self.colorkey = None #used at build_surface()
         self.static_objects = []
         self.me = None
+        self.objects_dict = {}
+
+    def add_static_object(self, o):
+        self.static_objects.append(o)
+        if o.name in self.objects_dict:
+            self.objects_dict[o.name][o.cell.coord] = o
+        else:
+            self.objects_dict[o.name] = {o.cell.coord:o}
+
+    def remove_static_object(self, o):
+        self.static_objects.remove(o)
+        self.objects_dict[o.name].pop(o.cell.coord)
+
+    def build_objects_dict(self):
+        for o in self.static_objects:
+            if o.name in self.objects_dict:
+                self.objects_dict[o.name][o.cell.coord] = o
+            else:
+                self.objects_dict[o.name] = {o.cell.coord:o}
+
+    def get_object(self, name, coord):
+        by_name = self.objects_dict.get(name)
+        if by_name:
+            return by_name.get(coord)
+
 
     def get_slowness(self,number):
         if number == const.NORMAL:
