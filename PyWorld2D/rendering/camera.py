@@ -163,45 +163,6 @@ class Camera:
     def get_rect_at_pix(self, pix):
         return self.get_rect_at_coord(self.get_coord_at_pix(pix))
 
-
-##    def blit_static_objects_around(self, screen, o, ir):
-##        """Blit the neighboring objects according to their y-coordinate."""
-##        x,y = o.cell.coord
-##        s = self.lm.get_current_cell_size()
-##        o_img, o_rect = o.get_current_img_and_rect(s)
-##        for dx,dy in DELTA_STATIC_OBJECTS: #includes 4 neighs + (0,0)
-##            cell = self.lm.get_cell_at(x+dx, y+dy)
-##            if cell:
-##                r = self.get_rect_at_coord(cell.coord)
-##                for so in cell.objects:
-##                    if so is not o:
-##                        if not so.is_ground:
-##                            so_img, so_rect = so.get_current_img_and_rect(s)
-##                            if so_rect.colliderect(o_rect):
-##                                if so_rect.bottom > ir.bottom:
-##                                    blit_coord = so_rect.topleft
-##                                    screen.blit(so_img, so_rect.topleft)
-##
-##    #Typically used to draw only the dynamic objects...
-##    #   The static ones are pre-blitted on the map !
-##    def draw_objects(self, screen, objs):
-##        s = self.lm.get_current_cell_size()
-##        if self.ui_manager:
-##            self.ui_manager.draw_before_objects(s)
-##        for o in objs:
-##            img, rect = o.get_current_img_and_rect(s)
-##            if not o.always_drawn_last:
-##                screen.blit(img, rect.topleft)
-##            #check static object:
-##            if not o.is_ground: #then some neigboring objects may have to be blitted according to y-coord
-##                self.blit_static_objects_around(screen, o, rect)
-##            if o.always_drawn_last:
-##                screen.blit(img, rect.topleft)
-##        if self.ui_manager:
-##            self.ui_manager.draw_after_objects(s)
-
-
-
     def log_static_objects_around(self, o, to_sort, drawn_last):
         """Blit the neighboring objects according to their y-coordinate."""
         x,y = o.cell.coord

@@ -80,12 +80,10 @@ class GuiGraphicsEnhancement:
                 ################### Footprints #################################
                 if self.show_footprints:
                     if t == "sand" or "snow" in t:
-                        for o in u.cell.objects:
-                            if "forest" in o.str_type:
-                                return
-                        rect = u.get_current_rect(self.zoom)
-                        footprint = Footprint(u, 0, rect.center)
-                        self.footprints[u.cell.coord] = footprint
+                        if not self.gui.game.get_object("forest", u.cell.coord):
+                            rect = u.get_current_rect(self.zoom)
+                            footprint = Footprint(u, 0, rect.center)
+                            self.footprints[u.cell.coord] = footprint
 
 
 class Gui:
@@ -229,9 +227,11 @@ class Gui:
                 return str(self.game.days_left) + " days left"
 
     def extinguish(self):
-        for o in self.cell_under_cursor.objects:
-            if o.str_type == "fire":
-                self.game.extinguish(self.cell_under_cursor.coord)
+        if self.game.get_object("fire", self.cell_under_cursor.coord):
+            self.game.extinguish(self.cell_under_cursor.coord)
+##        for o in self.cell_under_cursor.objects:
+##            if o.str_type == "fire":
+##                self.game.extinguish(self.cell_under_cursor.coord)
 
     def check_extinguish(self):
         u = self.selected_unit
@@ -260,9 +260,8 @@ class Gui:
             for o in self.cell_under_cursor.objects:
                 if o.str_type in self.game.is_burnable:
                     return True
-            for o in self.cell_under_cursor.objects:
-                if o.str_type == "river":
-                    return False
+            if self.game.get_object("river", self.cell_under_cursor.coord):
+                return False
         return self.cell_under_cursor.material.name.lower() in self.game.is_burnable
 
 
@@ -276,25 +275,20 @@ class Gui:
             if c.unit.team != self.selected_unit.team:
                 return False
 ##        if self.selected_unit.cell.distance_to(c) <= 1:
-        for o in c.objects:
-            if o.str_type == "river":
-                return False
+        if self.game.get_object("river", c.coord):
+            return False
         return c.material.name.lower() in self.game.is_flaggable
 
     def check_plant_flag(self):
-##        for o in self.interaction_objs:
-        for o in self.cell_under_cursor.objects:
-            if o.str_type == "flag":
-                return False
+        if self.game.get_object("flag", self.cell_under_cursor.coord):
+            return False
         return self.check_interact_flag()
 
     def check_replace_flag(self):
         if self.check_interact_flag():
 ##            for o in self.interaction_objs:
-            for o in self.cell_under_cursor.objects:
-                if o.str_type == "flag":
-                    print(o.team, self.selected_unit.team)
-                    return o.team != self.selected_unit.team
+            flag = self.game.get_object("flag", self.cell_under_cursor.coord)
+            return flag.team != self.selected_unit.team
 
     def check_interact_gotocell(self):
         c = self.cell_under_cursor
@@ -610,14 +604,13 @@ class Gui:
                         self.add_alert(self.e_wrong_team)
                         self.game.deny_sound.play()
                 else:
-                    for o in cell.objects:
-                        if o.name == "village":
-                            for o2 in cell.objects:
-                                if o2.str_type == "flag":
-                                    if o2.team == self.game.current_player.team:
-                                        self.production(o)
-                                        self.selected_unit = None
-                                        return
+                    o = self.game.get_object("village", cell.coord)
+                    if o:
+                        o2 = self.game.get_object("flag", cell.coord)
+                        if o2.team == self.game.current_player.team:
+                            self.production(o)
+                            self.selected_unit = None
+                            return
                     self.selected_unit = None
 
 
@@ -873,12 +866,11 @@ class Gui:
         img = self.e_gold_img.get_image()
         sources = {}
         target = self.e_gold_img.get_fus_rect().topleft
-        for f in game.get_all_objects_by_str_type("flag"):
+        flags = self.game.me.objects_dict.get("flag",{})
+        for f in flags.values():
             if f.team == p.team:
-                for o in f.cell.objects:
-                    if o.name == "village":
-                        sources[o.cell.coord] = 0
-                    break
+                if self.game.get_object("village", f.cell.coord):
+                    sources[f.cell.coord] = 0
         delta_coin = int((to - from_) / (COIN_PER_VILLAGE * len(sources)))
         print(game.current_player.name, "FROM", from_, "TO", to, "DELTA", delta_coin)
         coins_flying = []

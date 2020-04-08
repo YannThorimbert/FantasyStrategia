@@ -209,7 +209,7 @@ class Game:
 
     def build_map(self, map_initializer, fast, use_beach_tiler, load_tilers):
         map_initializer.build_map(self.me, fast, use_beach_tiler, load_tilers)
-        self.me.lm.build_objects_dict()
+        self.me.build_objects_dict()
         for obj in self.me.lm.static_objects:
             if obj.str_type == "bridge_h":
                 if self.bridge_h is None:
@@ -380,8 +380,27 @@ class Game:
         for u in self.get_units_of_player(p):
             return u.race
 
+    def get_object(self, str_type, coord):
+        return self.me.get_object(str_type, coord)
 
 
-
-
-##def add_game_gui_elements()
+    def check_integrity(self):
+        o1 = self.me.lm.static_objects + self.me.dynamic_objects
+        o2 = []
+        for x in range(self.get_map_size()[0]):
+            for y in range(self.get_map_size()[1]):
+                o2 += self.get_cell_at(x,y).objects
+        for o in o1:
+            assert o in o2
+        for o in o2:
+            assert o in o1
+        #o1 contains the same objects as o2
+        od = []
+        for entry in self.me.objects_dict.keys():
+            for coord in self.me.objects_dict[entry]:
+                od.append(self.me.get_object(entry, coord))
+                assert od[-1] in o1
+##        for o in o1:
+##            print(o, o.name, o.str_type, o.cell.coord)
+##            assert o in od
+        print("The", len(o1), "objects are consistent in memory.")

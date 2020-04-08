@@ -272,32 +272,37 @@ class MapObject:
         self.editor.register_object_type(self)
         return copy
 
-    def remove_from_cell(self):
+    def remove_from_cell_objects(self):
         self.cell.objects.remove(self)
         if self is self.cell.unit:
             self.cell.unit = None
 
     def remove_from_map(self, me):
-        self.remove_from_cell()
-        if self.name == "bridge" and not(self in me.dynamic_objects):
+        self.remove_from_cell_objects()
+        is_bridge = "bridge_" in self.str_type
+        if is_bridge and not(self in me.dynamic_objects):
             self.is_static = True
         if self.is_static:# or self.name=="bridge":
             print("Removing static object...")
             if self in me.lm.static_objects:
-                me.lm.remove_static_object(self)
+                me.remove_static_object(self)
             me.rebuild_cell_graphics(self.cell)
-        else: #easy
+        elif is_bridge:
             me.dynamic_objects.remove(self)
+        else:
+            me.remove_dynamic_object(self)
 
     def move_to_cell(self, dest_cell):
 ##        assert dest_cell.unit is None
         #remove from old cell
+        self.game.me.objects_dict[self.str_type].pop(self.cell.coord)
         self.cell.objects.remove(self)
         self.cell.unit = None
         #go to new cell
         dest_cell.unit = self
         dest_cell.objects.append(self)
         self.cell = dest_cell
+        self.game.me.add_to_objects_dict(self)
 
     def move_to_cell_animated(self, path):
         self.anim_path = path
@@ -434,5 +439,7 @@ class MapObject:
                      const.SLOW:self._get_map_time3}
         assert type_ in functions
         self.get_map_time = functions[type_]
+
+
 
 

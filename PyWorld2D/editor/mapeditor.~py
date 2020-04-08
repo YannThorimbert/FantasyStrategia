@@ -78,6 +78,38 @@ class MapEditor:
         #
         self.map_initializer = None
         self.game = None
+        self.objects_dict = {}
+
+    def add_to_objects_dict(self, o):
+        if o.str_type in self.objects_dict:
+            self.objects_dict[o.str_type][o.cell.coord] = o
+        else:
+            self.objects_dict[o.str_type] = {o.cell.coord:o}
+
+    def add_static_object(self, o):
+        self.lm.static_objects.append(o)
+        self.add_to_objects_dict(o)
+
+    def remove_static_object(self, o):
+        self.lm.static_objects.remove(o)
+        self.objects_dict[o.str_type].pop(o.cell.coord)
+
+    def remove_dynamic_object(self, o):
+        self.dynamic_objects.remove(o)
+        self.objects_dict[o.str_type].pop(o.cell.coord)
+
+    def build_objects_dict(self):
+        for o in self.lm.static_objects:
+            self.add_to_objects_dict(o)
+        for o in self.dynamic_objects:
+            self.add_to_objects_dict(o)
+
+    def get_object(self, str_type, coord):
+        by_str_type = self.objects_dict.get(str_type)
+        if by_str_type:
+            return by_str_type.get(coord)
+
+    ############################################################################
 
     def initialize_rivers(self):
         lm = self.lm
@@ -358,10 +390,8 @@ class MapEditor:
             if cell.unit:
                 self.cursor_color = 1
             else:
-                for o in cell.o.objects:
-                    if o.name == "village":
+                if self.get_object("village", cell.coord):
                         self.cursor_color = 1
-                        break
                 else:
                     self.cursor_color = 0
             self.img_cursor = self.cursors[self.cursor_color][self.idx_cursor]
@@ -478,15 +508,17 @@ class MapEditor:
         if quantity is not None:
             obj_added.quantity = quantity
         self.dynamic_objects.append(obj_added)
+        self.add_to_objects_dict(obj_added)
         return obj_added
 
     def add_dynamic_object(self, coord, obj, quantity=None): #le nom est mal copie qqpart !!!!
-        cell = self.lm.get_cell_at(coord[0],coord[1])
+        cell = self.lm.get_cell_at(coord[0], coord[1])
         assert cell
         obj_added = obj.add_dynamic_object_on_cell(cell)
         if quantity is not None:
             obj_added.quantity = quantity
         self.dynamic_objects.append(obj_added)
+        self.add_to_objects_dict(obj_added)
         return obj_added
 
     def process_mouse_navigation(self): #cam can move even with no mousemotion!

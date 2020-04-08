@@ -441,8 +441,7 @@ class MapInitializer:
             #think e.g. of a wooden bridge over a river. What the unit sees is
             #the wooden bridge
 ##            me.lm.static_objects.insert(0,obj)
-            me.lm.add_static_object(obj)
-##            me.lm.static_objects.append(obj)
+            me.add_static_object(obj)
 
 
     def build_map(self, me, fast=False, use_beach_tiler=True, load_tilers=False,
@@ -628,6 +627,7 @@ def add_random_river(me, layer, material_dict,
         c = objs.get((dx,dy))
         if not c:
             raise Exception("No river object for delta", dx, dy)
+        assert cell.name != "river"
         c = c.add_copy_on_cell(cell)
         cell.name = "river"
         layer.static_objects.append(c)
@@ -678,7 +678,8 @@ def draw_path(path, objects, layer):
 def draw_road(path, cobbles, bridges, layer):
     """<path> is a list of cells"""
     for i,cell in enumerate(path):
-        is_bridge =  "river" in [c.str_type for c in cell.objects]
+        already_there = [c.str_type for c in cell.objects]
+        is_bridge =  "river" in already_there
         if is_bridge:
             dx,dy = get_path_orientation(i,cell,path)
             if dx != 0:
@@ -690,5 +691,6 @@ def draw_road(path, cobbles, bridges, layer):
                 # raise Exception("Path orientation not expected:",dx,dy)
         else:
             c = random.choice(cobbles)
-        c = c.add_copy_on_cell(cell)
-        layer.static_objects.append(c)
+        if not(c.str_type in already_there):
+            c = c.add_copy_on_cell(cell)
+            layer.static_objects.append(c)

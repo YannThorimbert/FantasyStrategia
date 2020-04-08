@@ -292,7 +292,7 @@ class Unit(MapObject):
     def remove_from_game(self):
         self.game.units.remove(self)
         self.game.me.dynamic_objects.remove(self)
-        self.remove_from_cell()
+        self.remove_from_cell_objects()
 
     def die_after(self, duration):
         self.set_sprite_type("die")
@@ -563,4 +563,4 @@ class InteractiveObject(Unit):
     def remove_from_game(self):
 ##        self.game.objects.remove(self)
         self.game.me.dynamic_objects.remove(self)
-        self.remove_from_cell()
+        self.remove_from_cell_objects()

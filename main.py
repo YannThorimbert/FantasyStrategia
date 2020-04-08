@@ -51,6 +51,8 @@ game = Game(me)
 #battle : + eviter les double morts
 #battle : unites dans village ou foret ou buisson sont mieux protegees et ne courent pas si attaquees.
 
+#preconstruire boutons de village ? ou en tout cas afficher un truc tout de suite car la ca lag
+
 
 
 
@@ -202,7 +204,7 @@ for obj in game.get_all_objects_by_name("village"):
 game.set_flag((18,5), humans.flag, humans.team)
 
 
-##game.set_fire((10,8), 5)
+game.set_fire((10,8), 5)
 ##game.set_flag((15,7), humans.flag, 1)
 ##game.set_fire((15,7), 2)
 ##game.add_smoke("small", (8,8))
@@ -262,7 +264,7 @@ print("START")
 ##b.fight()
 
 
-
+game.check_integrity()
 me.set_zoom(level=0)
 m = thorpy.Menu(me.e_box,fps=me.fps)
 print(me.object_types)

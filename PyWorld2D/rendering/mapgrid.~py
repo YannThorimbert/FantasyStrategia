@@ -129,7 +129,7 @@ class LogicalMap(BaseGrid):
 
     def remove_static_object(self, o):
         self.static_objects.remove(o)
-        self.objects_cell[o.name].pop(o.cell.coord)
+        self.objects_dict[o.name].pop(o.cell.coord)
 
     def build_objects_dict(self):
         for o in self.static_objects:
