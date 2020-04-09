@@ -471,9 +471,6 @@ class GraphicalMap(PygameGrid):
 
 
     def blit_object_only_on_cell(self, obj, cell):
-        """blit image <obj_img> on self's surface, and only on the part of
-        self's surface belonging to the cell (x_cell,y_cell)."""
-##        if o img_rect touch this cell's rect..., leave this fucking function !
         #First we deduce the absolute pos of the obj from its rel pos in the cell
         relpos = obj.relpos
         xobj, yobj = obj.cell.coord

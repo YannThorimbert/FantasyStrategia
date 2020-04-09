@@ -43,9 +43,12 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-#battle : unites dans village ou foret ou buisson sont mieux protegees et ne courent pas si attaquees.
+#bruit coin tout de suite
+
+#construction : moulin (village sans production d'unit), village, garnison
 
 #preconstruire boutons de village ? ou en tout cas afficher un truc tout de suite car la ca lag
+
 
 #penser a enlever check integrity dans func time
 
@@ -184,6 +187,11 @@ game.add_unit((25,19), humans["infantry"], 10)
 game.add_unit((23,20), humans["infantry"], 10)
 game.add_unit((24,20), humans2["infantry"], 10)
 
+game.add_unit((12,4), humans["infantry"], 10)
+game.add_unit((13,4), humans2["infantry"], 10)
+
+game.add_unit((23,12), humans2["infantry"], 10)
+
 
 gnx,gny = game.get_map_size()
 for obj in game.get_all_objects_by_name("village"):
@@ -240,12 +248,11 @@ from FantasyStrategia.logic.battle import Battle, DistantBattle
 ##from FantasyStrategia.logic.fakebattle import Battle as FakeBattle
 ##from FantasyStrategia.logic.fakebattle import DistantBattle as FakeDistantBattle
 
-attacker = game.get_unit_at(18,7)
-defender = game.get_unit_at(18,8)
+attacker = game.get_unit_at(13,4)
+defender = game.get_unit_at(12,4)
 distance = defender.distance_to(attacker)
 units_in_battle = [attacker, defender]
 
-print("START")
 ##b = FakeDistantBattle(game, units_in_battle, defender, distance)
 ##b.fight()
 
@@ -254,8 +261,9 @@ print("START")
 
 ##b = Battle(game, units_in_battle, defender, distance)
 ##b.fight()
-
-
+print("OH")
+me.rebuild_cell_graphics(game.get_cell_at(12,6))
+print("ah")
 game.check_integrity()
 me.set_zoom(level=0)
 m = thorpy.Menu(me.e_box,fps=me.fps)

@@ -344,7 +344,6 @@ class FightingUnit:
             if self.battle.show_splash:
                 cx,cy = self.battle.get_cell_coord(self.pos[0], self.pos[1])
                 if self.battle.is_splash[cx,cy]: #splash
-                    print("Blit splash")
                     rect_splash = self.rect.move(0,self.rect.h-4)
                     self.battle.units_to_blit.append((self.battle.splash, rect_splash))
 
@@ -828,6 +827,13 @@ class Battle:
                 u = DistantFightingUnit(self, unit, "right", self.z, pos)
             else:
                 u = FightingUnit(self, unit, "right", self.z, pos)
+##            elif unit is self.defender:
+##                if self.game.get_object("forest", unit.cell.coord):
+##                    u = FightUnitAtRest(self, unit, "right", self.z, pos)
+##                else:
+##                    u = FightingUnit(self, unit, "right", self.z, pos)
+##            else:
+##                u = FightingUnit(self, unit, "right", self.z, pos)
             population.append(u)
 
     def prepare_battle(self):
@@ -1115,18 +1121,16 @@ class DistantFightingUnit(FightingUnit):
         self.time_frome_last_direction_change += 1
         self.time_from_last_shot += 1
 
-class FightUnitAtRest(FightingUnit): juste faire qu'il se tourne face a l'adversaire, contrairement a CannotFightUnit
+class FightUnitAtRest(FightingUnit): #juste faire qu'il se tourne face a l'adversaire, contrairement a CannotFightUnit
 
-
-    def refresh_direction_notarget(self):
-        self.direction = DELTA_TO_KEY[self.dxdy]
-        self.refresh_sprite_type()
-        self.time_frome_last_direction_change = 0
+    def refresh_not_near_target(self):
+        if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
+            self.refresh_direction_notarget()
+##        self.pos.x += self.vel*self.dxdy[0]
+##        self.pos.y += self.vel*self.dxdy[1]
+        return (self.frame0 + self.battle.fight_frame_walk)%self.nframes
 
     def draw_move_fight(self):
-                #random target otherwise they all focus on the same
-        if self.opponents:
-            self.target = random.choice(self.opponents)
         if self.battle.fight_t == self.start_to_run:
             self.vel = self.final_vel
         if self.target is None or self.target.dead:
@@ -1138,16 +1142,34 @@ class FightUnitAtRest(FightingUnit): juste faire qu'il se tourne face a l'advers
         delta = target_pos - self_pos
         self.refresh_dxdy(delta.x, delta.y)
         ########################################################################
-        if not self.target.dead and not self.dead:
+        near_target = abs(delta.x) < DFIGHT and abs(delta.y) < DFIGHT
+        if near_target: #fighting (unit doesnt move)
+            if random.random() < P_HIT_SOUND:
+                s = random.choice(self.battle.game.hit_sounds)
+                s.play_next_channel()
+                self.battle.shocks.append((self.target.rect.topleft, 0))
             if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
                 self.refresh_direction_target()
             frame = self.get_frame_near_target()
+            if not self.target.dead and not self.dead:
+                self.fight_against_target_near()
+        else: #walking (so we have to move the unit)
+            frame = self.refresh_not_near_target()
         self.rect.center = self.pos
-        frame += self.isprite
+        if near_target:
+            frame += self.isprite
+        else:
+            frame = self.isprite
         img = self.unit.imgs_z_t[self.z][frame]
         if self.battle.blit_this_frame: #bug potentiel ???????????
             self.log_blit(img)
         self.time_frome_last_direction_change += 1
+
+    def log_blit(self, img): #footprint and splashes always drawn first ==> no sorting
+         if self.battle.blit_this_frame:
+            self.battle.units_to_blit.append((img, self.rect))
+
+
 
 class CannotFightUnit(FightingUnit):
 

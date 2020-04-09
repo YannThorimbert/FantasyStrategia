@@ -319,25 +319,43 @@ class MapEditor:
         self.img_cursor = self.cursors[self.cursor_color][self.idx_cursor]
         self.cursor_slowness = int(0.3*self.fps)
 
-    def rebuild_cell_graphics(self, cell): #blit_objects doit blitter que sur la cellule qui a change !!!!
-        xc,yc = cell.coord
-        static_objects = {}
+    def rebuild_cell_graphics(self, cellbase): #blit_objects doit blitter que sur la cellule qui a change !!!!
+        xc,yc = cellbase.coord
+        static_objects_ground = {}
+        static_objects_not_ground = {}
         cells_to_refresh = []
         for x in range(xc-2,xc+3):
             for y in range(yc-2,yc+3):
+                static_objects_ground[(x,y)] = []
+                static_objects_not_ground[(x,y)] = []
                 cell = self.lm.get_cell_at(x,y)
                 if cell:
                     dx, dy = abs(xc-x), abs(yc-y)
                     if dx < 2 and dy < 2:
                         cells_to_refresh.append(cell)
                         self.lm.reblit_material_of_cell(cell)
-                    static_objects[(x,y)] = [o for o in self.lm.static_objects if o.cell is cell]
+                    for o in self.lm.static_objects:
+                        if o.cell is cell:
+                            if o.is_ground:
+                                static_objects_ground[(x,y)].append(o)
+                            else:
+                                static_objects_not_ground[(x,y)].append(o)
+        #blit ground
         for x in range(xc-2,xc+3):
             for y in range(yc-2,yc+3):
                 coord = (x,y)
-                if coord in static_objects:
-                    objs = static_objects[(x,y)]
-                    self.lm.blit_objects_only_on_cells(objs, cells_to_refresh)
+                if coord in static_objects_ground:
+                    objs = static_objects_ground[(x,y)]
+                    if objs:
+                        self.lm.blit_objects_only_on_cells(objs, cells_to_refresh)
+        #blit not ground
+        for x in range(xc-2,xc+3):
+            for y in range(yc-2,yc+3):
+                coord = (x,y)
+                if coord in static_objects_not_ground:
+                    objs = static_objects_not_ground[(x,y)]
+                    if objs:
+                        self.lm.blit_objects_only_on_cells(objs, cells_to_refresh)
 
 
     def set_zoom(self, level, refresh_slider=True):

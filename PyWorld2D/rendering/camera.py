@@ -197,29 +197,29 @@ class Camera:
             if o.always_drawn_last:
                 drawn_last.add((rect,img,o))
             else:
-                if "bridge" in o.str_type:
+                if o.is_ground:
+                    force_drawn_first.add((rect,img,o))
+                elif "bridge" in o.str_type:
                     force_drawn_first.add((rect,img,o))
                 else:
                     to_sort.add((rect,img,o))
             self.log_static_objects_around(o, to_sort, drawn_last)
-        #to_sort is on the form [((x,y,right,bottom),surface,object), ...]
+        ########################################################################
         force_drawn_first = [(img,rect) for rect,img,o in force_drawn_first if not o.hide]
-        screen.blits(force_drawn_first)
-        drawn_first = [(img,rect) for rect,img,o in to_sort if not o.hide]
-        drawn_first.sort(key=lambda x:x[1][3])
-        screen.blits(drawn_first)
-        #
+        drawn_second = [(img,rect) for rect,img,o in to_sort if not o.hide]
+        drawn_second.sort(key=lambda x:x[1][3])
+##        for r,i,o2 in drawn_last:
+##            if not o2.hide:
+##                if o2.cell.coord == (13,6):
+##                    if o2.str_type == "cobblestone":
+##                        print("DL cobble", o.name, o.cell.coord)
+##                elif o2.cell.coord == (12,6):
+##                    if o2.str_type == "forest":
+##                        print("DL forest", o.name, o.cell.coord)
         drawn_last = [(img,rect) for rect,img,o in drawn_last if not o.hide]
+        screen.blits(force_drawn_first)
+        screen.blits(drawn_second)
         screen.blits(drawn_last)
-        #version without blits: ############################
-##        to_sort = sorted(to_sort, key=lambda x:x[0][3])
-##        for rect, img, o in to_sort:
-##            screen.blit(img, (rect[0],rect[1]))
-##        for rect, img, o in drawn_last:
-##            screen.blit(img, (rect[0],rect[1]))
-##        if self.ui_manager:
-##            self.ui_manager.draw_after_objects(s)
-        ########### end version without blits ###############
         if self.ui_manager:
             self.ui_manager.draw_after_objects(s)
 
