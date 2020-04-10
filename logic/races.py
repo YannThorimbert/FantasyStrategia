@@ -15,6 +15,7 @@ std_material_cost = {'Deep water': float("inf"),
                      'forest': 4,
                      'cobblestone':1,
                      'village':1,
+                     'windmill':1,
                      'bridge':1,
                      'river':10,
                      'bush':5}
@@ -140,7 +141,8 @@ std_number = {'villager':20, #does not tell where units can be produced
 
 std_object_defense = {"bush":1.3,
                       "forest":1.5,
-                      "village":1.8}
+                      "village":1.8,
+                      "windmill":1.8}
 
 std_distance_factor = 5
 

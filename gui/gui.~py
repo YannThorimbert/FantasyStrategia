@@ -85,6 +85,43 @@ class GuiGraphicsEnhancement:
                             footprint = Footprint(u, 0, rect.center)
                             self.footprints[u.cell.coord] = footprint
 
+class UnitProductionGUI:
+    def __init__(self, game):
+        from FantasyStrategia.logic.races import std_cost, std_number
+        self.game = game
+        self.choices = {}
+        for race in self.game.get_all_races():
+            self.choices[race.name] = {}
+            for unit_type in std_cost:
+                if not "boat" in unit_type and not "king" in unit_type:
+                    if unit_type in race.unit_types:
+                        u = race[unit_type]
+                        img = race.unit_types[unit_type].imgs_z_t[0][0]
+                        e_img = thorpy.Image(img)
+                        text = str(u.base_number) + " " + unit_type.capitalize()
+                        cost = u.cost * INCOME_PER_VILLAGE
+                        grayed = cost > self.game.current_player.money
+                        cost = str(cost) + " $"
+                        e_text = thorpy.OneLineText(text + "    (" + cost+")")
+                        e_ghost = thorpy.make_group([e_img, e_text])
+                        #grayed
+                        g_button = thorpy.Pressable(elements=[e_ghost])
+                        g_button.fit_children()
+                        g_button.active = False
+                        g_button.set_pressed_state()
+                        #not grayed
+                        n_button = thorpy.Clickable(elements=[e_ghost])
+                        n_button.fit_children()
+                        n_button.add_basic_help(race.unit_descr[unit_type])
+                        self.choices[race.name][unit_type] = (e_text, g_button, n_button)
+        self.title = guip.get_title("Recruitment")
+        self.line = thorpy.Line(500, "h")
+##        self.box = thorpy.make_ok_box([self.title, self.line]+choices)
+##        self.box.center()
+
+    def build_choice(self, race, unit_type):
+        u = race[unit_type]
+
 
 class Gui:
 
@@ -161,6 +198,8 @@ class Gui:
         self.medic = None
         self.can_be_fought = []
         self.can_be_helped = []
+        self.prod_gui = UnitProductionGUI(self.game)
+
 
     def set_map_gui(self):
         me = self.me
@@ -619,7 +658,7 @@ class Gui:
             if self.selected_unit in self.has_moved:
                 self.update_possible_interactions(self.selected_unit, cell.coord)
             if cell:
-                print("treat interaction RMB", self.red_highlights)
+                print("treat interaction RMB")
                 interactibles = self.game.get_interactive_objects(cell.coord[0],
                                                                   cell.coord[1])
                 choices = self.get_interaction_choices(interactibles)
@@ -661,8 +700,10 @@ class Gui:
 
     def production(self, o):
         from FantasyStrategia.logic.races import std_cost, std_number
-        e_title = guip.get_title("Recruitment")
-        e_line = thorpy.Line(500, "h")
+        self.game.village_sound.play()
+        thorpy.set_theme("classic")
+        e_title = self.prod_gui.title
+        e_line = self.prod_gui.line
         choices = []
         race = self.game.get_race_of_player(self.game.current_player)
         def produce_unit(type_):
@@ -677,33 +718,27 @@ class Gui:
             if not "boat" in unit_type and not "king" in unit_type:
                 if unit_type in race.unit_types:
                     text = str(std_number[unit_type]) + " " + unit_type.capitalize()
+                    t,g,n = self.prod_gui.choices[race.name][unit_type]
+                    t.set_text(text)
                     cost = std_cost[unit_type] * INCOME_PER_VILLAGE
                     grayed = cost > self.game.current_player.money
-                    cost = str(cost) + " $"
-                    e_text = thorpy.OneLineText(text + "    (" + cost+")")
-                    img = race.unit_types[unit_type].imgs_z_t[0][0]
-                    e_img = thorpy.Image(img)
-                    e_ghost = thorpy.make_group([e_img, e_text])
                     if grayed:
-                        button = thorpy.Pressable(elements=[e_ghost])
-                        button.fit_children()
-                        button.active = False
-                        button.set_pressed_state()
+                        button = g
                     else:
-                        button = thorpy.Clickable(elements=[e_ghost])
-                        button.fit_children()
-                        button.add_basic_help(race.unit_descr[unit_type])
+                        button = n
                     button.user_func = produce_unit
                     button.user_params = {"type_":unit_type}
                     choices.append(button)
         def click_outside(event):
             if not e.get_fus_rect().collidepoint(event.pos):
                 thorpy.functions.quit_menu_func()
-        e = thorpy.make_ok_box([e_title, e_line]+choices)
+        e =  thorpy.make_ok_box([e_title, e_line]+choices)
         e.center()
         reac = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, click_outside)
         e.add_reaction(reac)
+        e.set_main_color((200,200,200,200))
         thorpy.launch_blocking(e, add_ok_enter=True)
+        thorpy.set_theme("human")
 
 
     def get_alpha_dest(self):

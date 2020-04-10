@@ -124,7 +124,7 @@ class CellInfo:
         if e.launcher.launched == self.em:
             self.launched = False
 
-    def update_em(self, cell):
+    def update_em(self, cell): #at rmb
         new_img = cell.get_static_img_at_zoom(0)
         self.em_mat_img_img.set_image(new_img)
         #
@@ -201,7 +201,7 @@ class CellInfo:
 
 
 
-    def update_e(self, cell):
+    def update_e(self, cell): #at hover
         self.cell = cell
         #
         text = cell.material.name
@@ -217,7 +217,11 @@ class CellInfo:
                 if "bridge" in obj.str_type:
                     objs.add("Bridge")
             else:
-                objs.add(obj.name) #split to not take the id
+                if obj.str_type == "flag":
+                    text = "flag"
+                else:
+                    text = obj.name
+                objs.add(text) #split to not take the id
         objs = list(objs)
         text = ""
         if len(objs) > 1:

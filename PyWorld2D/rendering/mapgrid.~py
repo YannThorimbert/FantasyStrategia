@@ -109,9 +109,9 @@ class LogicalMap(BaseGrid):
         self.t2 = 0 #used for fast animated graphics
         self.t3 = 0
         self.tot_time = 0 #in unit of pygame frame
-        self.frame_slowness = 20 #associated to t1
+        self.frame_slowness = None #associated to t1. Reset in mapbuilding !!!
         self.frame_slowness2 = 3 #associated to t2
-        self.frame_slowness3 = 40
+        self.frame_slowness3 = 15
         #
         self.refresh_cell_heights(hmap)
         self.refresh_cell_types()
@@ -280,7 +280,11 @@ class LogicalMap(BaseGrid):
             objects = self.static_objects
         if sort:
             objects.sort(key=lambda x: x.ypos())
-        for obj in objects:
+        ground = [o for o in objects if o.is_ground]
+        not_ground = [o for o in objects if not o.is_ground]
+        for obj in ground:
+            self.blit_object(obj)
+        for obj in not_ground:
             self.blit_object(obj)
 
     def blit_objects_only_on_cells(self, objs, cells):
@@ -420,60 +424,7 @@ class GraphicalMap(PygameGrid):
                         self.surfaces[cx][cy][t].blit(img, (x,y))
 
 
-##    def blit_object_at(self, obj, x_cell, y_cell):
-##        """blit image <obj_img> on self's surface, and only on the part of
-##        self's surface belonging to the cell (x_cell,y_cell)."""
-####        if o img_rect touch this cell's rect..., leave this fucking function !
-####        obj_img_rect = obj.
-##        #
-##        relpos = obj.relpos
-##        xobj, yobj = obj.cell.coord
-##        obj_rect = obj.imgs_z_t[self.level][0].get_rect()
-##        obj_rect.center = (self.cell_size//2,)*2
-##        dx, dy = int(relpos[0]*self.cell_size), int(relpos[1]*self.cell_size)
-##        obj_rect.move_ip(dx,dy)
-##        #fill table of surfaces
-##        # ######################################################################
-##        #xpix_tot [pix] : location of xobj in the global map
-##        #surfx [sub] : coord of the subsurface containing xobj
-##        #xpix [pix] : location of xobj in the sub surface (local map)
-##        xpix_tot = xobj*self.cell_size
-##        ypix_tot = yobj*self.cell_size
-##        surfx = xpix_tot//self.submap_size[0]
-##        surfy = ypix_tot//self.submap_size[1]
-##        xpix_sub = xpix_tot - surfx*self.submap_size[0] + obj_rect.x
-##        ypix_sub = ypix_tot - surfy*self.submap_size[1] + obj_rect.y
-##        # ######################################################################
-##        #it is possible that the cell is spread on different subsurfaces !
-##        #hence we loop :
-##        for dx in range(-1,2): #not cell ! Just self's subsurfaces
-##            for dy in range(-1,2): #not cell ! Just self's subsurfaces
-##                cx, cy = surfx+dx, surfy+dy
-##                #cx and cy are the subsurface coord of the current subsurface
-##                #control that the subsurface exists:
-##                if 0 <= cx < self.n_submaps[0] and 0 <= cy < self.n_submaps[1]:
-##                    #x [pix]is the location of the obj image in the subsurface of coord cx,cy
-##                    x = xpix_sub - dx*self.submap_size[0]
-##                    y = ypix_sub - dy*self.submap_size[1]
-##                    for t in range(self.nframes):
-##                        img_obj = obj.imgs_z_t[self.level][t%obj.nframes]
-##                        img_rect = img_obj.get_rect()
-##                        img_rect.topleft = x,y
-##                        cell_rect = self.get_cell_rect_at_coord_in_submap(obj.cell.coord)
-##                        print("RECTs", img_rect, cell_rect)
-##                        area_to_be_blitted = cell_rect.clip(img_rect)
-##        ##                area_to_be_blitted = img_rect.clip(cell_rect)
-##        ##                reste a rebouger en haut a gauche...
-##                        area_to_be_blitted.move_ip((-x,-y))
-##                        print("ATBB", area_to_be_blitted, img_rect)
-##                        self.surfaces[cx][cy][t].blit(img_obj, (x+area_to_be_blitted.x,y+area_to_be_blitted.y), area_to_be_blitted)
-##        ##                self.surfaces[cx][cy][t].blit(img_obj, (x,y))
-
-
     def blit_object_only_on_cell(self, obj, cell):
-        """blit image <obj_img> on self's surface, and only on the part of
-        self's surface belonging to the cell (x_cell,y_cell)."""
-##        if o img_rect touch this cell's rect..., leave this fucking function !
         #First we deduce the absolute pos of the obj from its rel pos in the cell
         relpos = obj.relpos
         xobj, yobj = obj.cell.coord

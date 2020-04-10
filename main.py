@@ -21,7 +21,7 @@ import gui.theme as theme
 from logic.player import Player
 ################################################################################
 
-theme.set_theme()
+theme.set_theme("human")
 
 W,H = 1200, 700 #screen size
 app = thorpy.Application((W,H))
@@ -43,14 +43,14 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-#bruit coin tout de suite
 
 #construction : moulin (village sans production d'unit), village, garnison
 
 #preconstruire boutons de village ? ou en tout cas afficher un truc tout de suite car la ca lag
 
-
 #penser a enlever check integrity dans func time
+
+#update loading bar
 
 #avant bataille, laisser le temps de voir les troupes
 #summary_pre_battle
@@ -192,6 +192,8 @@ game.add_unit((13,4), humans2["infantry"], 10)
 
 game.add_unit((23,12), humans2["infantry"], 10)
 
+game.add_object((18,10),game.windmill,1)
+
 
 gnx,gny = game.get_map_size()
 for obj in game.get_all_objects_by_name("village"):
@@ -261,9 +263,7 @@ units_in_battle = [attacker, defender]
 
 ##b = Battle(game, units_in_battle, defender, distance)
 ##b.fight()
-print("OH")
-me.rebuild_cell_graphics(game.get_cell_at(12,6))
-print("ah")
+
 game.check_integrity()
 me.set_zoom(level=0)
 m = thorpy.Menu(me.e_box,fps=me.fps)

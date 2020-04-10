@@ -279,14 +279,17 @@ class MapObject:
 
     def remove_from_map(self, me):
         self.remove_from_cell_objects()
-        if self.name == "bridge" and not(self in me.dynamic_objects):
+        is_bridge = "bridge_" in self.str_type
+        if is_bridge and not(self in me.dynamic_objects):
             self.is_static = True
         if self.is_static:# or self.name=="bridge":
             print("Removing static object...")
             if self in me.lm.static_objects:
                 me.remove_static_object(self)
             me.rebuild_cell_graphics(self.cell)
-        else: #easy
+        elif is_bridge:
+            me.dynamic_objects.remove(self)
+        else:
             me.remove_dynamic_object(self)
 
     def move_to_cell(self, dest_cell):
@@ -384,7 +387,7 @@ class MapObject:
     def _get_map_time2(self):
         return self.cell.map.t2
 
-    def _get_map_time3(self):
+    def _get_map_time3(self): #associated to slow
         return self.cell.map.t3
 
     def get_current_img(self):
@@ -422,6 +425,16 @@ class MapObject:
 
     def distance_to(self, another_obj):
         return self.cell.distance_to(another_obj.cell)
+
+    def set_animation_speed(self, type_):
+        if type_ == "normal":
+            self.set_frame_refresh_type(const.NORMAL)
+        elif type_ == "fast":
+            self.set_frame_refresh_type(const.FAST)
+        elif type_ == "slow":
+            self.set_frame_refresh_type(const.SLOW)
+        else:
+            raise Exception("Unknown animation speed :", type_)
 
     def set_frame_refresh_type(self, type_):
         functions = {const.NORMAL:self._get_current_frame1,

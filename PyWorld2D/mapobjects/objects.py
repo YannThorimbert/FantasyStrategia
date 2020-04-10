@@ -375,19 +375,19 @@ class MapObject:
     def _get_current_frame1(self):
         return self.cell.map.t%self.nframes
 
-    def _get_current_frame2(self):
+    def _get_current_frame2(self): #associated to fast
         return self.cell.map.t2%self.nframes
 
-    def _get_current_frame3(self):
+    def _get_current_frame3(self): #associated to slow
         return self.cell.map.t3%self.nframes
 
     def _get_map_time1(self):
         return self.cell.map.t
 
-    def _get_map_time2(self):
+    def _get_map_time2(self): #associated to fast
         return self.cell.map.t2
 
-    def _get_map_time3(self):
+    def _get_map_time3(self): #associated to slow
         return self.cell.map.t3
 
     def get_current_img(self):
@@ -425,6 +425,16 @@ class MapObject:
 
     def distance_to(self, another_obj):
         return self.cell.distance_to(another_obj.cell)
+
+    def set_animation_speed(self, type_):
+        if type_ == "normal":
+            self.set_frame_refresh_type(const.NORMAL)
+        elif type_ == "fast":
+            self.set_frame_refresh_type(const.FAST)
+        elif type_ == "slow":
+            self.set_frame_refresh_type(const.SLOW)
+        else:
+            raise Exception("Unknown animation speed :", type_)
 
     def set_frame_refresh_type(self, type_):
         functions = {const.NORMAL:self._get_current_frame1,

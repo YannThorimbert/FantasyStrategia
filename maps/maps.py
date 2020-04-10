@@ -37,6 +37,7 @@ map1.add_object("oak", 7, 5)
 map1.add_object("oak", 5, 5)
 map1.add_object("oak", 6, 6)
 map1.add_object("oak", 6, 4)
+map1.add_object("oak", 14, 7)
 ##map1.add_object("bush", 16, 8)
 map1.zoom_cell_sizes = [32,20]
 

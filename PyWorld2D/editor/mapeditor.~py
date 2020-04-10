@@ -326,6 +326,8 @@ class MapEditor:
         cells_to_refresh = []
         for x in range(xc-2,xc+3):
             for y in range(yc-2,yc+3):
+                static_objects_ground[(x,y)] = []
+                static_objects_not_ground[(x,y)] = []
                 cell = self.lm.get_cell_at(x,y)
                 if cell:
                     dx, dy = abs(xc-x), abs(yc-y)

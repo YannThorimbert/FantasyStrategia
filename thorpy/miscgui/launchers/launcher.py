@@ -102,7 +102,6 @@ def make_ok_box(elements,ok_text="Ok"):
     box.finish()
     ok.user_params = {"el":box}
     box.e_ok = ok
-    print(box)
     return box
 
 def set_as_done_button(button, element_to_unlaunch):

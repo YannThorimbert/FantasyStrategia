@@ -1,6 +1,7 @@
 import os, random, pygame, thorpy
 from FantasyStrategia.effects import effects
 from FantasyStrategia.logic.unit import InteractiveObject
+from PyWorld2D.mapobjects.objects import MapObject
 
 INCOME_PER_VILLAGE = 100
 
@@ -66,7 +67,9 @@ class Game:
         self.need_refresh_ui_box = True
         #
         self.sounds = thorpy.SoundCollection()
-        self.coin_sound = self.sounds.add("sounds/ui/coin2.wav")[0]
+        self.village_sound = self.sounds.add("sounds/ui/leather_inventory.wav")[0]
+##        self.coin_sound = self.sounds.add("sounds/ui/coin2.wav")[0]
+        self.coin_sound = self.sounds.add("sounds/ui/sell_buy_item.wav")[0]
         self.flag_sound = self.sounds.add("sounds/hits/new_hits_5.wav")[0]
         self.start_battle_sound = self.sounds.add("sounds/start_battle.wav")[0]
         self.fire_extinguish_sound = self.sounds.add("sounds/psht.wav")[0]
@@ -94,7 +97,12 @@ class Game:
         #
         self.smokes_log = {}
         effects.initialize_smokegens()
-##        self.fire.always_drawn_last = True
+        windmill_imgs = get_sprite_frames("sprites/windmill_idle.png")
+        self.windmill = MapObject(me, windmill_imgs, "windmill")
+        self.windmill.set_animation_speed("slow")
+        self.windmill.min_relpos = [0, -0.1]
+        self.windmill.max_relpos = [0, -0.1]
+        self.windmill.randomize_relpos()
         #
 
     def set_ambiant_sounds(self, val):
@@ -383,3 +391,9 @@ class Game:
 ##            print(o, o.name, o.str_type, o.cell.coord)
 ##            assert o in od
         print("The", len(o1), "objects are consistent in memory.")
+
+    def get_all_races(self):
+        races = set()
+        for u in self.units:
+            races.add(u.race)
+        return races
