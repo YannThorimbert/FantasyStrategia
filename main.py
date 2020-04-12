@@ -44,15 +44,12 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-#inclure fric moulins dans animation fric (ajouter aux sources)
-
-
 #construction : moulin (village sans production d'unit), village, garnison
 #conquete : 2 tours pour village, immediat pour moulin
 
-#avant bataille, laisser le temps de voir les troupes
 #summary_pre_battle
-#demander confirmation d'attaque dans le summary pre battle ! possibilite d'annuler a ce moment
+#demander confirmation d'attaque dans le summary pre battle ! possibilite d'annuler dernier deplacement a ce moment
+#avant bataille, laisser le temps de voir les troupes.
 
 #sons: cris de guerre. SoundSnap, acheter quand meme ?
 #penser a enlever check integrity dans func time
@@ -95,6 +92,9 @@ game = Game(me)
 
 #refaire thorpy avec le seul changement que on enleve tous les pygame.update. C'est l'utilisateur qui fait un flip.
 #et il n'y a pas de unblit. On reblit tout chaque frame.
+
+#virer InteractiveObject : ne sert a rien !!! (cf windmills)
+#==> remove_from_game devient remove_unit_from_game
 
 #remettre l'altitude, et compte dans bataille ! Mais pas l'altitude par cell : juste l'altitude correspondant au material, sinon pas assez lisible au niveau gameplay
 
@@ -205,10 +205,12 @@ game.add_unit((13,4), humans2["infantry"], 10)
 
 game.add_unit((23,12), humans2["infantry"], 10)
 
-game.add_object((18,10),game.windmill,1)
+game.add_object((18,10),game.windmill)
 
 
 game.set_flag((18,5), humans.flag, humans.team)
+
+game.add_object((15,5), game.construction)
 
 
 game.set_fire((10,8), 5)

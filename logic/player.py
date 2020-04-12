@@ -8,3 +8,4 @@ class Player:
         self.color = race.color
         self.color_rgb = COLORS[self.color][0]
         self.money = 0
+        self.tax = 1.

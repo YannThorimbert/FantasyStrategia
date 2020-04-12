@@ -4,7 +4,7 @@ import PyWorld2D.gui.elements as elements
 import PyWorld2D.gui.parameters as guip
 import PyWorld2D.saveload.io as io
 from FantasyStrategia.logic.battle import Battle, DistantBattle
-from FantasyStrategia.logic.game import INCOME_PER_VILLAGE
+from FantasyStrategia.logic.game import INCOME_PER_VILLAGE, INCOME_PER_WINDMILL
 
 def quit_func():
     io.ask_save(me)
@@ -229,7 +229,7 @@ class Gui:
         img = pygame.transform.scale(img, (25,25))
         self.e_pop_img = thorpy.Image(img, colorkey=(255,255,255))
         self.e_pop = thorpy.make_group([self.e_pop_img, self.e_pop_txt])
-        me.add_gui_element(self.e_pop, True)
+##        me.add_gui_element(self.e_pop, True)
         ########################################################################
         w = len(self.game.get_objects_of_team(self.game.current_player.team, "windmill"))
         self.e_windmill_txt = thorpy.make_text(str(w))
@@ -352,7 +352,6 @@ class Gui:
         self.forced_gotocell = True
 
     def clear(self):
-        print("CLEAR")
         self.selected_unit = None
         self.cell_under_cursor = None
         self.blue_highlights = []
@@ -901,21 +900,27 @@ class Gui:
 
     def show_animation_income(self, from_, to, fps=60):
         game = self.game
-        COIN_PER_VILLAGE = 3
-        MOD_SPAWN = 10
-        MAX_VEL = 10
+        COIN_PER_VILLAGE = 1 * 2
+        COIN_PER_WINDMILL = 5 * 2
+        MOD_SPAWN = 5
+        MAX_VEL = 20
         STOP_DIST = 10
         p = game.current_player
         img = self.e_gold_img.get_image()
         sources = {}
+        values = {}
         target = self.e_gold_img.get_fus_rect().topleft
         flags = self.game.me.objects_dict.get("flag",{})
         for f in flags.values():
             if f.team == p.team:
-                if self.game.get_object("village", f.cell.coord):
-                    sources[f.cell.coord] = 0
-        delta_coin = int((to - from_) / (COIN_PER_VILLAGE * len(sources)))
-        print(game.current_player.name, "FROM", from_, "TO", to, "DELTA", delta_coin)
+                o = self.game.get_object("village", f.cell.coord)
+                o2 = self.game.get_object("windmill", f.cell.coord)
+                if o:
+                    sources[f.cell.coord] = COIN_PER_VILLAGE
+                    values[f.cell.coord] = int(INCOME_PER_VILLAGE * p.tax) / COIN_PER_VILLAGE
+                elif o2:
+                    sources[f.cell.coord] = COIN_PER_WINDMILL
+                    values[f.cell.coord] = INCOME_PER_WINDMILL / COIN_PER_WINDMILL
         coins_flying = []
         done = False
         clock = pygame.time.Clock()
@@ -923,17 +928,21 @@ class Gui:
         money = from_
         self.e_gold_txt.set_text(str(money))
         while not done:
-            self.refresh()
-            game.me.func_reac_time()
-            clock.tick(game.me.fps)
             if i_anim%MOD_SPAWN == 0:
                 for src in sources:
-                    if sources[src] < COIN_PER_VILLAGE:
-                        cam_coord = game.me.cam.get_rect_at_coord(src).topleft
-                        coins_flying.append(cam_coord)
-                        sources[src] += 1
+                    if sources[src] > 0:
+                        x,y = game.me.cam.get_rect_at_coord(src).topleft
+                        value = values[src]
+                        coins_flying.append((x,y,value))
+                        sources[src] -= 1
             new_coins_flying = []
-            for x,y in coins_flying:
+            ####
+            self.refresh()
+            self.me.func_reac_time()
+            clock.tick(game.me.fps)
+            game.t += 1
+            ###
+            for x,y,value in coins_flying:
                 game.me.screen.blit(img, (x,y))
                 delta = V2(target) - (x,y)
                 L = delta.length()
@@ -942,9 +951,9 @@ class Gui:
                 if L > STOP_DIST:
                     x += delta.x
                     y += delta.y
-                    new_coins_flying.append((x,y))
+                    new_coins_flying.append((x,y,value))
                 else:
-                    money += delta_coin
+                    money += value
                     game.coin_sound.play_next_channel()
                     self.e_gold_txt.set_text(str(money))
             coins_flying = new_coins_flying
@@ -952,6 +961,78 @@ class Gui:
             i_anim += 1
             if not coins_flying:
                 done = True
+
+
+#1 by 1 version
+##    def show_animation_income(self, from_, to, fps=60):
+##        game = self.game
+##        COIN_PER_VILLAGE = 2
+##        COIN_PER_WINDMILL = 10
+##        MOD_SPAWN = 15
+##        MAX_VEL = 15
+##        STOP_DIST = 10
+##        p = game.current_player
+##        img = self.e_gold_img.get_image()
+##        sources = {}
+##        target = self.e_gold_img.get_fus_rect().topleft
+##        flags = self.game.me.objects_dict.get("flag",{})
+##        for f in flags.values():
+##            if f.team == p.team:
+##                o = self.game.get_object("village", f.cell.coord)
+##                o2 = self.game.get_object("windmill", f.cell.coord)
+##                if o:
+##                    sources[f.cell.coord] = COIN_PER_VILLAGE
+##                elif o2:
+##                    sources[f.cell.coord] = COIN_PER_WINDMILL
+##        coins_flying = []
+##        clock = pygame.time.Clock()
+##        i_anim = 0
+##        money = from_
+##        self.e_gold_txt.set_text(str(money))
+##        for coord in sources:
+##            self.game.center_cam_on_cell(coord)
+##            done = False
+##            i_anim = 0
+##            coins_flying = []
+##            n = sources[coord]
+##            if n > COIN_PER_VILLAGE:
+##                delta_coin = INCOME_PER_WINDMILL
+##            else:
+##                delta_coin = INCOME_PER_VILLAGE * p.tax
+##            ######
+##            while not done:
+##                if i_anim%MOD_SPAWN == 0:
+##                    if n > 0:
+##                        cam_coord = game.me.cam.get_rect_at_coord(coord).topleft
+##                        coins_flying.append(cam_coord)
+##                        n -= 1
+##                new_coins_flying = []
+##                ####
+##                self.refresh()
+##                self.me.func_reac_time()
+##                clock.tick(game.me.fps)
+##                game.t += 1
+##                ###
+##                for x,y in coins_flying:
+##                    game.me.screen.blit(img, (x,y))
+##                    delta = V2(target) - (x,y)
+##                    L = delta.length()
+##                    if L > MAX_VEL:
+##                        delta.scale_to_length(MAX_VEL)
+##                    if L > STOP_DIST:
+##                        x += delta.x
+##                        y += delta.y
+##                        new_coins_flying.append((x,y))
+##                    else:
+##                        money += delta_coin
+##                        game.coin_sound.play_next_channel()
+##                        self.e_gold_txt.set_text(str(money))
+##                coins_flying = new_coins_flying
+##                pygame.display.flip()
+##                i_anim += 1
+##                if not coins_flying:
+##                    done = True
+
 
 
 

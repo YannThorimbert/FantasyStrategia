@@ -68,6 +68,7 @@ class Game:
         self.need_refresh_ui_box = True
         #
         self.sounds = thorpy.SoundCollection()
+        self.construction_sound = self.sounds.add("sounds/hits/metal-clash.wav")[0]
         self.village_sound = self.sounds.add("sounds/ui/leather_inventory.wav")[0]
 ##        self.coin_sound = self.sounds.add("sounds/ui/coin2.wav")[0]
         self.coin_sound = self.sounds.add("sounds/ui/sell_buy_item.wav")[0]
@@ -87,7 +88,7 @@ class Game:
         self.is_flaggable = ["grass", "rock", "sand", "snow", "thin snow"]
         self.is_burnable = ["grass", "bridge_v", "bridge_h", "oak", "fir1",
                             "fir2", "firsnow", "palm", "bush", "village",
-                            "flag", "forest", "flag"]
+                            "flag", "forest", "flag", "windmill", "construction"]
         self.burning = {} #e.g. burning[(4,12):2] means 2 remaining turns to burn
         self.fire = InteractiveObject("fire", self.me, "sprites/fire")
         self.fire.min_relpos=[0,-0.4]
@@ -95,6 +96,8 @@ class Game:
         self.fire.relpos=[0,-0.4]
         self.bridge_v, self.bridge_h = None, None
         self.bridges = []
+        self.constructions = []
+        self.construction_time = {"village":2, "windmill":1}
         #
         self.smokes_log = {}
         effects.initialize_smokegens()
@@ -105,6 +108,8 @@ class Game:
         self.windmill.max_relpos = [0, -0.15]
         self.windmill.randomize_relpos()
         #
+        self.construction = MapObject(me, get_sprite_frames("sprites/Building_site.png"), "construction")
+        self.buildable_objs = {"windmill":self.windmill, "village":self.village}
 
     def set_ambiant_sounds(self, val):
         if val:
@@ -115,6 +120,21 @@ class Game:
             self.outdoor_sound.stop()
             if self.burning:
                 self.fire_sound.stop()
+
+    def add_construction(self, coord, str_type):
+        #for the moment, all races and units take the same construction time
+        self.constructions[coord] = (str_type, self.construction_time[str_type])
+        self.construction_sound.play()
+        self.add_object(coord, self.construction)
+
+    def refresh_constructions(self):
+        for coord in self.constructions:
+            str_type, time_left = self.constructions[coord]
+            time_left -= 1
+            if time_left == 0:
+                self.get_object("construction", coord).remove_from_map(self.me)
+                self.add_object(coord, self.buildable_objs[str_type])
+                self.set_flag(coord, self.current_player.race.flag, self.current_player.team)
 
 
     def add_smoke(self, type_, coord, delta=None, what=""):
@@ -277,7 +297,7 @@ class Game:
         self.units.append(u)
         return u
 
-    def add_object(self, coord, obj, quantity, rand_relpos=False):
+    def add_object(self, coord, obj, quantity=1, rand_relpos=False):
         o = self.me.add_dynamic_object(coord, obj, quantity)
         o.game = self
         if rand_relpos:
@@ -326,7 +346,7 @@ class Game:
             self.fire_sound.play(-1)
             cell = self.get_cell_at(coord[0],coord[1])
             self.burning[coord] = n
-            names = ("village","bridge","forest")
+            names = ("village","bridge","forest","windmill","construction")
             self.add_obj_before_other_if_needed(self.fire,1,names,cell)
 
     def add_obj_before_other_if_needed(self, obj, qty, other_names, cell):
@@ -371,6 +391,10 @@ class Game:
     def get_map_size(self):
         return self.me.lm.nx, self.me.lm.ny
 
+    def center_cam_on_cell(self, coord):
+        """To actually see the result, first draw the map, then display()"""
+        self.me.cam.center_on_cell(coord)
+
     def get_objects_of_team(self, team, str_type):
         objs = []
         for o in self.me.objects_dict["flag"].values():
@@ -383,11 +407,10 @@ class Game:
     def update_player_income(self, p):
         #1. villages
         v = len(self.get_objects_of_team(p.team, "village"))
-        tax_per_village = 1. #for the moment
-        p.money += int(v*INCOME_PER_VILLAGE * tax_per_village)
+        p.money += int(v * INCOME_PER_VILLAGE * p.tax)
         #2. windmills
         w = len(self.get_objects_of_team(p.team, "windmill"))
-        p.money += int(w*INCOME_PER_WINDMILL)
+        p.money += int(w * INCOME_PER_WINDMILL)
 
 
 

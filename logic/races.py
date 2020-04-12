@@ -16,6 +16,7 @@ std_material_cost = {'Deep water': float("inf"),
                      'cobblestone':1,
                      'village':1,
                      'windmill':1,
+                     'construction':1,
                      'bridge':1,
                      'river':10,
                      'bush':5}

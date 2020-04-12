@@ -28,15 +28,15 @@ class Camera:
         ms = self.img_hmap.get_size()
         self.world_size = V2(world_size)
         self.cell_rect.size = (cell_size,)*2
-        self.nx = viewport_rect.w//self.cell_rect.w - 1
+        self.nx = viewport_rect.w//self.cell_rect.w - 1 #number of cells along x
         self.ny = viewport_rect.h//self.cell_rect.h - 1
         map_size = self.nx*self.cell_rect.w, self.ny*self.cell_rect.h
         self.map_rect = pygame.Rect((0,0), map_size)
         self.map_rect.center = viewport_rect.center
-        self.rcam = pygame.Rect(0,0,self.nx,self.ny)
+        self.rcam = pygame.Rect(0,0,self.nx,self.ny) #in cell_units
         w = int(self.nx*ms[0]/self.world_size.x)
         h = int(self.ny*ms[1]/self.world_size.y)
-        self.rmouse = pygame.Rect(0,0,w,h)
+        self.rmouse = pygame.Rect(0,0,w,h) #rect on minimap (hmap)
 
 
     def reinit_pos(self):
@@ -126,11 +126,19 @@ class Camera:
                 return self.lm[coord]
 
     def center_on(self, minimap_pos):
+        """Units : pixels on minimap."""
         if self.box_hmap.get_rect().collidepoint(minimap_pos):
             self.rmouse.center = minimap_pos
             self.set_rcam_from_rmouse()
             self.set_mg_pos_from_rcam()
             self.set_campos_from_rcam()
+
+    def center_on_cell(self, coord):
+        self.rcam.center = coord
+        self.set_rmouse_from_rcam()
+        self.set_mg_pos_from_rcam()
+        self.set_campos_from_rcam()
+
 
     def correct_move(self, d):
         dx, dy = d
