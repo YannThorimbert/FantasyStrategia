@@ -77,7 +77,7 @@ class MiscInfo:
 
 class CellInfo:
     def __init__(self, size, cell_size, redraw, external_e):
-        self.e_coordalt = guip.get_text("")
+        self.e_coordalt = thorpy.make_text("(?,?)", font_size=10, font_color=(200,200,200))
         self.e_mat_img = thorpy.Image.make(pygame.Surface(cell_size))
         self.e_mat_name = guip.get_text("")
         self.e_obj_name = guip.get_text("")
@@ -87,7 +87,8 @@ class CellInfo:
 ##        self.e_mat.fit_children(axis=(False, True))
         self.elements = [self.e_mat, self.e_coordalt]
         self.e = thorpy.Box.make(self.elements)
-        self.e.set_size((size[0],None))
+        self.e.set_main_color((20,20,20))
+        self.e.set_size((size[0],int(0.8*self.e.get_fus_size()[1])), margins=(2,2))
         for e in self.e.get_elements():
             e.recenter()
         self.cell = None
@@ -281,6 +282,7 @@ class UnitInfo: #name, image, nombre(=vie dans FS!)
         #
         self.elements = [self.e_group]
         self.e = thorpy.Box.make(self.elements)
+        self.e.set_main_color((20,20,20))
         self.e.set_size((size[0],None))
         for e in self.e.get_elements():
             e.recenter()

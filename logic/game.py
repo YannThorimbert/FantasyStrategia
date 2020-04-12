@@ -4,6 +4,7 @@ from FantasyStrategia.logic.unit import InteractiveObject
 from PyWorld2D.mapobjects.objects import MapObject
 
 INCOME_PER_VILLAGE = 100
+INCOME_PER_WINDMILL = 500
 
 def sgn(x):
     if x > 0:
@@ -99,9 +100,9 @@ class Game:
         effects.initialize_smokegens()
         windmill_imgs = get_sprite_frames("sprites/windmill_idle.png")
         self.windmill = MapObject(me, windmill_imgs, "windmill")
-        self.windmill.set_animation_speed("slow")
-        self.windmill.min_relpos = [0, -0.1]
-        self.windmill.max_relpos = [0, -0.1]
+        self.windmill.set_animation_speed("midslow")
+        self.windmill.min_relpos = [0, -0.15]
+        self.windmill.max_relpos = [0, -0.15]
         self.windmill.randomize_relpos()
         #
 
@@ -169,7 +170,7 @@ class Game:
             self.extinguish(coord, natural_end=True)
 
     def refresh_village_gui(self):
-        nvillages = self.count_villages(self.current_player.team)
+        nvillages = len(self.get_objects_of_team(self.current_player.team, "village"))
         self.gui.e_pop_txt.set_text(str(nvillages))
 
     def end_turn(self):
@@ -211,12 +212,20 @@ class Game:
         self.me.func_reac_time()
         self.t += 1
         pygame.display.flip()
-        if self.t%100 == 0:
-            self.check_integrity()
+##        if self.t%100 == 0:
+##            self.check_integrity()
 
 
     def build_map(self, map_initializer, fast, use_beach_tiler, load_tilers):
         map_initializer.build_map(self.me, fast, use_beach_tiler, load_tilers)
+        neighs = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1),
+                    (1, 0), (1, 1)]
+        windmill_probability = 0.05
+##        can_windmill = ["grass", "rock", "thin snow", "snow", "sand"]
+        can_windmill = [n.lower() for n in self.me.materials if not("water") in n.lower()]
+        race1 = self.players[0].race
+        race2 = self.players[1].race
+        gnx,gny = self.get_map_size()
         self.me.build_objects_dict()
         for obj in self.me.lm.static_objects:
             if obj.str_type == "bridge_h":
@@ -228,7 +237,7 @@ class Game:
                     self.bridge_h.is_ground = True
                 self.add_object(obj.cell.coord, self.bridge_h, 1)
                 self.bridges.append(obj.cell.coord)
-            if obj.str_type == "bridge_v":
+            elif obj.str_type == "bridge_v":
                 if self.bridge_v is None:
                     self.bridge_v = InteractiveObject("bridge", self.me,
                                                 (obj.original_imgs[0],"idle"),
@@ -237,6 +246,26 @@ class Game:
                     self.bridge_v.is_ground = True
                 self.add_object(obj.cell.coord, self.bridge_v, 1)
                 self.bridges.append(obj.cell.coord)
+            elif obj.str_type == "village":
+                cx,cy = obj.cell.coord
+                race = None
+                if obj.cell.coord[1] > gny//2 + 0:
+                    race = race1
+                elif obj.cell.coord[1] < gny//2 - 0:
+                    race = race2
+                if race:
+                    self.set_flag(obj.cell.coord, race.flag, race.team)
+                for x,y in neighs:
+                    coord = cx+x, cy+y
+                    cell = self.get_cell_at(coord[0], coord[1])
+                    if cell:
+                        if not cell.objects:
+                            if cell.material.name.lower() in can_windmill:
+                                if random.random() < windmill_probability:
+                                    self.add_object(coord, self.windmill, 1)
+                                    if race:
+                                        print("adding flag", obj.cell.coord)
+                                        self.set_flag(coord, race.flag, race.team)
 
 
     def add_unit(self, coord, unit, quantity):
@@ -321,7 +350,6 @@ class Game:
         o = self.add_object(cell.coord, obj, qty, has_other)
         return o
 
-
     def get_interactive_objects(self, x, y):
         return [o for o in self.get_cell_at(x,y).objects if o.can_interact]
 
@@ -341,29 +369,30 @@ class Game:
     def get_map_size(self):
         return self.me.lm.nx, self.me.lm.ny
 
-    def count_villages(self, team):
-        counter = 0
-        for f in self.get_all_objects_by_str_type("flag"):
-            if f.team == team:
-                if self.get_object("village", f.cell.coord):
-                    counter += 1
-        return counter
-
+    def get_objects_of_team(self, team, str_type):
+        objs = []
+        for o in self.me.objects_dict["flag"].values():
+            if o.team == team:
+                obj = self.get_object(str_type, o.cell.coord)
+                if obj:
+                    objs.append(obj)
+        return objs
 
     def update_player_income(self, p):
-        v = self.count_villages(p.team)
+        #1. villages
+        v = len(self.get_objects_of_team(p.team, "village"))
         tax_per_village = 1. #for the moment
         p.money += int(v*INCOME_PER_VILLAGE * tax_per_village)
+        #2. windmills
+        w = len(self.get_objects_of_team(p.team, "windmill"))
+        p.money += int(w*INCOME_PER_WINDMILL)
+
 
 
     def get_units_of_player(self, p):
         for u in self.units:
             if u.team == p.team:
                 yield u
-
-    def get_race_of_player(self, p):
-        for u in self.get_units_of_player(p):
-            return u.race
 
     def get_object(self, str_type, coord):
         return self.me.get_object(str_type, coord)

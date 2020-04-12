@@ -106,12 +106,15 @@ class LogicalMap(BaseGrid):
         #
         self.nframes = len(material_couples[0].get_tilers(0))
         self.t = 0 #in unit of materials frame
+        self.t1 = 0 #used for default animated graphics
         self.t2 = 0 #used for fast animated graphics
-        self.t3 = 0
+        self.t3 = 0 #used for slow animated graphics
+        self.t4 = 0
         self.tot_time = 0 #in unit of pygame frame
-        self.frame_slowness = None #associated to t1. Reset in mapbuilding !!!
-        self.frame_slowness2 = 3 #associated to t2
-        self.frame_slowness3 = 20
+        self.frame_slowness1 = None #associated to t1. Reset in mapbuilding !!!
+        self.frame_slowness2 = None #associated to t2
+        self.frame_slowness3 = None
+        self.frame_slowness4 = None
         #
         self.refresh_cell_heights(hmap)
         self.refresh_cell_types()
@@ -122,7 +125,7 @@ class LogicalMap(BaseGrid):
 
     def get_slowness(self,number):
         if number == const.NORMAL:
-            return self.frame_slowness
+            return self.frame_slowness1
         elif number == const.FAST:
             return self.frame_slowness2
         elif number == const.SLOW:
@@ -150,7 +153,10 @@ class LogicalMap(BaseGrid):
             self.t2 += 1
         if self.tot_time % self.frame_slowness3 == 0:
             self.t3 += 1
-        if self.tot_time % self.frame_slowness == 0:
+        if self.tot_time % self.frame_slowness4 == 0:
+            self.t4 += 1
+        if self.tot_time % self.frame_slowness1 == 0:
+            self.t1 += 1
             self.t = (self.t+1) % self.nframes
             return True
 
@@ -572,7 +578,7 @@ class WhiteLogicalMap(LogicalMap):
         self.nframes = nframes
         self.t = 0
         self.tot_time = 0
-        self.frame_slowness = 20
+        self.frame_slowness1 = 20
         #
         self.refresh_cell_heights()
         self.refresh_cell_types()

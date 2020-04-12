@@ -56,7 +56,7 @@ class MapInitializer:
         ############ graphical options:
         self.zoom_cell_sizes = [32, 16, 8] #size of one cell for the different zoom levels.
         self.nframes = 16 #number of frames per world cycle (impacts memory requirement!)
-        self.fps = 60 #frame per second
+        self.fps = None #frame per second
         self.menu_width = 200 #width of the right menu in pixels
         self.box_hmap_margin = 20 #padding of the minimap inside its box
         self.max_wanted_minimap_size = 64 #size of the MINIMAP in pixels
@@ -183,8 +183,9 @@ class MapInitializer:
             return me.get_color_image(value)
 
 
-    def configure_map_editor(self):
+    def configure_map_editor(self, fps):
         """Set the properties of the map editor"""
+        self.fps = fps
         me = MapEditor(self.name)
         me.map_initializer = self
         me.box_hmap_margin = self.box_hmap_margin
@@ -497,7 +498,10 @@ def update_loading_bar(loading_bar, text, progress, on):
 def build_lm(me):
     """Build the logical map corresponding to me's properties"""
     lm = me.build_map() #build a logical map with me's properties
-    lm.frame_slowness = 0.1*me.fps #frame will change every k*FPS [s]
+    lm.frame_slowness1 = max(1,me.fps//7) #frame will change every k*FPS [s]
+    lm.frame_slowness2 = max(1,lm.frame_slowness1 // 2)
+    lm.frame_slowness3 = 2 * lm.frame_slowness1
+    lm.frame_slowness4 = int(1.1 * lm.frame_slowness1)
     me.set_map(lm) #we attach the map to the editor
 
 def build_hmap(me):

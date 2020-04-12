@@ -223,13 +223,21 @@ class Gui:
                                                  self.show_players_infos)
         me.add_gui_element(self.e_show_players, True)
         ########################################################################
-        n = self.game.count_villages(self.game.current_player.team)
-        self.e_pop_txt = thorpy.make_text(str(n))
+        v = len(self.game.get_objects_of_team(self.game.current_player.team, "village"))
+        self.e_pop_txt = thorpy.make_text(str(v))
         img = pygame.image.load("sprites/house.png")
         img = pygame.transform.scale(img, (32,32))
         self.e_pop_img = thorpy.Image(img, colorkey=(255,255,255))
         self.e_pop = thorpy.make_group([self.e_pop_img, self.e_pop_txt])
         me.add_gui_element(self.e_pop, True)
+        ########################################################################
+        w = len(self.game.get_objects_of_team(self.game.current_player.team, "windmill"))
+        self.e_windmill_txt = thorpy.make_text(str(w))
+        img = pygame.image.load("sprites/windmill.png")
+        img = pygame.transform.scale(img, (25,25))
+        self.e_windmill_img = thorpy.Image(img, colorkey=(255,255,255))
+        self.e_windmill = thorpy.make_group([self.e_windmill_img, self.e_windmill_txt])
+        me.add_gui_element(self.e_windmill, True)
         ########################################################################
         self.e_gold_txt = thorpy.make_text(str(self.game.current_player.money))
         self.e_gold_img = thorpy.Image("sprites/coin1.png",
@@ -705,7 +713,7 @@ class Gui:
         e_title = self.prod_gui.title
         e_line = self.prod_gui.line
         choices = []
-        race = self.game.get_race_of_player(self.game.current_player)
+        race = self.game.current_player.race
         def produce_unit(type_):
             self.game.coin_sound.play()
             u = self.game.add_unit(o.cell.coord, race[type_], std_number[type_])
@@ -736,7 +744,7 @@ class Gui:
         e.center()
         reac = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, click_outside)
         e.add_reaction(reac)
-        e.set_main_color((200,200,200,200))
+##        e.set_main_color((200,200,200,200))
         thorpy.launch_blocking(e, add_ok_enter=True)
         thorpy.set_theme("human")
 
@@ -916,7 +924,7 @@ class Gui:
         while not done:
             self.refresh()
             game.me.func_reac_time()
-            clock.tick(fps)
+            clock.tick(game.me.fps)
             if i_anim%MOD_SPAWN == 0:
                 for src in sources:
                     if sources[src] < COIN_PER_VILLAGE:

@@ -24,6 +24,7 @@ from logic.player import Player
 theme.set_theme("human")
 
 W,H = 1200, 700 #screen size
+FPS = 60
 app = thorpy.Application((W,H))
 
 map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
@@ -35,7 +36,7 @@ map_initializer.seed_static_objects = 15
 
 ##map_initializer.chunk = (11,9)
 ##map_initializer.reverse_hmap = False
-me = map_initializer.configure_map_editor() #me = "Map Editor"
+me = map_initializer.configure_map_editor(FPS) #me = "Map Editor"
 game = Game(me)
 
 
@@ -44,19 +45,20 @@ game = Game(me)
 ################################################################################
 
 
+#inclure fric moulins
+#moulin : rapporte + de fric mais peut pas spawner unites
+
+
 #construction : moulin (village sans production d'unit), village, garnison
-
-#preconstruire boutons de village ? ou en tout cas afficher un truc tout de suite car la ca lag
-
-#penser a enlever check integrity dans func time
-
-#update loading bar
+#conquete : 2 tours pour village, immediat pour moulin
 
 #avant bataille, laisser le temps de voir les troupes
 #summary_pre_battle
 #demander confirmation d'attaque dans le summary pre battle ! possibilite d'annuler a ce moment
 
 #sons: cris de guerre. SoundSnap, acheter quand meme ?
+#penser a enlever check integrity dans func time
+#update loading bar
 
 ################################################################################
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
@@ -95,12 +97,17 @@ game = Game(me)
 #refaire thorpy avec le seul changement que on enleve tous les pygame.update. C'est l'utilisateur qui fait un flip.
 #et il n'y a pas de unblit. On reblit tout chaque frame.
 
+#remettre l'altitude, et compte dans bataille ! Mais pas l'altitude par cell : juste l'altitude correspondant au material, sinon pas assez lisible au niveau gameplay
+
 #archers en priorite !!! (implique d'attacher fumee et sons aux classes de projectils)
+
+#faire unite = joueur = stratege/general sur un cheval
 
 ##Mettre des monuments (objets comme drapeaux mais avec image differente) qui augmentent le prestige(rayonnement).
 ## rayonnement = somme( 1. / distance à capitale ennemie de chaque monument). Les monuments coutent cher et sont construits par villageois/ouvriers?.
 
 #Population~nourriture, or~population*impots, rayonnement~monuments, crainte/respect~choix (viols etc)
+#couper bois ? ressourece bois, avec camp de bucherons ?
 
 #barre de choix d'impots : (c = curseur)
 ##Low tax, raise people popularity <------c----------------> High tax, lower people popularity
@@ -129,11 +136,9 @@ game = Game(me)
 
 
 ################################################################################
-#<fast> : quality a bit lower if true, loading time a bit faster.
-#<use_beach_tiler>: quality much better if true, loading much slower. Req. Numpy!
-#<load_tilers> : Very slow but needed if you don't have Numpy but still want hi quality.
 
-game.build_map(map_initializer, fast=False, use_beach_tiler=True, load_tilers=False)
+
+
 
 
 
@@ -151,6 +156,15 @@ humans2.base_material_cost["forest"] = 10
 ##humans2.base_terrain_attack["grass"] = 0.8
 humans2.dist_factor = 10
 humans2.finalize()
+
+players = [ Player(1, "Helmut", humans),
+            Player(2, "Jean", humans2)]
+game.set_players(players)
+
+#<fast> : quality a bit lower if true, loading time a bit faster.
+#<use_beach_tiler>: quality much better if true, loading much slower. Req. Numpy!
+#<load_tilers> : Very slow but needed if you don't have Numpy but still want hi quality.
+game.build_map(map_initializer, fast=False, use_beach_tiler=True, load_tilers=False)
 
 ##game.add_unit((15,5), humans["infantry"], 100, team=1)
 ##game.add_unit((14,6), humans["infantry"], 100, team=1) #14,6
@@ -195,14 +209,6 @@ game.add_unit((23,12), humans2["infantry"], 10)
 game.add_object((18,10),game.windmill,1)
 
 
-gnx,gny = game.get_map_size()
-for obj in game.get_all_objects_by_name("village"):
-    if obj.cell.coord[1] > gny//2 + 2:
-        game.set_flag(obj.cell.coord, humans.flag, humans.team)
-    elif obj.cell.coord[1] < gny//2 - 2:
-        game.set_flag(obj.cell.coord, humans2.flag, humans2.team)
-    #else village is neutral
-
 game.set_flag((18,5), humans.flag, humans.team)
 
 
@@ -216,9 +222,7 @@ game.set_fire((10,8), 5)
 
 #### GUI and events part #######################################################
 
-players = [ Player(1, "Helmut", humans.color),
-            Player(2, "Jean", humans2.color)]
-game.set_players(players)
+
 ui = gui.Gui(game)
 game.set_ambiant_sounds(False)
 
@@ -264,8 +268,10 @@ units_in_battle = [attacker, defender]
 ##b = Battle(game, units_in_battle, defender, distance)
 ##b.fight()
 
+##game.me.lm.frame_slowness = 30
 game.check_integrity()
 me.set_zoom(level=0)
+##thorpy.application.SHOW_FPS = True
 m = thorpy.Menu(me.e_box,fps=me.fps)
 print(me.object_types)
 m.play()

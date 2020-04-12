@@ -372,25 +372,39 @@ class MapObject:
                 imgs.append(img)
             self.imgs_z_t.append(imgs)
 
-    def _get_current_frame1(self):
-        return self.cell.map.t%self.nframes
+##    def _get_current_frame0(self):
+##        return self.cell.map.t%self.nframes #t is already a modulo ! dont use
 
-    def _get_current_frame2(self):
+    def _get_current_frame1(self): #associated to normal
+        return self.cell.map.t1%self.nframes
+
+    def _get_current_frame2(self): #associated to fast
         return self.cell.map.t2%self.nframes
 
-    def _get_current_frame3(self):
+    def _get_current_frame3(self): #associated to slow
         return self.cell.map.t3%self.nframes
 
-    def _get_map_time1(self):
-        return self.cell.map.t
+    def _get_current_frame4(self): #associated to midslow
+        return self.cell.map.t4%self.nframes
 
-    def _get_map_time2(self):
+##    def _get_map_time1(self):
+##        return self.cell.map.t
+
+    def _get_map_time1(self):
+        return self.cell.map.t1
+
+    def _get_map_time2(self): #associated to fast
         return self.cell.map.t2
 
     def _get_map_time3(self): #associated to slow
         return self.cell.map.t3
 
+    def _get_map_time4(self): #associated to midslow
+        return self.cell.map.t4
+
     def get_current_img(self):
+        if self.name == "windmill":
+            print("CF", self.get_current_frame(), self.get_map_time(), len(self.imgs_z_t[0]))
         return self.imgs_z_t[self.editor.zoom_level][self.get_current_frame()]
 
     def get_current_img_and_rect(self, cell_size):
@@ -433,12 +447,15 @@ class MapObject:
             self.set_frame_refresh_type(const.FAST)
         elif type_ == "slow":
             self.set_frame_refresh_type(const.SLOW)
+        elif type_ == "midslow":
+            self.set_frame_refresh_type(const.MIDSLOW)
         else:
             raise Exception("Unknown animation speed :", type_)
 
     def set_frame_refresh_type(self, type_):
         functions = {const.NORMAL:self._get_current_frame1,
                      const.FAST:self._get_current_frame2,
+                     const.MIDSLOW:self._get_current_frame4,
                      const.SLOW:self._get_current_frame3}
         assert type_ in functions
         self._refresh_frame_type = type_
@@ -446,6 +463,7 @@ class MapObject:
         #
         functions = {const.NORMAL:self._get_map_time1,
                      const.FAST:self._get_map_time2,
+                     const.MIDSLOW:self._get_map_time4,
                      const.SLOW:self._get_map_time3}
         assert type_ in functions
         self.get_map_time = functions[type_]

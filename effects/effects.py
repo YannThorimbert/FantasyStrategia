@@ -66,7 +66,7 @@ def refresh_smokes(game):
 
 
 
-def draw_ashes(game, obj, n=20, frame=0):
+def draw_ashes(game, obj, n=40, frame=0):
     global smokegen_mod
     tmp = smokegen_mod
     smokegen_mod = 2
@@ -102,12 +102,12 @@ def draw_ashes(game, obj, n=20, frame=0):
             ash.set_at((x,y), random.choice(ash_shades))
     ###
     clock = pygame.time.Clock()
-    n2 = 10
+    n2 = 20
     for i in range(n2):
         me.draw()
         me.screen.blit(ash, rect)
         pygame.display.flip()
-        clock.tick(30)
+        clock.tick(me.fps)
     for i in range(n):
         blits = []
         for k in range(N):
@@ -120,7 +120,7 @@ def draw_ashes(game, obj, n=20, frame=0):
         me.draw()
         me.screen.blit(ash, rect)
         pygame.display.flip()
-        clock.tick(30)
+        clock.tick(me.fps)
     smokegen_mod = tmp
 
 
