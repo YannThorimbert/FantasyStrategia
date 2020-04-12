@@ -171,7 +171,9 @@ class Game:
 
     def refresh_village_gui(self):
         nvillages = len(self.get_objects_of_team(self.current_player.team, "village"))
+        nwindmills = len(self.get_objects_of_team(self.current_player.team, "windmill"))
         self.gui.e_pop_txt.set_text(str(nvillages))
+        self.gui.e_windmill_txt.set_text(str(nwindmills))
 
     def end_turn(self):
         self.gui.clear()

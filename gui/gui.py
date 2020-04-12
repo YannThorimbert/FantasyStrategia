@@ -229,7 +229,7 @@ class Gui:
         img = pygame.transform.scale(img, (25,25))
         self.e_pop_img = thorpy.Image(img, colorkey=(255,255,255))
         self.e_pop = thorpy.make_group([self.e_pop_img, self.e_pop_txt])
-        me.add_gui_element(self.e_pop, True)
+##        me.add_gui_element(self.e_pop, True)
         ########################################################################
         w = len(self.game.get_objects_of_team(self.game.current_player.team, "windmill"))
         self.e_windmill_txt = thorpy.make_text(str(w))
@@ -237,7 +237,8 @@ class Gui:
         img = pygame.transform.scale(img, (25,25))
         self.e_windmill_img = thorpy.Image(img, colorkey=(255,255,255))
         self.e_windmill = thorpy.make_group([self.e_windmill_img, self.e_windmill_txt])
-        me.add_gui_element(self.e_windmill, True)
+        self.e_windmill_pop = thorpy.make_group([self.e_windmill, self.e_pop])
+        me.add_gui_element(self.e_windmill_pop, True)
         ########################################################################
         self.e_gold_txt = thorpy.make_text(str(self.game.current_player.money))
         self.e_gold_img = thorpy.Image("sprites/coin1.png",

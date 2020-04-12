@@ -44,9 +44,7 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-
-#inclure fric moulins
-#moulin : rapporte + de fric mais peut pas spawner unites
+#inclure fric moulins dans animation fric (ajouter aux sources)
 
 
 #construction : moulin (village sans production d'unit), village, garnison
@@ -59,6 +57,7 @@ game = Game(me)
 #sons: cris de guerre. SoundSnap, acheter quand meme ?
 #penser a enlever check integrity dans func time
 #update loading bar
+#ajouter 2 musiques
 
 ################################################################################
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
