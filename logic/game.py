@@ -17,6 +17,8 @@ def get_sprite_frames(fn, deltas=None, s=32, ckey=(255,255,255),
                         resize_factor=None):
     imgs = []
     sprites = pygame.image.load(fn)
+    if s == "auto":
+        s = sprites.get_width()
     n = sprites.get_width() // s
     h = sprites.get_height()
     if resize_factor:
@@ -28,6 +30,7 @@ def get_sprite_frames(fn, deltas=None, s=32, ckey=(255,255,255),
     if not deltas:
         deltas = [(0,0) for i in range(n)]
     x = 0
+    print("Loading sprites", n, s, h, fn)
     for i in range(n):
         surf = pygame.Surface((s,h))
         surf.fill(ckey)
@@ -68,7 +71,7 @@ class Game:
         self.need_refresh_ui_box = True
         #
         self.sounds = thorpy.SoundCollection()
-        self.construction_sound = self.sounds.add("sounds/hits/metal-clash.wav")[0]
+        self.construction_sound = self.sounds.add("sounds/ui/metal-clash.wav")[0]
         self.village_sound = self.sounds.add("sounds/ui/leather_inventory.wav")[0]
 ##        self.coin_sound = self.sounds.add("sounds/ui/coin2.wav")[0]
         self.coin_sound = self.sounds.add("sounds/ui/sell_buy_item.wav")[0]
@@ -85,7 +88,7 @@ class Game:
         self.magic_explosion_sounds = get_sounds("sounds/magic/explosions/", self.sounds)
         for s in self.death_sounds:
             s.set_volume(0.5)
-        self.is_flaggable = ["grass", "rock", "sand", "snow", "thin snow"]
+        self.can_build = ["grass", "rock", "sand", "snow", "thin snow"]
         self.is_burnable = ["grass", "bridge_v", "bridge_h", "oak", "fir1",
                             "fir2", "firsnow", "palm", "bush", "village",
                             "flag", "forest", "flag", "windmill", "construction"]
@@ -96,8 +99,6 @@ class Game:
         self.fire.relpos=[0,-0.4]
         self.bridge_v, self.bridge_h = None, None
         self.bridges = []
-        self.constructions = []
-        self.construction_time = {"village":2, "windmill":1}
         #
         self.smokes_log = {}
         effects.initialize_smokegens()
@@ -108,8 +109,15 @@ class Game:
         self.windmill.max_relpos = [0, -0.15]
         self.windmill.randomize_relpos()
         #
-        self.construction = MapObject(me, get_sprite_frames("sprites/Building_site.png"), "construction")
+        self.construction = MapObject(me, get_sprite_frames("sprites/construction.png"), "construction")
+        self.construction.is_ground = True
+        self.village = MapObject(me, get_sprite_frames("sprites/house.png", s="auto"), "village")
         self.buildable_objs = {"windmill":self.windmill, "village":self.village}
+        self.constructions = {}
+        self.construction_time = {"village":4, "windmill":6}
+        self.construction_price = {"village":INCOME_PER_VILLAGE*2,
+                                   "windmill":INCOME_PER_WINDMILL*2}
+        self.capturing = []
 
     def set_ambiant_sounds(self, val):
         if val:
@@ -121,20 +129,52 @@ class Game:
             if self.burning:
                 self.fire_sound.stop()
 
-    def add_construction(self, coord, str_type):
+    def add_construction(self, coord, str_type, unit):
         #for the moment, all races and units take the same construction time
-        self.constructions[coord] = (str_type, self.construction_time[str_type])
+        self.constructions[coord] = (str_type,
+                                     self.construction_time[str_type],
+                                     unit)
         self.construction_sound.play()
-        self.add_object(coord, self.construction)
+        obj = self.add_object(coord, self.construction)
+        obj.name = str_type
+
+##    def refresh_captures(self):
+##        to_remove = []
+##        for i in range(len(self.capturing)):
+##            u, what, time_left = self.capturing[i]
+##            u.make_grayed()
+##            self.gui.has_moved.append(u)
+##            time_left -= 1
+##            self.capturing[i] = u, what, time_left
+##            if time_left == 0:
+##                to_remove.append(i)
+##                self.set_flag(u.cell.coord,
+##                              u.race.flag,
+##                              u.team,
+##                              sound=True)
+##                self.refresh_village_gui()
+##        for i in to_remove[::-1]:
+##            self.capturing.pop(i)
 
     def refresh_constructions(self):
+        to_remove = []
         for coord in self.constructions:
-            str_type, time_left = self.constructions[coord]
-            time_left -= 1
+            str_type, time_left, unit = self.constructions[coord]
+##            unit.make_grayed()
+##            self.gui.has_moved.append(unit)
+            if unit:
+                time_left -= 1
+            self.constructions[coord] = str_type, time_left, unit
             if time_left == 0:
+                self.construction_sound.play_next_channel()
+                self.village_sound.play_next_channel()
                 self.get_object("construction", coord).remove_from_map(self.me)
                 self.add_object(coord, self.buildable_objs[str_type])
                 self.set_flag(coord, self.current_player.race.flag, self.current_player.team)
+                to_remove.append(coord)
+                unit.is_building = False
+        for coord in to_remove:
+            self.constructions.pop(coord)
 
 
     def add_smoke(self, type_, coord, delta=None, what=""):
@@ -166,6 +206,9 @@ class Game:
                 self.fire_extinguish_sound.play_next_channel()
                 o.remove_from_map(self.me)
                 effects.draw_ashes(self, o)
+                if o.str_type == "construction":
+                    self.constructions[o.cell.coord][2].is_building = None
+                    self.constructions.pop(o.cell.coord)
 
     def set_players(self, players, current=0):
         self.players = players
@@ -195,14 +238,17 @@ class Game:
         self.gui.e_pop_txt.set_text(str(nvillages))
         self.gui.e_windmill_txt.set_text(str(nwindmills))
 
-    def end_turn(self):
-        self.gui.clear()
+    def remove_all_grayed(self):
         to_remove = []
         for o in self.me.dynamic_objects:
-            if o.name.startswith("grayed_"):
+            if o.name[0] == "*":
                 to_remove.append(o)
         for o in to_remove:
             o.remove_from_map(self.me)
+
+    def end_turn(self):
+        self.gui.clear()
+        self.remove_all_grayed()
         self.need_refresh_ui_box = True
         self.update_fire_logic()
         self.current_player_i += 1
@@ -228,6 +274,8 @@ class Game:
         self.update_player_income(self.current_player)
         self.gui.show_animation_income(from_, self.current_player.money)
         self.gui.e_gold_txt.set_text(str(self.current_player.money))
+        self.refresh_constructions()
+##        self.refresh_captures()
 
     def func_reac_time(self):
         self.gui.refresh()
@@ -237,9 +285,12 @@ class Game:
 ##        if self.t%100 == 0:
 ##            self.check_integrity()
 
+    def update_loading_bar(self, text, progress):
+        self.map_initializer.update_loading_bar(text, progress)
 
     def build_map(self, map_initializer, fast, use_beach_tiler, load_tilers):
         map_initializer.build_map(self.me, fast, use_beach_tiler, load_tilers)
+        self.map_initializer = map_initializer
         neighs = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1),
                     (1, 0), (1, 1)]
         windmill_probability = 0.05
@@ -315,7 +366,7 @@ class Game:
     def remove_flag(self, coord, sound=False):
         flag = self.get_object("flag", coord)
         if flag:
-            flag.remove_from_game()
+            flag.remove_from_map(self.me)
             if sound:
                 self.flag_sound.play()
             return flag
@@ -430,6 +481,7 @@ class Game:
             for y in range(self.get_map_size()[1]):
                 o2 += self.get_cell_at(x,y).objects
         for o in o1:
+            o.game = self
             assert o in o2
         for o in o2:
             assert o in o1

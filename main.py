@@ -44,8 +44,15 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-#construction : moulin (village sans production d'unit), village, garnison
-#conquete : 2 tours pour village, immediat pour moulin
+#bruler qu'une fois le pont
+
+#count village marche plus par rapport aux drapeaux
+#moulin burn easily
+#seul infantry interragit flag
+
+#animation pour fin construction et fin capture.
+#si construction ou capture interrompue, enlever le tuple lie dans game.
+# ==> permettre à l'unite de bouger, mais prevenir que interrompt !
 
 #summary_pre_battle
 #demander confirmation d'attaque dans le summary pre battle ! possibilite d'annuler dernier deplacement a ce moment
@@ -150,7 +157,7 @@ humans["infantry"].material_cost["sand"] = 4
 humans["infantry"].terrain_attack["snow"] = 0.8
 humans.finalize() #always call this function to finish initialize a race !!!
 
-humans2 = Race("White team", "human", SOLAR, me, "red", team=2)
+humans2 = Race("Red team", "human", SOLAR, me, "red", team=2)
 humans2.base_material_cost["forest"] = 10
 ##humans2.base_terrain_attack["grass"] = 0.8
 humans2.dist_factor = 10
@@ -210,10 +217,6 @@ game.add_object((18,10),game.windmill)
 
 game.set_flag((18,5), humans.flag, humans.team)
 
-game.add_object((15,5), game.construction)
-
-
-game.set_fire((10,8), 5)
 ##game.set_flag((15,7), humans.flag, 1)
 ##game.set_fire((15,7), 2)
 ##game.add_smoke("small", (8,8))
@@ -233,6 +236,8 @@ game.gui.footstep = get_sprite_frames("sprites/footstep.png", s=12,
                                         resize_factor=0.6)
 game.gui.sword = get_sprite_frames("sprites/sword_shine.png")
 game.gui.medic = get_sprite_frames("sprites/medic.png", s=16)
+game.gui.under_construct = get_sprite_frames("sprites/under_construction.png", s=16)
+game.gui.under_capture = get_sprite_frames("sprites/under_capture.png", s=16)
 
 game.update_player_income(game.current_player)
 game.gui.e_gold_txt.set_text(str(game.current_player.money))
@@ -274,12 +279,9 @@ game.check_integrity()
 me.set_zoom(level=0)
 ##thorpy.application.SHOW_FPS = True
 m = thorpy.Menu(me.e_box,fps=me.fps)
-print(me.object_types)
 m.play()
 
 app.quit()
-
-
 
 ##Below is shown how to get a path, if you need it for an IA for instance:
 ##from ia.path import BranchAndBoundForMap

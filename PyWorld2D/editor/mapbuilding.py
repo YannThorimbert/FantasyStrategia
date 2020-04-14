@@ -45,6 +45,7 @@ VON_NEUMAN = [(-1,0), (1,0), (0,-1), (0,1)]
 class MapInitializer:
 
     def __init__(self, name):
+        self.loading_bar = None
         self.name = name #name of the map
         ############ terrain generation:
         self.world_size = (128,128) #in number of cells. Put a power of 2 for tilable maps
@@ -408,6 +409,7 @@ class MapInitializer:
                                             sin=False)
         self.imgs_river = imgs_river
         material_dict = get_materials_dict(lm)
+        self.update_loading_bar("Finding paths for rivers and roads...",0.6)
         while n_roads < self.max_number_of_roads or n_rivers < self.max_number_of_rivers:
             if n_rivers < self.max_number_of_rivers:
                 n_rivers += 1
@@ -460,22 +462,23 @@ class MapInitializer:
             loading_bar = thorpy.LifeBar.make(" ",
                 size=(thorpy.get_screen().get_width()//2,30))
             loading_bar.center(element="screen")
-            update_loading_bar(loading_bar, "Building height map...", 0., graphical_load)
+            self.loading_bar = loading_bar
+            self.update_loading_bar("Building height map...", 0.)
         build_hmap(me)
         for x,y,h in self.heights:
             me.hmap[x][y] = h
         if graphical_load:
             img = thorpy.get_resized_image(me.original_img_hmap, screen.get_size(), max)
             screen.blit(img, (0,0))
-            update_loading_bar(loading_bar,"Building tilers...",0.1,graphical_load)
+            self.update_loading_bar("Building tilers...",0.1)
         self.build_materials(me, fast, use_beach_tiler, load_tilers)
-        update_loading_bar(loading_bar,"Building map surfaces...",0.2,graphical_load)
+        self.update_loading_bar("Building map surfaces...",0.2)
         build_lm(me)
-        update_loading_bar(loading_bar,"Adding static objects...",0.3,graphical_load)
+        self.update_loading_bar("Adding static objects...",0.3)
         self.add_static_objects(me)
         self.add_user_objects(me)
         #Now that we finished to add objects, we generate the pygame surface
-        update_loading_bar(loading_bar, "Building surfaces", 0.9, graphical_load)
+        self.update_loading_bar("Building surfaces", 0.8)
         me.build_surfaces()
         me.build_gui_elements()
 
@@ -486,12 +489,10 @@ class MapInitializer:
             h = getattr(self, "h"+h) - 0.001
         self.heights.append((x,y,h))
 
-def update_loading_bar(loading_bar, text, progress, on):
-    print(text)
-    if on:
-        loading_bar.set_text(text)
-        loading_bar.set_life(progress)
-        loading_bar.blit()
+    def update_loading_bar(self, text, progress):
+        self.loading_bar.set_text(text)
+        self.loading_bar.set_life(progress)
+        self.loading_bar.blit()
         pygame.display.flip()
 
 

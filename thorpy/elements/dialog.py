@@ -30,7 +30,8 @@ def make_textbox(title, text, font_size=None, font_color=None, ok_text="Ok",
 ##    return box
 
 def launch_blocking_alert(title, text, parent=None, font_size=None, font_color=None,
-                            ok_text="Ok", transp=False, alpha_dialog=200, func=None):
+                            ok_text="Ok", transp=False, alpha_dialog=200, func=None,
+                            outside_click_quit=False):
     if font_size is None: font_size = thorpy.style.FONT_SIZE
     if font_color is None: font_color = thorpy.style.FONT_COLOR
     box_alert = make_textbox(title, text, font_size, font_color, ok_text)
@@ -38,6 +39,11 @@ def launch_blocking_alert(title, text, parent=None, font_size=None, font_color=N
     if transp:
         color_transp = tuple(list(thorpy.style.DEF_COLOR)[:3]+[alpha_dialog])
         box_alert.set_main_color(color_transp)
+    def click_quit(e):
+        if not box_alert.get_fus_rect().collidepoint(e.pos):
+            thorpy.functions.quit_menu_func()
+    if outside_click_quit:
+        box_alert.add_reaction(thorpy.Reaction(pygame.MOUSEBUTTONDOWN, click_quit))
     from thorpy.menus.tickedmenu import TickedMenu
     m = TickedMenu(box_alert)
     box_alert.get_elements_by_text(ok_text)[0].user_func = thorpy.functions.quit_menu_func

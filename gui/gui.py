@@ -5,6 +5,8 @@ import PyWorld2D.gui.parameters as guip
 import PyWorld2D.saveload.io as io
 from FantasyStrategia.logic.battle import Battle, DistantBattle
 from FantasyStrategia.logic.game import INCOME_PER_VILLAGE, INCOME_PER_WINDMILL
+from FantasyStrategia.gui import texts
+from FantasyStrategia.gui.theme import set_theme
 
 def quit_func():
     io.ask_save(me)
@@ -96,36 +98,69 @@ class UnitProductionGUI:
                 if not "boat" in unit_type and not "king" in unit_type:
                     if unit_type in race.unit_types:
                         u = race[unit_type]
-                        img = race.unit_types[unit_type].imgs_z_t[0][0]
-                        e_img = thorpy.Image(img)
-                        text = str(u.base_number) + " " + unit_type.capitalize()
                         cost = u.cost * INCOME_PER_VILLAGE
-                        grayed = cost > self.game.current_player.money
-                        cost = str(cost) + " $"
-                        e_text = thorpy.OneLineText(text + "    (" + cost+")")
-                        e_ghost = thorpy.make_group([e_img, e_text])
-                        #grayed
-                        g_button = thorpy.Pressable(elements=[e_ghost])
-                        g_button.fit_children()
-                        g_button.active = False
-                        g_button.set_pressed_state()
+                        img = race.unit_types[unit_type].imgs_z_t[0][0]
+                        text = str(u.base_number) + " " + unit_type.capitalize()
+                        text += "    (" + str(cost) + " $)"
                         #not grayed
+                        e_img = thorpy.Image(img)
+                        e_text = thorpy.OneLineText(text)
+                        e_ghost = thorpy.make_group([e_img, e_text])
                         n_button = thorpy.Clickable(elements=[e_ghost])
                         n_button.fit_children()
                         n_button.add_basic_help(race.unit_descr[unit_type])
+                        #grayed
+                        e_img = thorpy.Image(img)
+                        e_text = thorpy.OneLineText(text)
+                        e_ghost = thorpy.make_group([e_img, e_text])
+                        g_button = thorpy.Pressable(elements=[e_ghost])
+                        g_button = thorpy.Hoverable.make_hoverable(g_button)
+                        g_button.fit_children()
+                        g_button.set_pressed_state()
+                        g_button.add_basic_help(race.unit_descr[unit_type])
                         self.choices[race.name][unit_type] = (e_text, g_button, n_button)
+        set_theme("classic")
         self.title = guip.get_title("Recruitment")
         self.line = thorpy.Line(500, "h")
-##        self.box = thorpy.make_ok_box([self.title, self.line]+choices)
-##        self.box.center()
+        set_theme("human")
 
-    def build_choice(self, race, unit_type):
-        u = race[unit_type]
+class BuildingConstructionGUI:
+    def __init__(self, game):
+        self.game = game
+        self.choices = {}
+        for what in self.game.construction_price:
+            img = getattr(game, what).imgs_z_t[0][0]
+            price = self.game.construction_price[what]
+            price = "  " + str(price)+" $"
+            time = "  " + str(self.game.construction_time[what]//2)+" days"
+            text = " ".join([what,price,time])
+            #grayed
+            e_text = thorpy.OneLineText(text)
+            e_img = thorpy.Image(img)
+            e_ghost = thorpy.make_group([e_img, e_text])
+            g_button = thorpy.Element(elements=[e_ghost])
+            g_button = thorpy.Hoverable.make_hoverable(g_button)
+            g_button.fit_children()
+            g_button.set_pressed_state()
+            g_button.add_basic_help(texts.descr_building[what])
+            #not grayed
+            e_text = thorpy.OneLineText(text)
+            e_img = thorpy.Image(img)
+            e_ghost = thorpy.make_group([e_img, e_text])
+            n_button = thorpy.Clickable(elements=[e_ghost])
+            n_button.fit_children()
+            n_button.add_basic_help(texts.descr_building[what])
+            self.choices[what] = (g_button, n_button)
+        set_theme("classic")
+        self.title = guip.get_title("Building")
+        self.line = thorpy.Line(500, "h")
+        set_theme("human")
 
 
 class Gui:
 
     def __init__(self, game, time_remaining=-1):
+        game.update_loading_bar("Building gui elements", 0.95)
         self.game = game
         game.gui = self
         self.surface = thorpy.get_screen()
@@ -161,21 +196,23 @@ class Gui:
         self.moving_units = []
         self.add_reactions()
         self.life_font_size = guip.NFS
-        self.life_font_color = (0,0,0)
+        self.life_font_color = (255,255,255)
         self.font_life = pygame.font.SysFont(guip.font_gui_life, self.life_font_size)
         self.refresh_lifes()
         self.show_lifes = True
         self.actions = {"flag":[("Remove flag",self.remove_selected_flag,
-                                    self.check_interact_flag),
-                                ("Replace flag",self.set_flag_on_cell_under_cursor,
-                                    self.check_replace_flag)],
+                                    self.check_interact_flag)],
                         "fire":[("Extinguish",self.extinguish,
                                     self.check_extinguish)]
                         }
         self.actions_no_objs = [("Plant flag",self.set_flag_on_cell_under_cursor,
                                     self.check_plant_flag),
                                 ("Burn",self.burn,
-                                    self.check_interact_burn)]
+                                    self.check_interact_burn),
+                                ("Continue building",self.continue_build,
+                                    self.check_continue_build),
+                                ("Build",self.build,
+                                    self.check_build)]
 ##                                ("Go there",self.choice_gotocell,
 ##                                    self.check_interact_gotocell)]
         self.interaction_objs = []
@@ -196,9 +233,11 @@ class Gui:
         self.footstep = None
         self.sword = None
         self.medic = None
+        self.under_construct = None
         self.can_be_fought = []
         self.can_be_helped = []
         self.prod_gui = UnitProductionGUI(self.game)
+        self.build_gui = BuildingConstructionGUI(self.game)
 
 
     def set_map_gui(self):
@@ -312,6 +351,27 @@ class Gui:
                 return False
         return self.cell_under_cursor.material.name.lower() in self.game.is_burnable
 
+    def check_build(self):
+        cuc = self.cell_under_cursor
+        if cuc.objects:
+            return False
+        elif self.selected_unit.str_type != "villager":
+            return False
+        elif self.selected_unit.cell.distance_to(cuc) != 1:
+            return False
+        return cuc.material.name.lower() in self.game.can_build
+
+    def check_continue_build(self):
+        if self.selected_unit.str_type != "villager":
+            return False
+        elif self.selected_unit.cell.distance_to(self.cell_under_cursor) != 1:
+            return False
+        elif self.selected_unit.is_building == self.cell_under_cursor.coord:
+            return False
+        c = self.game.constructions.get(self.cell_under_cursor.coord)
+        if c:
+            return c[2] is None
+
 
     def check_interact_flag(self):
         c = self.cell_under_cursor
@@ -325,18 +385,22 @@ class Gui:
 ##        if self.selected_unit.cell.distance_to(c) <= 1:
         if self.game.get_object("river", c.coord):
             return False
-        return c.material.name.lower() in self.game.is_flaggable
+        if self.game.get_object("construction", c.coord):
+            return False
+        return c.material.name.lower() in self.game.can_build
 
     def check_plant_flag(self):
         if self.game.get_object("flag", self.cell_under_cursor.coord):
             return False
         return self.check_interact_flag()
 
-    def check_replace_flag(self):
-        if self.check_interact_flag():
-##            for o in self.interaction_objs:
-            flag = self.game.get_object("flag", self.cell_under_cursor.coord)
-            return flag.team != self.selected_unit.team
+##    def check_capture(self):
+##        if self.check_interact_flag():
+##            flag = self.game.get_object("flag", self.cell_under_cursor.coord)
+##            if flag.team != self.selected_unit.team:
+##                for o in self.cell_under_cursor.objects:
+##                    if o.str_type in self.game.construction_time:
+##                        return True
 
     def check_interact_gotocell(self):
         c = self.cell_under_cursor
@@ -391,7 +455,7 @@ class Gui:
     def update_possible_help_and_fight(self, coord):
         ref_unit = self.selected_unit
         if not ref_unit:
-            ref_unit = self.cell_under_cursor
+            ref_unit = self.cell_under_cursor.unit
         for other in self.game.units:
             if other is not ref_unit:
                 d = other.cell.distance_to_coord(coord)
@@ -427,7 +491,18 @@ class Gui:
     def add_alert(self, e):
         self.me.ap.add_alert(e, guip.DELAY_HELP * self.me.fps)
 
+    def want_to_leave_construction(self, u):
+        ok = thorpy.launch_binary_choice("Leave construction ?")
+        if ok:
+            what, t, unit = self.game.constructions[u.is_building]
+            self.game.constructions[u.is_building] = (what, t, None)
+            u.is_building = None
+            return True
+
     def go_to_cell(self, u, path):
+        if u.is_building:
+            if not self.want_to_leave_construction(u):
+                return
         u.move_to_cell_animated(path)
         self.moving_units.append(u)
         self.game.walk_sounds[0].play(-1)
@@ -513,20 +588,31 @@ class Gui:
     def remove_selected_flag(self):
         for o in self.interaction_objs:
             if o.str_type == "flag":
-                o.remove_from_game()
+                self.game.remove_flag(o.cell.coord, sound=True)
                 break
-        #
         self.selected_unit.make_grayed()
-        #
         self.game.refresh_village_gui()
+        self.selected_unit = None
 
     def set_flag_on_cell_under_cursor(self):
         self.remove_selected_flag()
+        unit = self.cell_under_cursor.unit
         self.game.set_flag(self.cell_under_cursor.coord,
-                            self.selected_unit.race.flag,
-                            self.selected_unit.team,
+                            unit.race.flag,
+                            unit.team,
                             sound=True)
         self.game.refresh_village_gui()
+        self.selected_unit = None
+
+##    def capture(self):
+##        for o in self.cell_under_cursor.objects:
+##            if o.str_type in self.game.construction_time:
+##                what = o.str_type
+##                break
+##        t = self.game.construction_time[what]
+##        self.game.capturing.append((self.selected_unit, what, t))
+##        self.selected_unit.make_grayed()
+##        self.has_moved.append(self.selected_unit)
 
     def burn(self):
         self.game.set_fire(self.cell_under_cursor.coord, 4)
@@ -561,13 +647,13 @@ class Gui:
                         for name, func, check in self.actions[o.str_type]:
                             if name in exceptions:
                                 continue
-                            if check():
+                            elif check():
                                 choices[name] = func
             self.interaction_objs = objs
         for name, func, check in self.actions_no_objs:
             if name in exceptions:
                 continue
-            if check():
+            elif check():
                 choices[name] = func
         return choices
 
@@ -639,11 +725,13 @@ class Gui:
             else:#no path (destination) is drawn for lmb
                 if self.selected_unit:
                     self.lmb_unit_already_moved(cell)
+                    self.selected_unit = None
+                    return
                 if cell.unit:
                     if cell.unit.team == self.game.current_player.team:
                         self.selected_unit = cell.unit
                         if not(cell.unit in self.has_moved):
-                            print("update destinations")
+                            print("Update destinations")
                             self.destinations_lmb = self.get_destinations(cell)
                         self.update_possible_help_and_fight(self.selected_unit.cell.coord)
                     else:
@@ -663,14 +751,13 @@ class Gui:
     def rmb(self, e):
         if self.selected_unit:
             cell = self.cell_under_cursor
-            if self.selected_unit in self.has_moved:
-                self.update_possible_interactions(self.selected_unit, cell.coord)
             if cell:
-                print("treat interaction RMB")
+                print("Treat interaction RMB")
+                if self.selected_unit in self.has_moved:
+                    self.update_possible_interactions(self.selected_unit, cell.coord)
                 interactibles = self.game.get_interactive_objects(cell.coord[0],
                                                                   cell.coord[1])
                 choices = self.get_interaction_choices(interactibles)
-                print("     ", choices)
                 if choices:
                     self.user_make_choice(choices)
                     if self.forced_gotocell:
@@ -706,10 +793,61 @@ class Gui:
         else:
             self.cell_under_cursor = None
 
+    def continue_build(self):
+        if self.selected_unit.is_building:
+            if not self.want_to_leave_construction(self.selected_unit):
+                return
+        coord = self.cell_under_cursor.coord
+        self.game.construction_sound.play()
+        what, time, unit = self.game.constructions[coord]
+        self.game.constructions[coord] = what, time, self.selected_unit
+        self.selected_unit.make_grayed()
+        self.selected_unit.is_building = coord
+        self.selected_unit = None
+
+    def build(self):
+        self.game.construction_sound.play()
+        set_theme("classic")
+        def construct(type_):
+            self.game.coin_sound.play()
+            self.game.add_construction(self.cell_under_cursor.coord, type_,
+                                        self.selected_unit)
+            self.selected_unit.is_building = self.cell_under_cursor.coord
+            self.selected_unit.make_grayed()
+##            self.has_moved.append(self.selected_unit)
+            self.game.current_player.money -= self.game.construction_price[type_]
+            self.e_gold_txt.set_text(str(self.game.current_player.money))
+            self.refresh()
+            self.selected_unit = None
+            thorpy.functions.quit_menu_func()
+        choices = []
+        for what in self.game.construction_price:
+            price = self.game.construction_price[what]
+            grayed = price > self.game.current_player.money
+            g, n = self.build_gui.choices[what]
+            if grayed:
+                button = g
+            else:
+                button = n
+                button.user_func = construct
+                button.user_params = {"type_":what}
+            choices.append(button)
+        def click_outside(event):
+            if not e.get_fus_rect().collidepoint(event.pos):
+                thorpy.functions.quit_menu_func()
+        e =  thorpy.make_ok_box([self.build_gui.title, self.build_gui.line]+\
+                                    choices)
+        e.center()
+        reac = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, click_outside)
+        e.add_reaction(reac)
+##        e.set_main_color((200,200,200,200))
+        thorpy.launch_blocking(e, add_ok_enter=True)
+        set_theme("human")
+
     def production(self, o):
         from FantasyStrategia.logic.races import std_cost, std_number
         self.game.village_sound.play()
-        thorpy.set_theme("classic")
+        set_theme("classic")
         e_title = self.prod_gui.title
         e_line = self.prod_gui.line
         choices = []
@@ -725,17 +863,19 @@ class Gui:
         for unit_type in std_cost:
             if not "boat" in unit_type and not "king" in unit_type:
                 if unit_type in race.unit_types:
-                    text = str(std_number[unit_type]) + " " + unit_type.capitalize()
+                    u = race[unit_type]
+                    cost = u.cost * INCOME_PER_VILLAGE
+                    text = str(u.base_number) + " " + unit_type.capitalize()
+                    text += "    (" + str(cost) + " $)"
                     t,g,n = self.prod_gui.choices[race.name][unit_type]
                     t.set_text(text)
-                    cost = std_cost[unit_type] * INCOME_PER_VILLAGE
                     grayed = cost > self.game.current_player.money
                     if grayed:
                         button = g
                     else:
                         button = n
-                    button.user_func = produce_unit
-                    button.user_params = {"type_":unit_type}
+                        button.user_func = produce_unit
+                        button.user_params = {"type_":unit_type}
                     choices.append(button)
         def click_outside(event):
             if not e.get_fus_rect().collidepoint(event.pos):
@@ -746,7 +886,7 @@ class Gui:
         e.add_reaction(reac)
 ##        e.set_main_color((200,200,200,200))
         thorpy.launch_blocking(e, add_ok_enter=True)
-        thorpy.set_theme("human")
+        set_theme("human")
 
 
     def get_alpha_dest(self):
@@ -761,9 +901,14 @@ class Gui:
 
     def draw_actions_possibility(self, unit, s):
         x,y = unit.get_current_rect_center(s)
-        if unit in self.has_moved:
+        if unit.is_building:
+            t = self.game.me.lm.t3 % len(self.under_construct)
+            img = self.under_construct[t]
+            self.surface.blit(img, (x-s//2,y))
+        elif unit in self.has_moved:
             t = self.game.me.lm.t3 % len(self.footstep)
             self.surface.blit(self.footstep[t], (x-s//2,y))
+        ########################################################################
         if unit in self.can_be_fought:
             t = self.game.me.lm.t % len(self.sword)
             img = self.sword[t]
@@ -781,10 +926,19 @@ class Gui:
         self.lifes = []
         for u in self.game.units:
             if not u in self.moving_units:
-                text = self.font_life.render(str(u.quantity), True, self.life_font_color)
+                text = self.font_life.render(str(u.quantity), True,
+                                                self.life_font_color)
                 x,y = self.game.me.cam.get_rect_at_coord(u.cell.coord).center
-                coord = x+4,y+4
+                coord = x+4, y+4
                 self.lifes.append((text, coord))
+                ################################################################
+                if u.is_building:
+                    time_left = str(self.game.constructions[u.is_building][1])
+                    text = self.font_life.render(time_left+"d", True,
+                                                 self.life_font_color)
+                    x,y = self.game.me.cam.get_rect_at_coord(u.is_building).center
+                    coord = x+4, y+4
+                    self.lifes.append((text, (x,y)))
 
     def unit_under_cursor(self):
         if self.cell_under_cursor:
@@ -888,7 +1042,6 @@ class Gui:
         e_box = thorpy.make_ok_cancel_box([e_title, e_life_size, e_life_color])
         e_box.center()
         result = thorpy.launch_blocking(e_box)
-        print("RESULT",result.how_exited)
         if result.how_exited == "done":
             self.life_font_size = e_life_size.get_value()
             self.life_font_color = e_life_color.get_value()
@@ -931,6 +1084,7 @@ class Gui:
             if i_anim%MOD_SPAWN == 0:
                 for src in sources:
                     if sources[src] > 0:
+                        game.coin_sound.play_next_channel()
                         x,y = game.me.cam.get_rect_at_coord(src).topleft
                         value = values[src]
                         coins_flying.append((x,y,value))

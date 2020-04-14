@@ -4,7 +4,7 @@ from pygame.math import Vector2 as V2
 import thorpy
 import PyWorld2D.thornoise.purepython.noisegen as ng
 import PyWorld2D.rendering.tilers.tilemanager as tm
-from PyWorld2D.rendering.mapgrid import LogicalMap, WhiteLogicalMap
+from PyWorld2D.rendering.mapgrid import LogicalMap
 import PyWorld2D.gui.parameters as guip
 import PyWorld2D.gui.elements as gui
 from PyWorld2D.rendering.camera import Camera
@@ -267,15 +267,6 @@ class MapEditor:
     def set_map(self, logical_map):
         self.cam.set_map_data(logical_map)
 
-##    def add_layer(self, white_value=(255,255,255)):
-##        outsides = self.materials["outside"].imgs
-##        lay = WhiteLogicalMap(self.map_rects, outsides, self.lm.cell_sizes,
-##                                self.nframes, self.cam.world_size, white_value)
-####        lay = WhiteLogicalMap(hmap, map_rects, outsides, desired_world_size,
-####                                white_value=white_value)
-##        self.lm.add_layer(lay)
-##        return lay
-
 
     def build_camera(self, img_hmap):
         self.original_img_hmap = img_hmap
@@ -480,12 +471,9 @@ class MapEditor:
         #     pass
         if e.button == 3: #right click
             #1. undraw destinations if necessary
-            mm, lmb = False, False
-            if self.cam.ui_manager:
-                mm = bool(self.cam.ui_manager.destinations_mousemotion)
-                lmb = bool(self.cam.ui_manager.destinations_lmb)
-                su = self.cam.ui_manager.selected_unit
-                print(mm, lmb, su)
+            mm = bool(self.cam.ui_manager.destinations_mousemotion)
+            lmb = bool(self.cam.ui_manager.destinations_lmb)
+            su = self.cam.ui_manager.selected_unit
             if mm or lmb or su:
                 self.cam.ui_manager.destinations_mousemotion = []
                 self.cam.ui_manager.destinations_lmb = []
@@ -502,6 +490,8 @@ class MapEditor:
                     self.cell_info.last_cell_clicked = cell
                     self.cell_info.launch_em(cell, e.pos, self.cam.map_rect)
                 self.cell_info.last_cell_clicked = None
+                self.cell_info.launched = False
+##                self.unit_info.launched = False
             self.unit_info.last_cell_clicked = None
 
     def func_reac_mousemotion(self, e):

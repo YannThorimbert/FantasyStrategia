@@ -1,5 +1,6 @@
 import pygame, thorpy
 import PyWorld2D.gui.parameters as guip
+from FantasyStrategia.logic.unit import Unit
 
 
 def get_help_text(*texts, start="normal"):
@@ -77,6 +78,7 @@ class MiscInfo:
 
 class CellInfo:
     def __init__(self, size, cell_size, redraw, external_e):
+        self.wline = int(0.75*size[0])
         self.e_coordalt = thorpy.make_text("(?,?)", font_size=10, font_color=(200,200,200))
         self.e_mat_img = thorpy.Image.make(pygame.Surface(cell_size))
         self.e_mat_name = guip.get_text("")
@@ -109,8 +111,8 @@ class CellInfo:
         self.em_obj_name = guip.get_text("")
         self.em_mat_obj = thorpy.make_group([self.em_mat_name,  self.em_obj_name], "v")
         self.em_mat = thorpy.make_group([self.em_mat_img, self.em_mat_obj])
-##        self.em_elements = [self.em_title, thorpy.Line.make(100), self.em_mat, self.em_coord, self.em_altitude, self.em_name_rename]
-        self.em_elements = [self.em_title, thorpy.Line.make(100), self.em_mat, self.em_coord, self.em_name_rename]
+##        self.em_elements = [self.em_title, thorpy.Line.make(self.wline), self.em_mat, self.em_coord, self.em_altitude, self.em_name_rename]
+        self.em_elements = [self.em_title, thorpy.Line.make(self.wline), self.em_mat, self.em_coord, self.em_name_rename]
         self.em = thorpy.Box.make(self.em_elements)
         self.em.set_main_color((200,200,200,150))
         self.launched = False
@@ -142,11 +144,12 @@ class CellInfo:
                 if "bridge" in obj.str_type:
                     objs.add("Bridge")
             else:
-                if obj.str_type == "fire":
-                    n = obj.game.burning[obj.cell.coord]
-                    objs.add("fire ("+str(n)+" turns)")
-                else:
-                    objs.add(obj.name) #split to not take the id
+                if not obj.name[0] == "*":
+                    if obj.str_type == "fire":
+                        n = obj.game.burning[obj.cell.coord]
+                        objs.add("fire ("+str(n)+" turns)")
+                    else:
+                        objs.add(obj.name) #split to not take the id
         text = ", ".join([name for name in objs])
         self.em_obj_name.set_text(text.capitalize())
         #
@@ -193,6 +196,7 @@ class CellInfo:
         ins.enter() #put focus on inserter
         thorpy.launch_blocking(ps)
         newname = ins.get_value()
+        newname = newname.replace("*","")
         if newname:
             self.cell.set_name(newname)
         self.update_em(self.cell)
@@ -204,25 +208,26 @@ class CellInfo:
 
     def update_e(self, cell): #at hover
         self.cell = cell
-        #
+        # text for material and ground
         text = cell.material.name
         for obj in cell.objects:
             if obj.is_ground:
                 text = obj.name.capitalize()
                 break
         self.e_mat_name.set_text(text)
-        #
+        # text for other objects, including units
         objs = set()
         for obj in cell.objects:
             if obj.is_ground:
                 if "bridge" in obj.str_type:
                     objs.add("Bridge")
             else:
-                if obj.str_type == "flag":
-                    text = "flag"
-                else:
-                    text = obj.name
-                objs.add(text) #split to not take the id
+                if not obj.name[0] == "*":
+                    if obj.str_type == "flag":
+                        text = "flag"
+                    else:
+                        text = obj.name
+                    objs.add(text) #split to not take the id
         objs = list(objs)
         text = ""
         if len(objs) > 1:
@@ -232,6 +237,11 @@ class CellInfo:
         self.e_obj_name.set_text(text.capitalize())
         #
         new_img = cell.get_static_img_at_zoom(0)
+        for o in cell.objects:
+            if not o.is_static:
+                if not isinstance(o, Unit): #then blit it anyway
+                    cell_size = o.editor.cell_size
+                    new_img.blit(o.imgs_z_t[0][0], o.get_relative_pos(cell_size))
         self.e_mat_img.set_image(new_img)
         if len(objs) > 0:
             thorpy.store(self.e_mat_obj)
@@ -264,6 +274,7 @@ class CellInfo:
 class UnitInfo: #name, image, nombre(=vie dans FS!)
     def __init__(self, me, size, cell_size, redraw, external_e):
         self.me = me
+        self.wline = int(0.75*size[0])
         self.unit = None
 ##        self.cell = None probleme
         self.e_img = thorpy.Image.make(pygame.Surface(cell_size))
@@ -304,7 +315,7 @@ class UnitInfo: #name, image, nombre(=vie dans FS!)
         self.em_unit_race = guip.get_text("")
         self.em_nameNrace = thorpy.make_group([self.em_unit_name, self.em_unit_race], "v")
         self.em_unit = thorpy.make_group([self.em_unit_img, self.em_nameNrace])
-        self.em_elements = [self.em_title, thorpy.Line.make(100), self.em_unit, self.em_rename]#self.em_name_rename]
+        self.em_elements = [self.em_title, thorpy.Line.make(self.wline), self.em_unit, self.em_rename]#self.em_name_rename]
         #
         self.em_mat_img_img = thorpy.Image.make(pygame.Surface(cell_size))
         self.em_mat_img = thorpy.Clickable.make(elements=[self.em_mat_img_img])
@@ -316,7 +327,7 @@ class UnitInfo: #name, image, nombre(=vie dans FS!)
             self.me.cell_info.launch_em(cell, pos, self.me.cam.map_rect)
 ##        self.em_button_cell = guip.get_button("Terrain infos", show_terrain_infos)
         self.em_mat_img.user_func = show_terrain_infos
-        self.em_elements += [thorpy.Line.make(100), self.em_mat_img]
+        self.em_elements += [thorpy.Line.make(self.wline), self.em_mat_img]
         self.em = thorpy.Box.make(self.em_elements)
         self.em.set_main_color((200,200,200,150))
         self.launched = False
@@ -342,6 +353,14 @@ class UnitInfo: #name, image, nombre(=vie dans FS!)
 
     def update_em(self, cell):
         new_img = cell.unit.get_current_img()
+        def descr():
+            thorpy.launch_blocking_alert("Unit infos",
+                                         cell.unit.get_description(),
+                                         outside_click_quit=True)
+            self.me.draw()
+            self.em.blit()
+            pygame.display.flip()
+        self.em_unit_img.user_func = descr
         self.em_unit_img_img.set_image(new_img)
         self.em_unit_name.set_text(cell.unit.name.capitalize())
         baserace = cell.unit.race.baserace.capitalize()
@@ -386,6 +405,7 @@ class UnitInfo: #name, image, nombre(=vie dans FS!)
         ins.enter() #put focus on inserter
         thorpy.launch_blocking(ps)
         newname = ins.get_value()
+        newname = newname.replace("*","")
         if newname:
             self.unit.name = newname
         self.update_em(self.unit.cell)
@@ -404,7 +424,6 @@ class UnitInfo: #name, image, nombre(=vie dans FS!)
             baserace = unit.race.baserace.capitalize()
             playername = unit.get_all_players()[0].name
             raceteam = baserace + " (" + playername + ")"
-##            raceteam = "caca"
             new_img = unit.get_current_img()
             self.e_img.visible = True
             changed = True

@@ -60,6 +60,10 @@ class Element(_Screened, Ghost):
             rects.extend(e.get_fus_rects(state))
         return rects
 
+    def set_pressed_state(self, grayed_color=(100,100,100)):
+        if grayed_color:
+            self.set_main_color(grayed_color)
+
     def get_title(self):
         try:
             return self.current_state.fusionner.title

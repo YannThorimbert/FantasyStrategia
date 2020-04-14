@@ -43,7 +43,8 @@ def launch_alert(text, font_size=None, font_color=None, ok_text="Ok"):
     box_alert.center()
     launch(box_alert)
 
-def launch_choices(text, choices, title_fontsize=None, title_fontcolor=None):
+def launch_choices(text, choices, title_fontsize=None, title_fontcolor=None,
+                    click_quit=False):
     """choices are tuple (text,func)"""
     if title_fontsize is None: title_fontsize = style.FONT_SIZE
     if title_fontcolor is None: title_fontcolor = style.FONT_COLOR
@@ -59,7 +60,8 @@ def launch_choices(text, choices, title_fontsize=None, title_fontcolor=None):
     box = Box.make([e_text, ghost])
     box.center()
     from thorpy.miscgui.launchers.launcher import launch
-    from thorpy.miscgui.reaction import ConstantReaction
+    from thorpy.miscgui.reaction import ConstantReaction, Reaction
+    from thorpy import functions
     launcher = launch(box)
     for e in elements:
         reac = ConstantReaction(constants.THORPY_EVENT,
@@ -67,10 +69,14 @@ def launch_choices(text, choices, title_fontsize=None, title_fontcolor=None):
                                 {"id":constants.EVENT_UNPRESS, "el":e},
                                 {"what":None})
         box.add_reaction(reac)
+    def click_outside(e):
+        if not box.get_fus_rect().collidepoint(e.pos):
+            functions.quit_menu_func()
+    box.add_reaction(Reaction(pygame.MOUSEBUTTONDOWN, click_outside))
     return launcher
 
 def launch_blocking_choices(text, choices, parent=None, title_fontsize=None,
-                    title_fontcolor=None, main_color=None):
+                    title_fontcolor=None, main_color=None, click_quit=False):
     """choices is a list of either tuple(text,func) or elements"""
     if title_fontsize is None: title_fontsize = style.FONT_SIZE
     if title_fontcolor is None: title_fontcolor = style.FONT_COLOR
@@ -87,13 +93,18 @@ def launch_blocking_choices(text, choices, parent=None, title_fontsize=None,
     if main_color:
         box.set_main_color(main_color)
     box.center()
-    from thorpy.miscgui.reaction import ConstantReaction
+    from thorpy.miscgui.reaction import ConstantReaction, Reaction
+    from thorpy import functions
     for e in elements:
         reac = ConstantReaction(constants.THORPY_EVENT,
                                 functions.quit_menu_func,
                                 {"id":constants.EVENT_UNPRESS,
                                  "el":e})
         box.add_reaction(reac)
+    def click_outside(e):
+        if not box.get_fus_rect().collidepoint(e.pos):
+            functions.quit_menu_func()
+    box.add_reaction(Reaction(pygame.MOUSEBUTTONDOWN, click_outside))
     from thorpy.menus.tickedmenu import TickedMenu
     m = TickedMenu(box)
     m.play()
@@ -104,7 +115,7 @@ def launch_blocking_choices(text, choices, parent=None, title_fontsize=None,
 
 def launch_binary_choice(title_text, parent=None, title_fontsize=None,
                     title_fontcolor=None, main_color=None, yes_text="Yes",
-                    no_text="No", blocking=True):
+                    no_text="No", blocking=True, click_quit=False):
     """Use <blocking> argument to decide wether or not the launch is blocking"""
     class Choice:
         value = False
@@ -112,9 +123,11 @@ def launch_binary_choice(title_text, parent=None, title_fontsize=None,
         Choice.value = True
     choices = [(yes_text,yes), (no_text,None)]
     if blocking:
-        launch_blocking_choices(title_text, choices, parent, title_fontsize, title_fontcolor, main_color)
+        launch_blocking_choices(title_text, choices, parent, title_fontsize,
+                                title_fontcolor, main_color, click_quit)
     else:
-        launch_choices(title_text, choices, parent, title_fontsize, title_fontcolor, main_color)
+        launch_choices(title_text, choices, parent, title_fontsize,
+                        title_fontcolor, main_color, click_quit)
     return Choice.value
 
 def launch_inserter(title_text, initial_value="", parent=None, title_fontsize=None,

@@ -43,7 +43,7 @@ P_HIT_SOUND = 1.
 DFIGHT = 16
 K = 2.
 
-PROB_OBJECT = 0.1
+PROB_OBJECT = 0.2
 
 def sgn(x):
     if x < 0:

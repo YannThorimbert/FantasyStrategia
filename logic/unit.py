@@ -95,6 +95,7 @@ class Unit(MapObject):
         self.footprint = None
         self.projectile1 = None #projectile used in close battle
         self.is_grayed = False
+        self.is_building = None
         self.id = Unit.unit_id
         Unit.unit_id += 1
 
@@ -102,17 +103,21 @@ class Unit(MapObject):
         return self.race[self.str_type]
 
     def make_grayed(self):
-        self.is_grayed = True
-        self.hide = True
-        imgs = self.get_race_unit().grayed
-        obj = MapObject(self.game.me, imgs[self.game.me.zoom_level])
-        obj.imgs_z_t = imgs
-        obj = self.game.add_object(self.cell.coord, obj, 1)
-        obj.set_frame_refresh_type(self._refresh_frame_type)
-        obj.get_map_time = self.get_map_time
-        obj.get_current_frame = obj._get_current_frame3
-        obj.name = "grayed_"+self.str_type
-        obj.is_grayed = True
+        if not self.is_grayed:
+            self.is_grayed = True
+            self.hide = True
+            imgs = self.get_race_unit().grayed
+            obj = MapObject(self.game.me, imgs[self.game.me.zoom_level])
+            obj.imgs_z_t = imgs
+            obj = self.game.add_object(self.cell.coord, obj, 1)
+            obj.set_frame_refresh_type(self._refresh_frame_type)
+            obj.get_map_time = self.get_map_time
+            obj.get_current_frame = obj._get_current_frame3
+            obj.name = "*"+self.str_type
+            obj.is_grayed = True
+
+    def get_description(self):
+        return self.race.unit_descr[self.str_type]
 
 
     def _spawn_possible_destinations(self, x, y, tot_cost, path_to_here, score):
@@ -289,17 +294,18 @@ class Unit(MapObject):
             self.get_current_img = self._once_get_current_img
             self.animation_step = self.get_map_time()
 
-    def remove_from_game(self):
-        self.game.units.remove(self)
-        self.game.me.remove_dynamic_object(self)
-        self.remove_from_cell_objects()
 
     def die_after(self, duration):
         self.set_sprite_type("die")
         self.set_animation_type("once")
         slowness = self.game.me.lm.get_slowness(self._refresh_frame_type)
         self.stop_animation = self.game.me.fps / slowness
-        self.stop_animation_func = self.remove_from_game
+        self.stop_animation_func = self.remove_from_game_after_die
+
+    def remove_from_game_after_die(self):
+        self.game.units.remove(self)
+        self.remove_from_map(self.game.me)
+
 
     def reset_stop_animation(self):
         self.stop_animation = float("inf")
@@ -560,7 +566,7 @@ class InteractiveObject(Unit):
         obj.color = self.color
         return obj
 
-    def remove_from_game(self):
-##        self.game.objects.remove(self)
-        self.game.me.dynamic_objects.remove(self)
-        self.remove_from_cell_objects()
+##    def remove_from_game(self):
+####        self.game.objects.remove(self)
+##        self.game.me.dynamic_objects.remove(self)
+##        self.remove_from_cell_objects()

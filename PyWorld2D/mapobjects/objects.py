@@ -130,6 +130,7 @@ class MapObject:
         if isinstance(fns, str):
             fns = [fns]
         self.fns = fns
+        thing = None
         for thing in fns:
             if thing:
                 if isinstance(thing,str):
@@ -177,6 +178,7 @@ class MapObject:
         self.always_drawn_last = False
         self.is_static = False
         self.hide = False
+        self.game = None
 
     def get_cell_coord(self):
         return self.cell.coord
@@ -406,6 +408,7 @@ class MapObject:
         return self.imgs_z_t[self.editor.zoom_level][self.get_current_frame()]
 
     def get_current_img_and_rect(self, cell_size):
+        """Return img and absolute position of rect in the map"""
         img = self.get_current_img()
         r = self.editor.cam.get_rect_at_coord(self.cell.coord)
         ir = img.get_rect()
@@ -430,10 +433,12 @@ class MapObject:
     def get_current_rect(self, cell_size):
         return self.editor.cam.get_rect_at_coord(self.cell.coord)
 
+    def get_relative_pos(self, cell_size):
+        return self.relpos[0]*cell_size, self.relpos[1]*cell_size
+
     def set_same_type(self, objs):
         for o in objs:
             o.int_type = self.int_type
-
 
     def distance_to(self, another_obj):
         return self.cell.distance_to(another_obj.cell)
