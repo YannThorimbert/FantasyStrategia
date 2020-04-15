@@ -768,30 +768,6 @@ class Battle:
 
 
 
-
-
-
-class DistantBattle(Battle):
-    def __init__(self, game, units, defender, distance, zoom_level=0):
-        Battle.__init__(self, game, units, defender, distance, zoom_level)
-        self.battle_duration = DISTANT_BATTLE_DURATION
-        self.projectile_class = DistantBattleProjectile
-        self.separation_line = pygame.Surface((30,self.surface.get_height()))
-        self.sep_line_x = (self.surface.get_width() - self.separation_line.get_width())/2
-
-    def get_units_dict_from_list(self, units):
-        coords = [u.cell.coord for u in units]
-        relative_dict = {}
-        if units[0].cell.coord[0] < units[1].cell.coord[0]:
-            relative_dict["left"] = units[0]
-            relative_dict["right"] = units[1]
-        else:
-            relative_dict["left"] = units[1]
-            relative_dict["right"] = units[0]
-        return relative_dict
-
-
-
 class DistantFightingUnit(FightingUnit):
 
     def __init__(self, battle, unit, direction, zoom_level, pos):

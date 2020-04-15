@@ -167,7 +167,6 @@ class Game:
             self.constructions[coord] = str_type, time_left, unit
             if time_left == 0:
                 self.construction_sound.play_next_channel()
-                self.village_sound.play_next_channel()
                 self.get_object("construction", coord).remove_from_map(self.me)
                 self.add_object(coord, self.buildable_objs[str_type])
                 self.set_flag(coord, self.current_player.race.flag, self.current_player.team)
@@ -203,12 +202,20 @@ class Game:
             objs = self.get_cell_at(coord[0],coord[1]).objects #ok
             to_burn = [o for o in objs if o.str_type in self.is_burnable]
             for o in to_burn:
+                self.gui.add_onomatopoeia(self.gui.els_burned, o.cell.coord)
                 self.fire_extinguish_sound.play_next_channel()
                 o.remove_from_map(self.me)
-                effects.draw_ashes(self, o)
+                if not(isinstance(o,InteractiveObject) and o.name == "bridge"):
+                    effects.draw_ashes(self, o)
+                else:
+                    self.bridges.remove(o.cell.coord)
+                    for o2 in o.cell.objects:
+                        if isinstance(o,MapObject) and o.name == "bridge":
+                            o.hide = True #just of the anim, then removed
                 if o.str_type == "construction":
                     self.constructions[o.cell.coord][2].is_building = None
                     self.constructions.pop(o.cell.coord)
+
 
     def set_players(self, players, current=0):
         self.players = players
@@ -282,8 +289,8 @@ class Game:
         self.me.func_reac_time()
         self.t += 1
         pygame.display.flip()
-##        if self.t%100 == 0:
-##            self.check_integrity()
+        if self.t%100 == 0:
+            self.check_integrity()
 
     def update_loading_bar(self, text, progress):
         self.map_initializer.update_loading_bar(text, progress)

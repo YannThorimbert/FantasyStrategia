@@ -451,7 +451,8 @@ class AlertPool:
 
     def __init__(self):
         self.alerts = []
-        self.countdowns = {}
+        self.countdowns = {} #appear after a while only
+        self.frames_on_coord = []
 
     def add_alert_countdown(self, element, countdown):
         self.countdowns[element] = countdown
@@ -459,25 +460,40 @@ class AlertPool:
     def add_alert(self, element, counter):
         self.alerts.append([element, counter])
 
-    def alert_indices(self):
-        for i in range(len(self.alerts)-1, -1, -1):
-            yield i
+    def add_frames_on_coord(self, elements, coord, counter):
+        """coord is a coord of the map, not a coord of the screen"""
+        self.frames_on_coord.append([elements, coord, counter])
 
     def refresh(self):
-        for i in self.alert_indices():
+        for i in range(len(self.alerts)-1, -1, -1):
             self.alerts[i][1] -= 1
             if self.alerts[i][1] < 0:
                 self.alerts.pop(i)
+        for i in range(len(self.frames_on_coord)-1, -1, -1):
+            self.frames_on_coord[i][2] -= 1
+            if self.frames_on_coord[i][2] < 0:
+                self.frames_on_coord.pop(i)
         for e in self.countdowns:
             self.countdowns[e] -= 1
 
-
     def draw(self, screen, x, y, gap=5):
-        for i in self.alert_indices():
+        for i in range(len(self.alerts)-1, -1, -1):
             e = self.alerts[i][0]
             e.set_topleft((x,y))
-            e.blit()
             y += e.get_fus_size()[1] + gap
+            e.blit()
+        for i in range(len(self.frames_on_coord)-1, -1, -1):
+            t = int(self.frames_on_coord[i][2] / 5)
+            L = len(self.frames_on_coord[i][0])
+            if t < 0:
+                t = 0
+            elif t >= L:
+                t = L - 1
+            e = self.frames_on_coord[i][0][t]
+            prescribed_coord = self.frames_on_coord[i][1]
+            prescribed_coord = self.cam.get_rect_at_coord(prescribed_coord)
+            e.set_topleft(prescribed_coord.topleft)
+            e.blit()
         for e in self.countdowns:
             if self.countdowns[e] < 0:
                 e.set_topleft((x,y))

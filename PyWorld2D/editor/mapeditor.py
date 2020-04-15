@@ -271,6 +271,7 @@ class MapEditor:
     def build_camera(self, img_hmap):
         self.original_img_hmap = img_hmap
         cam = Camera()
+        self.ap.cam = cam
         map_rects = []
         for level in range(len(self.zoom_cell_sizes)):
             self.zoom_level = level

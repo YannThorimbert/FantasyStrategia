@@ -44,19 +44,12 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-#bruler qu'une fois le pont
-
-#count village marche plus par rapport aux drapeaux
-#moulin burn easily
-#seul infantry interragit flag
-
-#animation pour fin construction et fin capture.
-#si construction ou capture interrompue, enlever le tuple lie dans game.
-# ==> permettre à l'unite de bouger, mais prevenir que interrompt !
+#vie (life) change de couleur ou alors s'adapte au material ou alors preconstruit 1-20
 
 #summary_pre_battle
+#avant bataille, laisser le temps de voir les troupes avant que commencent a courir
 #demander confirmation d'attaque dans le summary pre battle ! possibilite d'annuler dernier deplacement a ce moment
-#avant bataille, laisser le temps de voir les troupes.
+##    ===> toujours possible d'annuler un deplacement si rien d'autre n'a ete fait depuis
 
 #sons: cris de guerre. SoundSnap, acheter quand meme ?
 #penser a enlever check integrity dans func time
@@ -257,22 +250,24 @@ game.gui.e_gold_txt.set_text(str(game.current_player.money))
 ##units_in_battle = defender.get_all_surrounding_ennemies()
 ##units_in_battle.append(defender)
 from FantasyStrategia.logic.battle import Battle, DistantBattle
-##from FantasyStrategia.logic.fakebattle import Battle as FakeBattle
-##from FantasyStrategia.logic.fakebattle import DistantBattle as FakeDistantBattle
+from FantasyStrategia.logic.fakebattle import Battle as FakeBattle
+from FantasyStrategia.logic.fakedistantbattle import DistantBattle as FakeDistantBattle
 
-attacker = game.get_unit_at(13,4)
-defender = game.get_unit_at(12,4)
+##attacker = game.get_unit_at(13,4)
+##defender = game.get_unit_at(12,4)
+##distance = defender.distance_to(attacker)
+##units_in_battle = [attacker, defender]
+##b = FakeBattle(game, units_in_battle, defender, distance)
+## ##b = Battle(game, units_in_battle, defender, distance)
+##b.fight()
+
+attacker = game.get_unit_at(23,4)
+defender = game.get_unit_at(23,2)
 distance = defender.distance_to(attacker)
 units_in_battle = [attacker, defender]
-
-##b = FakeDistantBattle(game, units_in_battle, defender, distance)
-##b.fight()
-
+b = FakeDistantBattle(game, units_in_battle, defender, distance)
 ##b = DistantBattle(game, units_in_battle, defender, distance)
-##b.fight()
-
-##b = Battle(game, units_in_battle, defender, distance)
-##b.fight()
+b.fight()
 
 ##game.me.lm.frame_slowness = 30
 game.check_integrity()

@@ -301,11 +301,11 @@ class Unit(MapObject):
         slowness = self.game.me.lm.get_slowness(self._refresh_frame_type)
         self.stop_animation = self.game.me.fps / slowness
         self.stop_animation_func = self.remove_from_game_after_die
+        self.game.gui.add_onomatopoeia(self.game.gui.els_dead, self.cell.coord)
 
     def remove_from_game_after_die(self):
         self.game.units.remove(self)
         self.remove_from_map(self.game.me)
-
 
     def reset_stop_animation(self):
         self.stop_animation = float("inf")

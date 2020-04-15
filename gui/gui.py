@@ -8,6 +8,14 @@ from FantasyStrategia.logic.game import INCOME_PER_VILLAGE, INCOME_PER_WINDMILL
 from FantasyStrategia.gui import texts
 from FantasyStrategia.gui.theme import set_theme
 
+ONOMATOPOEIA_DURATION = 1.5
+ONOMATOPOEIA_COLOR = (255,)*3
+def get_onomatopoeia_frames(text, color):
+    els = []
+    for font_size in range(22, 15, -1):
+        els.append(thorpy.make_text(text, font_size, color))
+    return els
+
 def quit_func():
     io.ask_save(me)
     thorpy.functions.quit_func()
@@ -163,6 +171,16 @@ class Gui:
         game.update_loading_bar("Building gui elements", 0.95)
         self.game = game
         game.gui = self
+        #
+        self.font_colors_mat = {}
+        for m in self.game.me.materials:
+            if "snow" in m.lower():
+                self.font_colors_mat[m] = (0,)*3
+##            elif "water" in m.lower():
+##                self.font_colors_mat[m] = (255,100,0)
+            else:
+                self.font_colors_mat[m] = (255,)*3
+        #
         self.surface = thorpy.get_screen()
         game.me.cam.ui_manager = self
         self.me = game.me
@@ -238,6 +256,9 @@ class Gui:
         self.can_be_helped = []
         self.prod_gui = UnitProductionGUI(self.game)
         self.build_gui = BuildingConstructionGUI(self.game)
+        self.els_capture = get_onomatopoeia_frames("Captured", ONOMATOPOEIA_COLOR)
+        self.els_built = get_onomatopoeia_frames("Built", ONOMATOPOEIA_COLOR)
+        self.els_dead = get_onomatopoeia_frames("Dead", ONOMATOPOEIA_COLOR)
 
 
     def set_map_gui(self):
@@ -374,6 +395,8 @@ class Gui:
 
 
     def check_interact_flag(self):
+        if self.selected_unit.str_type != "infantry":
+            return False
         c = self.cell_under_cursor
         if c.coord != self.selected_unit.cell.coord:
             return False
@@ -488,8 +511,13 @@ class Gui:
         else:
             self.red_highlights.append(unit)
 
-    def add_alert(self, e):
-        self.me.ap.add_alert(e, guip.DELAY_HELP * self.me.fps)
+    def add_alert(self, e, coord=None):
+        duration = guip.DELAY_HELP * self.me.fps
+        self.me.ap.add_alert(e, duration)
+
+    def add_onomatopoeia(self, elements, coord):
+        duration = ONOMATOPOEIA_DURATION * self.me.fps
+        self.me.ap.add_frames_on_coord(elements, coord, duration)
 
     def want_to_leave_construction(self, u):
         ok = thorpy.launch_binary_choice("Leave construction ?")
@@ -601,21 +629,18 @@ class Gui:
                             unit.race.flag,
                             unit.team,
                             sound=True)
+        if self.game.get_object("village", self.cell_under_cursor.coord):
+            self.add_onomatopoeia(self.els_capture, self.cell_under_cursor.coord)
+        elif self.game.get_object("windmill", self.cell_under_cursor.coord):
+            self.add_onomatopoeia(self.els_capture, self.cell_under_cursor.coord)
         self.game.refresh_village_gui()
         self.selected_unit = None
 
-##    def capture(self):
-##        for o in self.cell_under_cursor.objects:
-##            if o.str_type in self.game.construction_time:
-##                what = o.str_type
-##                break
-##        t = self.game.construction_time[what]
-##        self.game.capturing.append((self.selected_unit, what, t))
-##        self.selected_unit.make_grayed()
-##        self.has_moved.append(self.selected_unit)
-
     def burn(self):
-        self.game.set_fire(self.cell_under_cursor.coord, 4)
+        time_left = 4
+        if self.game.get_object("windmill", self.cell_under_cursor.coord):
+            time_left = 2
+        self.game.set_fire(self.cell_under_cursor.coord, time_left)
         self.selected_unit.make_grayed()
 
     def help(self):
@@ -926,16 +951,17 @@ class Gui:
         self.lifes = []
         for u in self.game.units:
             if not u in self.moving_units:
-                text = self.font_life.render(str(u.quantity), True,
-                                                self.life_font_color)
+                font_color = self.font_colors_mat[u.cell.material.name]
+                text = self.font_life.render(str(u.quantity), True, font_color)
+##                                                self.life_font_color)
                 x,y = self.game.me.cam.get_rect_at_coord(u.cell.coord).center
                 coord = x+4, y+4
                 self.lifes.append((text, coord))
                 ################################################################
                 if u.is_building:
                     time_left = str(self.game.constructions[u.is_building][1])
-                    text = self.font_life.render(time_left+"d", True,
-                                                 self.life_font_color)
+                    text = self.font_life.render(time_left+"d", True, font_color)
+##                                                 self.life_font_color)
                     x,y = self.game.me.cam.get_rect_at_coord(u.is_building).center
                     coord = x+4, y+4
                     self.lifes.append((text, (x,y)))
