@@ -20,6 +20,11 @@ SPEEDUP_PROJECTILE = 10.
 ##ANGLE_PROJECTILE = 30.
 ##ANGLE_PROJECTILE_RADIAN = ANGLE_PROJECTILE * math.pi / 180.
 
+LEFT = "left"
+RIGHT = "right"
+CENTER = "center"
+UP = "up"
+DOWN = "down"
 
 ANIM_VEL = 1.5
 SLOW_FIGHT_FRAME1 = 4
@@ -104,7 +109,7 @@ class FightingUnit:
         if unit.str_type == "wizard":
             self.delta_head = None
         self.blit_footprints = True
-        self.direction = "left"
+        self.direction = LEFT
         self.refresh_sprite_type()
         self.dead = False
         global ID
@@ -379,7 +384,6 @@ class Battle:
         self.distance = distance
         self.defender = defender
         self.agressors = [u for u in units if not(u is defender)]
-        print("UNITS", units, [u.team for u in units])
         units = self.get_units_dict_from_list(units)
         assert defender in units.values()
         nb_defender = len([u for u in units.values() if u.team==defender.team])
@@ -394,11 +398,11 @@ class Battle:
         self.surface = thorpy.get_screen()
         self.surface_rect = self.surface.get_rect()
         self.W, self.H = self.surface.get_size()
-        self.right = units.get("right")
-        self.left = units.get("left")
-        self.up = units.get("up")
-        self.down = units.get("down")
-        self.center = units.get("center")
+        self.right = units.get(RIGHT)
+        self.left = units.get(LEFT)
+        self.up = units.get(UP)
+        self.down = units.get(DOWN)
+        self.center = units.get(CENTER)
         #
         self.terrain = pygame.Surface(self.surface.get_size())
         self.z = zoom_level
@@ -453,10 +457,6 @@ class Battle:
         self.timebar.set_main_color((220,220,220,100))
         self.timebar.stick_to("screen","top", "top")
 
-
-    def show_forecast(self):
-        ...
-
     def press_enter(self):
         if self.finished:
             self.fight_t = 100000000000
@@ -491,7 +491,7 @@ class Battle:
             otherkey = DELTA_TO_KEY[(-dx,-dy)]
             relative_dict[otherkey] = center_unit
         else:
-            relative_dict["center"] = center_unit
+            relative_dict[CENTER] = center_unit
         return relative_dict
 
     def fight(self):
@@ -742,13 +742,13 @@ class Battle:
         self.ny = H//self.cell_size
 ##        self.W -= self.cell_size//2
 ##        self.H -= self.cell_size//2
-        if side == "left" or side == "right":
+        if side == LEFT or side == RIGHT:
             max_nx = W // (2*s) - 1 - 6
             max_ny = H // s - 1 - 8
-        elif side == "bottom" or side == "top":
+        elif side == DOWN or side == UP:
             max_ny = H // (2*s) - 1 - 6
             max_nx = W // s - 1 - 2
-        elif side == "center":
+        elif side == CENTER:
             max_nx = W // (3*s) + 2
             max_ny = H // (3*s) + 2
         else:
@@ -762,7 +762,7 @@ class Battle:
         space_y = ny*s
         dy = (self.H - space_y) // 2
         disp = []
-        if side == "right":
+        if side == RIGHT:
             dx = self.W - space_x
         else:
             dx = s//2
@@ -780,7 +780,7 @@ class Battle:
         space_x = nx*s
         dx = (self.W-space_x) // 2
         disp = []
-        if side == "bottom":
+        if side == DOWN:
             dy = self.H - space_y
         else:
             dy = s//2
@@ -792,7 +792,7 @@ class Battle:
         return disp
 
     def get_disp_poses_c(self):
-        nx,ny = self.get_nxny("center")
+        nx,ny = self.get_nxny(CENTER)
         s = self.game.me.zoom_cell_sizes[self.z]
         disp = []
         space_y = ny*s
@@ -823,27 +823,27 @@ class Battle:
             pos[0] += random.randint(0,s//3)
             pos[1] += random.randint(0,s//3)
             if not(unit.can_fight()) or self.distance > unit.attack_range[1]:
-                u = CannotFightUnit(self, unit, "right", self.z, pos)
+                u = CannotFightUnit(self, unit, RIGHT, self.z, pos)
             elif unit.attack_range[1] > 1:
-                u = DistantFightingUnit(self, unit, "right", self.z, pos)
+                u = DistantFightingUnit(self, unit, RIGHT, self.z, pos)
             else:
-                u = FightingUnit(self, unit, "right", self.z, pos)
+                u = FightingUnit(self, unit, RIGHT, self.z, pos)
 ##            elif unit is self.defender:
 ##                if self.game.get_object("forest", unit.cell.coord):
-##                    u = FightUnitAtRest(self, unit, "right", self.z, pos)
+##                    u = FightUnitAtRest(self, unit, RIGHT, self.z, pos)
 ##                else:
-##                    u = FightingUnit(self, unit, "right", self.z, pos)
+##                    u = FightingUnit(self, unit, RIGHT, self.z, pos)
 ##            else:
-##                u = FightingUnit(self, unit, "right", self.z, pos)
+##                u = FightingUnit(self, unit, RIGHT, self.z, pos)
             population.append(u)
 
     def prepare_battle(self):
         s = self.game.me.zoom_cell_sizes[self.z]
 ##        assert n1 <= nx*ny and n2 <= nx*ny
-        disp_left = self.get_disp_poses_x("left")
-        disp_right = self.get_disp_poses_x("right")
-        disp_top = self.get_disp_poses_y("top")
-        disp_bottom = self.get_disp_poses_y("bottom")
+        disp_left = self.get_disp_poses_x(LEFT)
+        disp_right = self.get_disp_poses_x(RIGHT)
+        disp_top = self.get_disp_poses_y(UP)
+        disp_bottom = self.get_disp_poses_y(DOWN)
         disp_center = self.get_disp_poses_c()
         #
         self.f1 = []
@@ -868,11 +868,11 @@ class Battle:
         self.is_footprint = np.zeros((self.nx, self.ny), dtype=bool)
         self.is_splash = np.zeros((self.nx, self.ny), dtype=bool)
         self.build_base_terrain()
-        self.build_terrain(disp_left, self.left, "left")
-        self.build_terrain(disp_right, self.right, "right")
-        self.build_terrain(disp_top, self.up, "up")
-        self.build_terrain(disp_bottom, self.down, "down")
-        self.build_terrain(disp_center, self.center, "center")
+        self.build_terrain(disp_left, self.left, LEFT)
+        self.build_terrain(disp_right, self.right, RIGHT)
+        self.build_terrain(disp_top, self.up, UP)
+        self.build_terrain(disp_bottom, self.down, DOWN)
+        self.build_terrain(disp_center, self.center, CENTER)
         for u in self.f:
             u.rect.center = u.pos
             if u.unit is self.defender:
@@ -985,10 +985,10 @@ class Battle:
         e1 = thorpy.make_text("Battle summary", 36)
         e2 = thorpy.Line(2*e1.get_rect().width // 3, "h")
         els = {}
-        names = {"left":"west", "right":"east", "up":"north", "down":"south", "center":"center"}
+        names = {LEFT:"west", RIGHT:"east", UP:"north", DOWN:"south", CENTER:CENTER}
         show_death = []
         losses = {}
-        for side in ("left", "center", "right", "up", "down"):
+        for side in (LEFT, CENTER, RIGHT, UP, DOWN):
             u = getattr(self, side)
             if u:
                 engaged = thorpy.LifeBar("Before battle: "+str(u.quantity),
@@ -1019,10 +1019,10 @@ class Battle:
         for key in losses:
             group_bottom.append(thorpy.make_text(key+" : "+str(losses[key])+" losses"))
         group_bottom = thorpy.make_group(group_bottom, "v")
-        group_center = thorpy.make_group([els["west"], els["center"], els["east"]])
+        group_center = thorpy.make_group([els["west"], els[CENTER], els["east"]])
         e = thorpy.make_ok_box([e1,e2,els["north"],group_center,els["south"],
                     thorpy.Line(2*e1.get_rect().width // 3, "h"),group_bottom])
-        e.set_main_color((255,255,255,100))
+##        e.set_main_color((255,255,255,100))
         e.center()
         return e, show_death
 
@@ -1041,11 +1041,11 @@ class DistantBattle(Battle):
         coords = [u.cell.coord for u in units]
         relative_dict = {}
         if units[0].cell.coord[0] < units[1].cell.coord[0]:
-            relative_dict["left"] = units[0]
-            relative_dict["right"] = units[1]
+            relative_dict[LEFT] = units[0]
+            relative_dict[RIGHT] = units[1]
         else:
-            relative_dict["left"] = units[1]
-            relative_dict["right"] = units[0]
+            relative_dict[LEFT] = units[1]
+            relative_dict[RIGHT] = units[0]
         return relative_dict
 
 

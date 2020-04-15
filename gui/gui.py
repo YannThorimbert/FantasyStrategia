@@ -1,9 +1,11 @@
-import pygame, thorpy, math
+import pygame, thorpy, math, random
 from pygame.math import Vector2 as V2
 import PyWorld2D.gui.elements as elements
 import PyWorld2D.gui.parameters as guip
 import PyWorld2D.saveload.io as io
 from FantasyStrategia.logic.battle import Battle, DistantBattle
+from FantasyStrategia.logic.fakebattle import Battle as FakeBattle
+from FantasyStrategia.logic.fakebattle import DistantBattle as FakeDistantBattle
 from FantasyStrategia.logic.game import INCOME_PER_VILLAGE, INCOME_PER_WINDMILL
 from FantasyStrategia.gui import texts
 from FantasyStrategia.gui.theme import set_theme
@@ -259,6 +261,11 @@ class Gui:
         self.els_capture = get_onomatopoeia_frames("Captured", ONOMATOPOEIA_COLOR)
         self.els_built = get_onomatopoeia_frames("Built", ONOMATOPOEIA_COLOR)
         self.els_dead = get_onomatopoeia_frames("Dead", ONOMATOPOEIA_COLOR)
+        #
+        self.current_battle_simulation = None
+        self.empty_star = None
+        self.plain_star = None
+        self.stars = []
 
 
     def set_map_gui(self):
@@ -446,6 +453,8 @@ class Gui:
         self.interaction_objs = []
         self.can_be_fought = []
         self.can_be_helped = []
+        self.current_battle_simulation = None
+        self.stars = []
 
     def get_destinations(self, cell):
         destinations = []
@@ -535,6 +544,14 @@ class Gui:
         self.moving_units.append(u)
         self.game.walk_sounds[0].play(-1)
 
+    def small_clear(self):
+        self.selected_unit = None
+        self.stars = []
+        self.current_battle_simulation = None
+##        self.blue_highlights = []
+##        self.red_highlights = []
+
+
     def refresh_moving_units(self):
         to_remove = []
         for u in self.moving_units:
@@ -583,16 +600,17 @@ class Gui:
                 self.add_alert(self.e_cant_move_another)
                 self.game.deny_sound.play()
             # self.selected_unit.move_to_cell(cell)
-            self.selected_unit = None
+            self.small_clear()
 
-
-
-    def attack(self):
-##        defender = self.interaction_objs[0].cell.unit
+    def get_battle_units(self):
         defender = self.unit_under_cursor()
         distance = defender.distance_to(self.selected_unit)
         units_in_battle = defender.get_all_surrounding_ennemies()
         units_in_battle.append(defender)
+        return units_in_battle, defender, distance
+
+    def attack(self):
+        units_in_battle, defender, distance = self.get_battle_units()
         b = Battle(self.game, units_in_battle, defender, distance)
         b.fight()
         if self.selected_unit.quantity > 0:
@@ -600,6 +618,59 @@ class Gui:
         self.clear()
         thorpy.get_current_menu().fps = guip.FPS
         self.refresh_lifes()
+
+    def try_attack_simulation(self):
+        if not self.current_battle_simulation:
+            uuc = self.unit_under_cursor()
+            if uuc in self.can_be_fought:
+                if uuc.distance_to(self.selected_unit) == 1:
+                    self.attack_simulation()
+                elif uuc.distance_to(self.selected_unit) < self.selected_unit.attack_range[1]:
+                    self.distant_attack_simulation()
+
+    def attack_simulation(self):
+        units_in_battle, defender, distance = self.get_battle_units()
+        random.seed(0)
+        b = FakeBattle(self.game, units_in_battle, defender, distance)
+        result = b.fight()
+        self.current_battle_simulation = self.cell_under_cursor.unit
+        w,h = self.plain_star.get_size()
+        for u,v in result.items():
+            surf = pygame.Surface((w,h)).convert_alpha()
+            surf.fill((255,255,255,0))
+            x = 0
+            for i in range(v):
+                surf.blit(self.plain_star, (x,0))
+                x += w
+            for i in range(3-v):
+                surf.blit(self.empty_star, (x,0))
+                x += w
+            self.stars.append((u,surf))
+        print(self.stars)
+
+
+    def distant_attack_simulation(self):
+        print("***caca")
+        return
+        units_in_battle, defender, distance = self.get_battle_units()
+        random.seed(0)
+        b = FakeBattle(self.game, units_in_battle, defender, distance)
+        result = b.fight()
+        self.current_battle_simulation = self.cell_under_cursor.unit
+        w,h = self.plain_star.get_size()
+        for u,v in result.items():
+            surf = pygame.Surface((w,h)).convert_alpha()
+            surf.fill((255,255,255,0))
+            x = 0
+            for i in range(v):
+                surf.blit(self.plain_star, (x,0))
+                x += w
+            for i in range(3-v):
+                surf.blit(self.empty_star, (x,0))
+                x += w
+            self.stars.append((u,surf))
+        print(self.stars)
+
 
     def distant_attack(self):
         defender = self.unit_under_cursor()
@@ -620,7 +691,7 @@ class Gui:
                 break
         self.selected_unit.make_grayed()
         self.game.refresh_village_gui()
-        self.selected_unit = None
+        self.small_clear()
 
     def set_flag_on_cell_under_cursor(self):
         self.remove_selected_flag()
@@ -634,7 +705,7 @@ class Gui:
         elif self.game.get_object("windmill", self.cell_under_cursor.coord):
             self.add_onomatopoeia(self.els_capture, self.cell_under_cursor.coord)
         self.game.refresh_village_gui()
-        self.selected_unit = None
+        self.small_clear()
 
     def burn(self):
         time_left = 4
@@ -746,11 +817,11 @@ class Gui:
                 self.blue_highlights = []
                 self.can_be_fought = []
                 self.can_be_helped = []
-                self.selected_unit = None
+                self.small_clear()
             else:#no path (destination) is drawn for lmb
                 if self.selected_unit:
                     self.lmb_unit_already_moved(cell)
-                    self.selected_unit = None
+                    self.small_clear()
                     return
                 if cell.unit:
                     if cell.unit.team == self.game.current_player.team:
@@ -768,9 +839,9 @@ class Gui:
                         o2 = self.game.get_object("flag", cell.coord)
                         if o2.team == self.game.current_player.team:
                             self.production(o)
-                            self.selected_unit = None
+                            self.small_clear()
                             return
-                    self.selected_unit = None
+                    self.small_clear()
 
 
     def rmb(self, e):
@@ -792,7 +863,7 @@ class Gui:
                     return
         self.destinations_mousemotion = []
         self.destinations_lmb = []
-        self.selected_unit = None
+        self.small_clear()
 
     def mousemotion(self, e):
         self.destinations_mousemotion = []
@@ -810,9 +881,12 @@ class Gui:
                         rect = self.me.cam.get_rect_at_coord(coord)
                         self.destinations_mousemotion.append(rect.center)
                     self.update_possible_help_and_fight(path[-1])
+                else: #cannot go there
+                    self.try_attack_simulation()
             else:
                 if self.selected_unit:
                     self.update_possible_help_and_fight(self.selected_unit.cell.coord)
+                    self.try_attack_simulation()
                 else:
                     self.destinations_mousemotion = self.get_destinations(cell)
         else:
@@ -828,7 +902,7 @@ class Gui:
         self.game.constructions[coord] = what, time, self.selected_unit
         self.selected_unit.make_grayed()
         self.selected_unit.is_building = coord
-        self.selected_unit = None
+        self.small_clear()
 
     def build(self):
         self.game.construction_sound.play()
@@ -843,7 +917,7 @@ class Gui:
             self.game.current_player.money -= self.game.construction_price[type_]
             self.e_gold_txt.set_text(str(self.game.current_player.money))
             self.refresh()
-            self.selected_unit = None
+            self.small_clear()
             thorpy.functions.quit_menu_func()
         choices = []
         for what in self.game.construction_price:
@@ -1020,6 +1094,9 @@ class Gui:
                 self.surface.blit(img, coord)
         for u in self.game.units:
             self.draw_actions_possibility(u, s)
+        for u, surf in self.stars:
+            r = u.get_current_rect(s)
+            self.surface.blit(surf, r)
 
     def refresh(self):
         self.enhancer.refresh()
@@ -1212,8 +1289,6 @@ class Gui:
 ##                i_anim += 1
 ##                if not coins_flying:
 ##                    done = True
-
-
 
 
 def get_help_box():

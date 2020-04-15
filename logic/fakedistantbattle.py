@@ -43,7 +43,7 @@ P_HIT_SOUND = 1.
 DFIGHT = 16
 K = 2.
 
-PROB_OBJECT = 0.1
+PROB_OBJECT = 0.2
 
 def sgn(x):
     if x < 0:
@@ -103,12 +103,16 @@ class FightingUnit:
         self.delta_head = (dhx,dhy)
         if unit.str_type == "wizard":
             self.delta_head = None
+        self.blit_footprints = True
         self.direction = "left"
         self.refresh_sprite_type()
         self.dead = False
         global ID
         self.id = ID
         ID += 1
+        #
+##        self.unit.footprint = self.unit.footprint.convert()
+##        self.unit.footprint.set_alpha(10)
 
     def __lt__(self, other):
         return self.pos.y < other.pos.y
@@ -215,7 +219,7 @@ class FightingUnit:
             if len(self.opponents) > 0:
                 self.direction = "idle"
                 self.dxdy = (0,0)
-##                self.refresh_sprite_type()
+                self.refresh_sprite_type()
                 self.vel = 0.
                 frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
             else:
@@ -228,7 +232,16 @@ class FightingUnit:
             if dl < self.battle.cell_size:
                 self.direction = "idle"
                 self.dxdy = (0,0)
+                self.refresh_sprite_type()
                 self.vel = 0.
+                frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
+            else:
+                frame = (self.frame0 + self.battle.fight_frame_walk)%self.nframes
+        #
+        if self.battle.blit_this_frame:
+            frame += self.isprite
+            img = self.unit.imgs_z_t[self.z][frame]
+            self.log_blit(img)
         self.pos.x += self.vel*self.dxdy[0]
         self.pos.y += self.vel*self.dxdy[1]
         self.rect.center = self.pos
@@ -255,7 +268,9 @@ class FightingUnit:
             self.battle.to_remove.append(self)
         elif result > 0:
             self.battle.to_remove.append(self.target)
-
+            if self_is_defending:
+                if self in self.battle.to_remove:
+                    self.battle.to_remove.remove(self)
 
 
     def refresh_not_near_target(self):
@@ -283,6 +298,8 @@ class FightingUnit:
         near_target = abs(delta.x) < DFIGHT and abs(delta.y) < DFIGHT
         if near_target: #fighting (unit doesnt move)
             if random.random() < P_HIT_SOUND:
+                s = random.choice(self.battle.game.hit_sounds)
+                s.play_next_channel()
                 self.battle.shocks.append((self.target.rect.topleft, 0))
             if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
                 self.refresh_direction_target()
@@ -294,6 +311,8 @@ class FightingUnit:
         self.rect.center = self.pos
         frame += self.isprite
         img = self.unit.imgs_z_t[self.z][frame]
+        if self.battle.blit_this_frame: #bug potentiel ???????????
+            self.log_blit(img)
         self.time_frome_last_direction_change += 1
 
 
@@ -312,6 +331,21 @@ class FightingUnit:
             self.time_frome_last_direction_change = 0
         return delta
 
+    def log_blit(self, img): #footprint and splashes always drawn first ==> no sorting
+         if self.battle.blit_this_frame:
+            if self.battle.show_footprints:
+                if self.battle.blit_footprint_this_frame and self.blit_footprints:
+                    cx,cy = self.battle.get_cell_coord(self.pos[0], self.pos[1])
+                    if self.battle.is_footprint[cx,cy]: #footprint
+                        R = 2
+                        x = self.rect.centerx + random.randint(-R,R)
+                        y = self.rect.bottom - 5 + random.randint(-R,R)
+            self.battle.units_to_blit.append((img, self.rect))
+            if self.battle.show_splash:
+                cx,cy = self.battle.get_cell_coord(self.pos[0], self.pos[1])
+                if self.battle.is_splash[cx,cy]: #splash
+                    rect_splash = self.rect.move(0,self.rect.h-4)
+                    self.battle.units_to_blit.append((self.battle.splash, rect_splash))
 
 
 
@@ -338,18 +372,22 @@ class Battle:
 
 
     def __init__(self, game, units, defender, distance, zoom_level=0):
+        self.units_to_blit = []
         self.battle_duration = BATTLE_DURATION
         self.projectile_class = Projectile
         self.distance = distance
         self.defender = defender
         self.agressors = [u for u in units if not(u is defender)]
-        print("UNITS", units, [u.team for u in units])
         units = self.get_units_dict_from_list(units)
         assert defender in units.values()
         nb_defender = len([u for u in units.values() if u.team==defender.team])
         assert nb_defender == 1
         #Map objects
         self.units_dict = units
+        self.objects = {key:units[key].cell.objects for key in units}
+        self.objects_to_blit = []
+        for key in list(self.objects.keys()):
+            self.objects[key] = [o for o in self.objects[key] if not isinstance(o, Unit)]
         self.game = game
         self.surface = thorpy.get_screen()
         self.surface_rect = self.surface.get_rect()
@@ -360,7 +398,6 @@ class Battle:
         self.down = units.get("down")
         self.center = units.get("center")
         #
-        self.terrain = pygame.Surface(self.surface.get_size())
         self.z = zoom_level
         self.cell_size = None
         self.f1 = []
@@ -375,22 +412,12 @@ class Battle:
         self.fight_frame_attack_slow = 0
         self.finished = 0
         #
-        self.explosion = thorpy.AnimatedGif("sprites/explosion.gif")
-        s = self.game.me.zoom_cell_sizes[self.z]
-        self.explosion.resize_frames((2*s,2*s))
-        self.explosions = [] #contain the pos of explosions
-        #
-        self.shock = thorpy.AnimatedGif("sprites/shock3.gif")
-        self.shocks = [] #contain the pos of shocks
-        #
-        self.blood = pygame.image.load("sprites/blood.png")
         self.background = None
         self.mod_display = 1
         self.blit_this_frame = True
+        self.mod_footprint = 8
+        self.blit_footprint_this_frame = True
         self.show_footprints = True
-        self.splashes = [pygame.image.load("sprites/splash.png")]
-        self.splashes.append(pygame.transform.flip(self.splashes[0], True, False))
-        self.splash = self.splashes[0]
         self.show_splash = True
         self.is_splash = None
         self.is_footprint = None
@@ -399,23 +426,8 @@ class Battle:
         self.walk_sounds = []
         self.screams = []
         self.projectiles = []
-        self.text_finish = thorpy.Element("Press enter to finish battle")
-        self.text_finish.set_font_size(70)
-        self.text_finish.set_main_color((255,255,255,100))
-        self.text_finish.scale_to_title()
-        self.text_finish.center()
         self.before_f1 = None
         self.before_f2 = None
-        #GUI
-        self.timebar = thorpy.LifeBar("Remaining time", size=(self.W//2, 25))
-        self.timebar.set_main_color((220,220,220,100))
-        self.timebar.stick_to("screen","top", "top")
-
-
-
-    def press_enter(self):
-        if self.finished:
-            self.fight_t = 100000000000
 
 
     def get_units_dict_from_list(self, units):
@@ -461,7 +473,13 @@ class Battle:
         for unit in show_death:
             unit.die_after(2.)
 
+    def accelerate(self):
+        self.mod_display = 10
+        thorpy.get_current_menu().fps = 500
 
+    def slow(self):
+        self.mod_display = 1
+        thorpy.get_current_menu().fps = guip.FPS
 
 
     def show(self):
@@ -473,28 +491,8 @@ class Battle:
             done = self.update_battle()
 
 
-
-    def add_walk_sounds(self):
-        counter = 0
-        max_n = min(10, len(self.f)//7 + 1)
-        for s in self.game.walk_sounds:
-            if counter < max_n:
-                pygame.time.wait(random.randint(10,100))
-                s.play(-1)
-                self.walk_sounds.append(s)
-                counter += 1
-
-    def refresh_walk_sounds(self):
-        L = len([u for u in self.f if u.vel > 0.])
-        if L == 0:
-            for s in self.walk_sounds:
-                s.stop()
-            self.walk_sounds = []
-            return
-        max_n = min(10, L//7 + 1)
-        while len(self.walk_sounds) > max_n:
-            s = self.walk_sounds.pop()
-            s.stop()
+    def collect_deads_to_blit(self):
+        pass
 
     def refresh_deads(self):
         if self.finished:
@@ -502,6 +500,9 @@ class Battle:
             return
         for u in self.to_remove:
             if not u.dead:
+                if self.game.death_sounds and random.random() < P_DEAD_SOUND:
+                    sound = random.choice(self.game.death_sounds)
+                    sound.play_next_channel()
                 u.dead = True
                 if u.target:
                     if u in u.target.targeted_by: #distant fighting units can target without beeing your current opponent
@@ -522,7 +523,12 @@ class Battle:
     def update_and_blit_projectiles(self):
         to_delete = []
         semicell = self.cell_size//2
+        sg = effects.smokegen_wizard
+        sg.kill_old_elements()
         for p in self.projectiles:
+            if p.can_blit():
+##                self.surface.blit(p.img, p.pos) #arrow
+                sg.generate(p.pos)
             p.update_pos()
             if p.D < semicell:
                 to_delete.append(p)
@@ -531,7 +537,48 @@ class Battle:
                 to_delete.append(p)
         for p in to_delete:
             self.projectiles.remove(p)
+        sg.update_physics(V2(0,0))
+        sg.draw(self.surface)
+        self.draw_explosions()
+        self.draw_shocks()
 
+
+    def draw_explosions(self):
+        for i in range(len(self.explosions)-1,-1,-1):
+            pos, frame = self.explosions[i]
+            img = self.explosion.frames[frame]
+            self.surface.blit(img, pos)
+            if self.fight_t%4 == 0:
+                frame += 1
+            if frame >= len(self.explosion.frames):
+                self.explosions.pop(i)
+            else:
+                self.explosions[i] = (pos, frame)
+
+    def draw_shocks(self):
+        for i in range(len(self.shocks)-1,-1,-1):
+            pos, frame = self.shocks[i]
+            img = self.shock.frames[frame]
+            self.surface.blit(img, pos)
+            if self.fight_t%4 == 0:
+                frame += 1
+            if frame >= len(self.shock.frames):
+                self.shocks.pop(i)
+            else:
+                self.shocks[i] = (pos, frame)
+
+    def blit_terrain_and_deads(self):
+        bodies = self.collect_deads_to_blit() #also blit bloods
+        to_blit = self.objects_to_blit + bodies + self.units_to_blit
+##        to_blit = self.units_to_blit
+        to_blit.sort(key = lambda x:x[1].bottom)
+        self.surface.blits(to_blit)
+
+    def refresh_and_blit_gui(self):
+        self.refresh_timebar()
+        self.timebar.blit()
+        if self.finished:
+            self.text_finish.blit()
 
     def update_battle(self):
         if not self.finished:
@@ -539,7 +586,11 @@ class Battle:
         for u in self.f:
             u.draw_move_fight()
         if self.blit_this_frame:
+            self.blit_terrain_and_deads()
             self.update_and_blit_projectiles()
+            self.refresh_and_blit_gui()
+            pygame.display.flip()
+            self.units_to_blit = []
         self.refresh_deads()
         # Refresh battle variables #############################################
         self.fight_t += 1
@@ -552,6 +603,7 @@ class Battle:
         if self.fight_t % SLOW_FIGHT_FRAME3 == 0:
             self.fight_frame_attack_slow += 1
         self.blit_this_frame = self.fight_t % self.mod_display == 0
+        self.blit_footprint_this_frame = self.fight_t % self.mod_footprint == 0
 ##        self.f.sort(key=lambda x:x.rect.bottom) #peut etre pas besoin selon systeme de cible
         # Check for battle end #################################################
         extermination = len(self.f1) == 0 or len(self.f2) == 0
@@ -561,6 +613,12 @@ class Battle:
             elif self.fight_t - self.finished > TIME_AFTER_FINISH:
                 return True
 
+    def finish_battle(self):
+        self.slow()
+        for u in self.f:
+            u.target = None
+            u.update_dest_end()
+            u.vel = u.final_vel
 
 
     def get_nxny(self, side):
@@ -657,6 +715,13 @@ class Battle:
                 u = DistantFightingUnit(self, unit, "right", self.z, pos)
             else:
                 u = FightingUnit(self, unit, "right", self.z, pos)
+##            elif unit is self.defender:
+##                if self.game.get_object("forest", unit.cell.coord):
+##                    u = FightUnitAtRest(self, unit, "right", self.z, pos)
+##                else:
+##                    u = FightingUnit(self, unit, "right", self.z, pos)
+##            else:
+##                u = FightingUnit(self, unit, "right", self.z, pos)
             population.append(u)
 
     def prepare_battle(self):
@@ -687,6 +752,14 @@ class Battle:
             u2.friends = self.f2
         self.update_targets()
         self.f = self.f1 + self.f2
+        self.is_footprint = np.zeros((self.nx, self.ny), dtype=bool)
+        self.is_splash = np.zeros((self.nx, self.ny), dtype=bool)
+        self.build_base_terrain()
+        self.build_terrain(disp_left, self.left, "left")
+        self.build_terrain(disp_right, self.right, "right")
+        self.build_terrain(disp_top, self.up, "up")
+        self.build_terrain(disp_bottom, self.down, "down")
+        self.build_terrain(disp_center, self.center, "center")
         for u in self.f:
             u.rect.center = u.pos
             if u.unit is self.defender:
@@ -708,6 +781,77 @@ class Battle:
                 u.set_target(ennemy)
 
 
+
+    def build_terrain(self, disp, unit, side):
+        if not unit:
+            return
+        img, splash, footprint = get_img(unit.cell, self.z)
+        blit_everywhere = None
+        for o in self.objects[side]:
+            if o.str_type == "cobblestone" or "bridge" in o.str_type or "river" in o.str_type:
+                if not("village" in [o.str_type for o in self.objects[side]]):
+                    blit_everywhere = o.imgs_z_t[self.z][0]
+                    break
+        objs_to_blit = []
+        for o in self.objects[side]:
+            if not(o.str_type == "cobblestone" or "bridge" in o.str_type):
+                objs_to_blit.append(o)
+        for x,y in disp:
+            if objs_to_blit:
+                if random.random() < PROB_OBJECT:
+                    o = random.choice(objs_to_blit)
+                    img = o.imgs_z_t[self.z][0]
+                    rect = img.get_rect()
+                    rect.topleft = x,y
+                    self.objects_to_blit.append((img,rect))
+            x,y = self.get_cell_coord(x,y)
+            self.is_splash[x,y] = splash
+            self.is_footprint[x,y] = footprint
+
+
+    def build_base_terrain(self):
+        W,H = self.surface.get_size()
+        nx = W // self.cell_size + 1
+        ny = H // self.cell_size + 1
+        cell = pygame.Rect(0, 0, self.cell_size, self.cell_size)
+        for x in range(nx):
+            cell.x = x*self.cell_size
+            for y in range(ny):
+                cell.y = y*self.cell_size
+                self.build_unknown_terrain(cell)
+
+    def build_unknown_terrain(self, cell):
+        def choose(units_order):
+            for u in units_order:
+                if u is not None:
+                    return u
+            assert False
+        if cell.x < self.W//3:
+            if cell.y < self.H//3:
+                u = choose((self.up,self.left,self.center,self.right,self.down))
+            elif cell.y > 2*self.H//3:
+                u = choose((self.down,self.left,self.center,self.right,self.up))
+            else:
+                u = choose((self.left,self.center,self.up,self.down,self.right))
+        elif cell.x > 2*self.W//3:
+            if cell.y < self.H//3:
+                u = choose((self.up,self.right,self.center,self.left,self.down))
+            elif cell.y > 2*self.H//3:
+                u = choose((self.down,self.right,self.center,self.left,self.up))
+            else:
+                u = choose((self.right,self.center,self.up,self.down,self.left))
+        else:
+            if cell.y < self.H//3:
+                u = choose((self.up,self.center,self.left,self.right,self.down))
+            elif cell.y > 2*self.H//3:
+                u = choose((self.down,self.center,self.left,self.right,self.up))
+            else:
+                u = choose((self.center,self.up,self.down,self.left,self.right))
+##        img = u.cell.material.imgs[self.z][0]
+        img, splash, footprint = get_img(u.cell, self.z)
+        x,y = self.get_cell_coord(cell.x,cell.y)
+        self.is_splash[x,y] = splash
+        self.is_footprint[x,y] = footprint
 
     def get_cell_coord(self, x, y):
         return int((x * self.nx) // self.W), int((y * self.ny) // self.H)
@@ -768,9 +912,6 @@ class Battle:
 
 
 
-
-
-
 class DistantBattle(Battle):
     def __init__(self, game, units, defender, distance, zoom_level=0):
         Battle.__init__(self, game, units, defender, distance, zoom_level)
@@ -791,18 +932,31 @@ class DistantBattle(Battle):
         return relative_dict
 
 
+    def refresh_and_blit_gui(self):
+        self.refresh_timebar()
+        self.surface.blit(self.separation_line, (self.sep_line_x,0))
+        self.timebar.blit()
+        if self.finished:
+            self.text_finish.blit()
+
+
 
 class DistantFightingUnit(FightingUnit):
 
     def __init__(self, battle, unit, direction, zoom_level, pos):
         FightingUnit.__init__(self, battle, unit, direction, zoom_level, pos)
         self.time_from_last_shot = random.randint(0,100)
+        self.blit_footprints = False
 
 
     def draw_move_fight_notarget(self):
         self.direction = "idle"
         self.dxdy = (0,0)
+        self.refresh_sprite_type()
         self.vel = 0.
+        frame = (self.frame0 + self.battle.fight_frame_attack)%self.nframes
+        img = self.unit.imgs_z_t[self.z][frame]
+        self.log_blit(img)
 
     def get_frame_near_target(self):
         return (self.frame0 + self.battle.fight_frame_attack_slow)%self.nframes
@@ -817,6 +971,8 @@ class DistantFightingUnit(FightingUnit):
 
     def fight_against_target_distant(self):
         if self.time_from_last_shot > self.unit.shot_frequency:
+            s = random.choice(self.battle.game.magic_attack_sounds)
+            s.play_next_channel()
             projectile = self.battle.projectile_class(self, self.target)
             self.battle.projectiles.append(projectile)
             self.time_from_last_shot = 0
@@ -843,8 +999,60 @@ class DistantFightingUnit(FightingUnit):
                 self.fight_against_target_distant()
             frame = self.get_frame_near_target()
         self.rect.center = self.pos
+        frame += self.isprite
+        img = self.unit.imgs_z_t[self.z][frame]
+        if self.battle.blit_this_frame:
+            self.log_blit(img)
         self.time_frome_last_direction_change += 1
         self.time_from_last_shot += 1
+
+class FightUnitAtRest(FightingUnit): #juste faire qu'il se tourne face a l'adversaire, contrairement a CannotFightUnit
+
+    def refresh_not_near_target(self):
+        if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
+            self.refresh_direction_notarget()
+##        self.pos.x += self.vel*self.dxdy[0]
+##        self.pos.y += self.vel*self.dxdy[1]
+        return (self.frame0 + self.battle.fight_frame_walk)%self.nframes
+
+    def draw_move_fight(self):
+        if self.battle.fight_t == self.start_to_run:
+            self.vel = self.final_vel
+        if self.target is None or self.target.dead:
+            self.draw_move_fight_notarget()
+            self.time_frome_last_direction_change += 1
+            return
+        target_pos = V2(self.target.rect.center)
+        self_pos = V2(self.rect.center)
+        delta = target_pos - self_pos
+        self.refresh_dxdy(delta.x, delta.y)
+        ########################################################################
+        near_target = abs(delta.x) < DFIGHT and abs(delta.y) < DFIGHT
+        if near_target: #fighting (unit doesnt move)
+            if random.random() < P_HIT_SOUND:
+                s = random.choice(self.battle.game.hit_sounds)
+                s.play_next_channel()
+                self.battle.shocks.append((self.target.rect.topleft, 0))
+            if self.time_frome_last_direction_change > NFRAMES_DIRECTIONS:
+                self.refresh_direction_target()
+            frame = self.get_frame_near_target()
+            if not self.target.dead and not self.dead:
+                self.fight_against_target_near()
+        else: #walking (so we have to move the unit)
+            frame = self.refresh_not_near_target()
+        self.rect.center = self.pos
+        if near_target:
+            frame += self.isprite
+        else:
+            frame = self.isprite
+        img = self.unit.imgs_z_t[self.z][frame]
+        if self.battle.blit_this_frame: #bug potentiel ???????????
+            self.log_blit(img)
+        self.time_frome_last_direction_change += 1
+
+    def log_blit(self, img): #footprint and splashes always drawn first ==> no sorting
+         if self.battle.blit_this_frame:
+            self.battle.units_to_blit.append((img, self.rect))
 
 
 
@@ -876,6 +1084,10 @@ class CannotFightUnit(FightingUnit):
                 self.refresh_direction_target()
             frame = self.get_frame_near_target()
         self.rect.center = self.pos
+        frame += self.isprite
+        img = self.unit.imgs_z_t[self.z][frame]
+        if self.battle.blit_this_frame: #bug potentiel ???????????
+            self.log_blit(img)
         self.time_frome_last_direction_change += 1
 
 
@@ -906,6 +1118,8 @@ class Projectile:
         pos = (self.pos[0]-b.cell_size, self.pos[1]-b.cell_size)
         b.explosions.append((pos, 0))
         self_is_defending = b.defender is self.fired_by.unit
+        s = random.choice(b.game.magic_explosion_sounds)
+        s.play_next_channel()
         damage = self.fired_by.unit.get_distant_attack_result(self.target.unit,
                                             self.fired_by.terrain_bonus,
                                             self.target.terrain_bonus,
@@ -952,12 +1166,23 @@ class DistantBattleProjectile(Projectile):
 
     def can_blit(self):
         return True
+        if self.fired_by.pos.x > self.target_pos.x:
+            if self.direction.y < 0:
+                return self.pos.x > self.x_change_direction
+            elif self.direction.y > 0:
+                return self.pos.x < self.x_change_direction
+        else:
+            if self.direction.y < 0:
+                return self.pos.x < self.x_change_direction
+            elif self.direction.y > 0:
+                return self.pos.x > self.x_change_direction
+        return False
 
 
 def get_img(cell, z):
     splash = False
     footprint = False
-    for obj in cell.objects:
+    for obj in cell.objects: #ok
         if obj.str_type == "river":
             img = obj.imgs_z_t[z][0]
             splash = True
@@ -968,4 +1193,3 @@ def get_img(cell, z):
         if "sand" in n or "snow" in n:
             footprint = True
     return img, splash, footprint
-

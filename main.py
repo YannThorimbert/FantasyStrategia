@@ -44,12 +44,13 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-#vie (life) change de couleur ou alors s'adapte au material ou alors preconstruit 1-20
+#si gui.current_simulation, remplacer si pas le meme unit !!!
 
-#summary_pre_battle
+
+##toujours possible d'annuler un deplacement si rien d'autre n'a ete fait depuis
 #avant bataille, laisser le temps de voir les troupes avant que commencent a courir
-#demander confirmation d'attaque dans le summary pre battle ! possibilite d'annuler dernier deplacement a ce moment
-##    ===> toujours possible d'annuler un deplacement si rien d'autre n'a ete fait depuis
+
+#draw_actions_poss n'a pas besoin d'etre appele sur TOUTES units sauf is building
 
 #sons: cris de guerre. SoundSnap, acheter quand meme ?
 #penser a enlever check integrity dans func time
@@ -89,6 +90,8 @@ game = Game(me)
 ################################################################################
 ################################################################################
 ################################################################################
+
+#plain_star a plusieurs frames.
 
 #refaire thorpy avec le seul changement que on enleve tous les pygame.update. C'est l'utilisateur qui fait un flip.
 #et il n'y a pas de unblit. On reblit tout chaque frame.
@@ -234,6 +237,8 @@ game.gui.under_capture = get_sprite_frames("sprites/under_capture.png", s=16)
 
 game.update_player_income(game.current_player)
 game.gui.e_gold_txt.set_text(str(game.current_player.money))
+game.gui.empty_star = get_sprite_frames("sprites/star_empty.png", s=13)[0]
+game.gui.plain_star = get_sprite_frames("sprites/star_plain.png", s=13)[0]
 
 #me.e_box includes many default reactions. You can remove them as follow:
 #remove <g> key:
@@ -243,31 +248,6 @@ game.gui.e_gold_txt.set_text(str(game.current_player.money))
 #remove +/- numpad keys for zoom, replacing <sign> by plus or minus:
 ##me.e_box.remove_reaction("k <sign>")
 #remember to modify/deactivate the help text corresponding to the removed reac
-
-
-
-
-##units_in_battle = defender.get_all_surrounding_ennemies()
-##units_in_battle.append(defender)
-from FantasyStrategia.logic.battle import Battle, DistantBattle
-from FantasyStrategia.logic.fakebattle import Battle as FakeBattle
-from FantasyStrategia.logic.fakedistantbattle import DistantBattle as FakeDistantBattle
-
-##attacker = game.get_unit_at(13,4)
-##defender = game.get_unit_at(12,4)
-##distance = defender.distance_to(attacker)
-##units_in_battle = [attacker, defender]
-##b = FakeBattle(game, units_in_battle, defender, distance)
-## ##b = Battle(game, units_in_battle, defender, distance)
-##b.fight()
-
-attacker = game.get_unit_at(23,4)
-defender = game.get_unit_at(23,2)
-distance = defender.distance_to(attacker)
-units_in_battle = [attacker, defender]
-b = FakeDistantBattle(game, units_in_battle, defender, distance)
-##b = DistantBattle(game, units_in_battle, defender, distance)
-b.fight()
 
 ##game.me.lm.frame_slowness = 30
 game.check_integrity()
