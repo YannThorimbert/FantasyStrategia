@@ -161,28 +161,6 @@ class FightingUnit:
                 best_d, best_o = d, u
         return best_o
 
-##    def get_furthest_ennemy(self):
-##        distances = []
-##        best_d, best_o = (float("inf"),float("inf")), None
-##        dok = STOP_TARGET_DIST_FACTOR_FAR*self.battle.cell_size
-##        dok = (dok,dok)
-##        for u in self.opponents:
-##            delta = abs(self.pos.x-u.pos.x), abs(self.pos.y-u.pos.y)
-##            if delta < dok:
-##                return u
-##            elif delta < best_d:
-##                best_d, best_o = delta, u
-##        return best_o
-
-##    def get_ennemy(self):
-##        if self.strategy == 0:
-##            return self.get_nearest_ennemy()
-##        else:
-##            return self.get_furthest_ennemy()
-
-##    def get_ennemy(self):
-##        return self.get_nearest_ennemy()
-
     def refresh_sprite_type(self):
         i,n,t = self.unit.sprites_ref[self.direction]
         self.isprite = i
@@ -231,7 +209,6 @@ class FightingUnit:
                 self.update_dest_end()
                 frame = (self.frame0 + self.battle.fight_frame_walk)%self.nframes
         else:
-            # print("LAA", self.battle.fight_t)
             delta = self.update_dest_end()
             dl = delta.length()
             if dl < self.battle.cell_size:
@@ -380,8 +357,9 @@ class Battle:
 
 
     def __init__(self, game, units, defender, distance, zoom_level=0):
+        self.fps = game.me.fps
         self.units_to_blit = []
-        self.observation_time = BATTLE_DURATION//20
+        self.observation_time = BATTLE_DURATION//10
         self.battle_duration = BATTLE_DURATION
         self.defender_start_shooting = BATTLE_DURATION//10
         self.projectile_class = Projectile
@@ -544,13 +522,8 @@ class Battle:
                                         {"key":pygame.K_RETURN})
         bckgr.add_reaction(reac)
         #
-        menu = thorpy.Menu(bckgr, fps=60)
-        self.update_battle()
-        thorpy.get_application().pause(1.)
-        text = thorpy.make_text("Battle starts", 70, (0,0,0))
-        text.center()
-        text.blit()
-        pygame.display.flip()
+        menu = thorpy.Menu(bckgr, fps=self.fps)
+        self.observation(self.fps)
 ##        thorpy.interactive_pause(3.)
         #######################################################################
         self.game.set_ambiant_sounds(False)
@@ -560,7 +533,45 @@ class Battle:
             s.stop()
         self.game.set_ambiant_sounds(True)
 
-
+    def observation(self, fps):
+##        self.update_battle()
+        clock = pygame.time.Clock()
+        self.blit_this_frame = True
+        for u in self.f:
+            u.start_to_run = float("inf")
+        text = thorpy.make_text("Battle starts", 70, (0,0,0))
+        text.center()
+        while True:
+            clock.tick(fps)
+            self.units_to_blit = []
+            for u in self.f:
+                u.draw_move_fight_notarget()
+            self.blit_terrain_and_deads()
+            self.update_and_blit_projectiles()
+            self.refresh_and_blit_gui()
+            self.fight_t += 1
+            if self.fight_t > self.observation_time:
+                for u in self.f:
+                    u.time_frome_last_direction_change = 1000
+                    if u.unit is self.defender:
+                        u.start_to_run = DEFENSE_START_RUNNING
+                        u.vel = u.final_vel / 2.
+                    else:
+                        u.start_to_run = random.randint(0, 1000)
+                        u.vel = u.final_vel
+                self.fight_t = 0
+                self.update_battle()
+                return
+            if self.fight_t % SLOW_FIGHT_FRAME1 == 0:
+                self.fight_frame_walk += 1
+                self.splash = self.splashes[self.fight_frame_walk%2]
+            if self.fight_t % SLOW_FIGHT_FRAME2 == 0:
+                self.fight_frame_attack += 1
+                self.refresh_walk_sounds()
+            if self.fight_t % SLOW_FIGHT_FRAME3 == 0:
+                self.fight_frame_attack_slow += 1
+            text.blit()
+            pygame.display.flip()
 
     def add_walk_sounds(self):
         counter = 0

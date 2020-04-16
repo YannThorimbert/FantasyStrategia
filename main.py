@@ -44,16 +44,12 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-#avant bataille, laisser le temps de voir les troupes avant que commencent a courir
 
 #draw_actions_poss n'a pas besoin d'etre appele sur TOUTES units sauf is building
 
-#plus belles attaques, mais problem timing
-
 #sons: cris de guerre. SoundSnap, acheter quand meme ?
 #penser a enlever check integrity dans func time
-#update loading bar
-#ajouter 2 musiques
+
 
 ################################################################################
 #Valider le jeu sur 3 types d'units : fermier, fantassin, mage
@@ -90,6 +86,7 @@ game = Game(me)
 ################################################################################
 ##toujours possible d'annuler un deplacement si rien d'autre n'a ete fait depuis (comme dans aw)
 
+#plus belles attaques, mais problem timing. Gros impact sur FakeBattle !!!
 
 #refaire thorpy avec le seul changement que on enleve tous les pygame.update. C'est l'utilisateur qui fait un flip.
 #et il n'y a pas de unblit. On reblit tout chaque frame.

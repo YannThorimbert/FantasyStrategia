@@ -451,7 +451,7 @@ class Unit(MapObject):
         g = RACE_FIGHT_FACTOR.get((other_race, self_race), 1.)
         damage_from_other = terrain_bonus2 * r * g * other.strength / self.defense
         damage_from_other *= ATTACKING_DAMAGE_FACTOR
-        print(damage_to_other, damage_from_other)
+##        print(damage_to_other, damage_from_other)
         tot = damage_from_other+damage_to_other
         if random.random() < 1. / tot:
             return 0
