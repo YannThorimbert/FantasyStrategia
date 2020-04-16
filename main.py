@@ -44,13 +44,11 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-#si gui.current_simulation, remplacer si pas le meme unit !!!
-
-
-##toujours possible d'annuler un deplacement si rien d'autre n'a ete fait depuis
 #avant bataille, laisser le temps de voir les troupes avant que commencent a courir
 
 #draw_actions_poss n'a pas besoin d'etre appele sur TOUTES units sauf is building
+
+#plus belles attaques, mais problem timing
 
 #sons: cris de guerre. SoundSnap, acheter quand meme ?
 #penser a enlever check integrity dans func time
@@ -90,8 +88,8 @@ game = Game(me)
 ################################################################################
 ################################################################################
 ################################################################################
+##toujours possible d'annuler un deplacement si rien d'autre n'a ete fait depuis (comme dans aw)
 
-#plain_star a plusieurs frames.
 
 #refaire thorpy avec le seul changement que on enleve tous les pygame.update. C'est l'utilisateur qui fait un flip.
 #et il n'y a pas de unblit. On reblit tout chaque frame.
@@ -142,19 +140,17 @@ game = Game(me)
 
 
 
-
-
 humans = Race("Green team", "human", LUNAR, me, "green", team=1) #LUNAR, STELLAR or SOLAR
-humans.base_material_cost["grass"] = 2
-humans.base_material_cost["forest"] = 5
+##humans.base_material_cost["grass"] = 2
+##humans.base_material_cost["forest"] = 5
 humans.dist_factor = 10
 ##humans.base_terrain_attack["grass"] = 2.
-humans["infantry"].material_cost["sand"] = 4
-humans["infantry"].terrain_attack["snow"] = 0.8
+##humans["infantry"].material_cost["sand"] = 4
+##humans["infantry"].terrain_attack["snow"] = 0.8
 humans.finalize() #always call this function to finish initialize a race !!!
 
 humans2 = Race("Red team", "human", SOLAR, me, "red", team=2)
-humans2.base_material_cost["forest"] = 10
+##humans2.base_material_cost["forest"] = 10
 ##humans2.base_terrain_attack["grass"] = 0.8
 humans2.dist_factor = 10
 humans2.finalize()
@@ -198,6 +194,9 @@ game.add_unit((23,4), humans["wizard"], 1)
 game.add_unit((20,10), humans2["infantry"], 10)
 game.add_unit((20,11), humans["infantry"], 10)
 
+game.add_unit((17,1), humans2["infantry"], 10)
+game.add_unit((18,1), humans["infantry"], 10)
+
 game.add_unit((24,19), humans2["infantry"], 10)
 game.add_unit((25,19), humans["infantry"], 10)
 game.add_unit((23,20), humans["infantry"], 10)
@@ -239,6 +238,7 @@ game.update_player_income(game.current_player)
 game.gui.e_gold_txt.set_text(str(game.current_player.money))
 game.gui.empty_star = get_sprite_frames("sprites/star_empty.png", s=13)[0]
 game.gui.plain_star = get_sprite_frames("sprites/star_plain.png", s=13)[0]
+game.hourglass = get_sprite_frames("sprites/hourglass.png")
 
 #me.e_box includes many default reactions. You can remove them as follow:
 #remove <g> key:

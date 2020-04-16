@@ -265,6 +265,8 @@ class FightingUnit:
 
     def fight_against_target_near(self):
         self_is_defending = self.battle.defender is self.unit
+        if not self_is_defending:
+            return
         result = self.unit.get_fight_result(self.target.unit,
                                             self.terrain_bonus,
                                             self.target.terrain_bonus,
@@ -379,7 +381,9 @@ class Battle:
 
     def __init__(self, game, units, defender, distance, zoom_level=0):
         self.units_to_blit = []
+        self.observation_time = BATTLE_DURATION//20
         self.battle_duration = BATTLE_DURATION
+        self.defender_start_shooting = BATTLE_DURATION//10
         self.projectile_class = Projectile
         self.distance = distance
         self.defender = defender
@@ -505,7 +509,7 @@ class Battle:
         e, show_death = self.get_summary()
         e.blit()
         transitions.fade_from_black_screen(self.surface, t=0.5)
-        thorpy.launch_blocking(e, add_ok_enter=True)
+        thorpy.launch_blocking(e, add_ok_enter=True, click_quit=True)
         effects.smokegen_wizard.smokes = []
         #manual animation is simpler in this case
         for unit in show_death:
@@ -542,6 +546,7 @@ class Battle:
         #
         menu = thorpy.Menu(bckgr, fps=60)
         self.update_battle()
+        thorpy.get_application().pause(1.)
         text = thorpy.make_text("Battle starts", 70, (0,0,0))
         text.center()
         text.blit()
@@ -1087,6 +1092,10 @@ class DistantFightingUnit(FightingUnit):
         pass
 
     def fight_against_target_distant(self):
+        self_is_defending = self.battle.defender is self.unit
+        if self_is_defending:
+            if self.battle.fight_t < self.battle.defender_start_shooting:
+                return
         if self.time_from_last_shot > self.unit.shot_frequency:
             s = random.choice(self.battle.game.magic_attack_sounds)
             s.play_next_channel()

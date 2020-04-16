@@ -271,6 +271,7 @@ class MapEditor:
     def build_camera(self, img_hmap):
         self.original_img_hmap = img_hmap
         cam = Camera()
+        self.ap.cam = cam
         map_rects = []
         for level in range(len(self.zoom_cell_sizes)):
             self.zoom_level = level
@@ -417,6 +418,7 @@ class MapEditor:
         #blit map
         self.cam.draw_grid(self.screen, self.show_grid_lines)
         #blit objects
+        self.cam.draw_rmouse(self.screen, self.box_hmap.get_rect())
         self.cam.draw_objects(self.screen, self.dynamic_objects)
         #blit smoke effects
         self.game.refresh_smokes()
@@ -424,7 +426,7 @@ class MapEditor:
         self.update_cell_info()
         #blit right pane and draw rect on minimap
         self.e_box.blit()
-        self.cam.draw_rmouse(self.screen, self.box_hmap.get_rect())
+##        self.cam.draw_rmouse(self.screen, self.box_hmap.get_rect())
 ##        pygame.draw.rect(self.screen, (255,255,255), self.cam.rmouse, 1)
 
     def draw_no_update(self):

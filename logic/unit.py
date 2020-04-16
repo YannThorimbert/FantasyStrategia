@@ -27,11 +27,10 @@ COLORS = {"blue":((160,195,210), (110,160,185), (76,95,128)), #SRC_COLOR
 ANIM_LOOP = 0
 ANIM_ONCE = 1
 
-
-BASE_FIGHT_FACTOR = 1.5
-ATTACKING_DAMAGE_FACTOR = 1.2
-FIGHT_AMPLITUDE = 1.3 #control the length of the fights
-FIGHT_RANDOMNESS = 0.6
+PROB_DEFENSE_FIRST = 0.2
+ATTACKING_DAMAGE_FACTOR = 1.3
+FIGHT_AMPLITUDE = 0.75 #control the length of the fights
+FIGHT_RANDOMNESS = 0.2
 FIGHT_R0 = 1. - FIGHT_RANDOMNESS/2.
 def get_random_factor_fight():
     """Returns a float in [1-FIGHT_RANDOMNESS/2, 1+FIGHT_RANDOMNESS/2]."""
@@ -391,27 +390,89 @@ class Unit(MapObject):
         return self.cell.material.name.lower()
 
     def get_terrain_bonus(self):
-        d = max([self.object_defense.get(o.str_type,1.) for o in self.cell.objects])
+        d = max([1.]+[self.object_defense.get(o.str_type,1.) for o in self.cell.objects if not isinstance(o, Unit)])
         terrain = self.get_terrain_name_for_fight()
         return self.terrain_attack.get(terrain, 1.)*d
 
+    def get_fight_infos(self, other, self_is_defending): #-1, 0, 1
+        """-1: self looses, 0: draw, 1: self wins"""
+        terrain1 = self.get_terrain_name_for_fight()
+        terrain2 = other.get_terrain_name_for_fight()
+        terrain1b = self.terrain_attack.get(terrain1, 1.)
+        terrain2b = other.terrain_attack.get(terrain2, 1.)
+        terrain_bonus1 = self.get_terrain_bonus()
+        terrain_bonus2 = other.get_terrain_bonus()
+        obj1 = max([(1., None)]+[(self.object_defense.get(o.str_type,1.),o) for o in self.cell.objects if not isinstance(o, Unit)])
+        obj2 = max([(1., None)]+[(other.object_defense.get(o.str_type,1.),o) for o in other.cell.objects if not isinstance(o, Unit)])
+        f = RACE_FIGHT_FACTOR.get((self.race.racetype, other.race.racetype), 1.)
+        r = get_random_factor_fight()
+        #
+        min_r = round(FIGHT_AMPLITUDE*FIGHT_R0,2)
+        max_r = round(FIGHT_AMPLITUDE*(FIGHT_R0+FIGHT_RANDOMNESS),2)
+        #
+        damage_to_other = terrain_bonus1 * r * f * self.strength / other.defense
+        ########################################################################
+        print("***", self.name, "from", self.race.name, "VS", other.name, "from", other.race.name)
+        print("     Defender strength and defense:", self.strength, self.defense)
+        print("     Agressor strength and defense:", other.strength, other.defense)
+        try:
+            n1 = obj1[1].str_type
+        except:
+            n1 = None
+        try:
+            n2 = obj2[1].str_type
+        except:
+            n2 = None
+        print("    ","Defender object defense:", n1, obj1[0])
+        print("         ","Defender terrain factor:", terrain_bonus1)
+        print("         ","Defender base terrain and defense:", terrain1, terrain1b)
+        print("    ","Agressor terrain factor:", terrain_bonus2)
+        print("         ","Agressor base terrain defense:", terrain2, terrain2b)
+        print("         ","Agressor object defense:", n2, obj2[0])
+        print("    ","Agression factor for agressor:", ATTACKING_DAMAGE_FACTOR)
+        print("    ","Defender race factor:", f)
+        print("    ","Agressor race factor:", RACE_FIGHT_FACTOR.get((other.race.racetype, self.race.racetype), 1.))
+        print("    ","Randomness:", min_r, "to", max_r)
+        print("--------------------------------------------------------")
+        print("    ","Total factor defender:", round(terrain_bonus1 * min_r * f * self.strength / other.defense,2))
+        print("    ","Total factor agressor:", round(ATTACKING_DAMAGE_FACTOR * terrain_bonus2 * min_r * f * other.strength / self.defense,2))
+        return 0
+
     def get_fight_result(self, other, terrain_bonus1, terrain_bonus2, self_is_defending): #-1, 0, 1
         """-1: self looses, 0: draw, 1: self wins"""
+        assert self_is_defending
         self_race = self.race.racetype
         other_race = other.race.racetype
-        f = RACE_FIGHT_FACTOR.get((self_race, other_race), 1.)
         r = get_random_factor_fight()
+        #defender
+        f = RACE_FIGHT_FACTOR.get((self_race, other_race), 1.)
         damage_to_other = terrain_bonus1 * r * f * self.strength / other.defense
-        if damage_to_other > 1.:
+        #agressor
+        g = RACE_FIGHT_FACTOR.get((other_race, self_race), 1.)
+        damage_from_other = terrain_bonus2 * r * g * other.strength / self.defense
+        damage_from_other *= ATTACKING_DAMAGE_FACTOR
+        print(damage_to_other, damage_from_other)
+        tot = damage_from_other+damage_to_other
+        if random.random() < 1. / tot:
+            return 0
+        elif random.random() < damage_to_other / tot:
             return 1
         else:
-            f = RACE_FIGHT_FACTOR.get((other_race, self_race), 1.)
-            damage_from_other = terrain_bonus2 * r * f * other.strength / self.defense
-            if self_is_defending:
-                damage_from_other *= ATTACKING_DAMAGE_FACTOR
-            if damage_from_other > 1.:
-                return -1
-        return 0
+            return -1
+
+
+
+##        if random.random() < PROB_DEFENSE_FIRST: #DEFENSE FIRST
+##            if damage_to_other > 1.:
+##                return 1
+##            elif damage_from_other > 1.:
+##                return -1
+##        else: ####################################ATTACK FIRST
+##            if damage_from_other > 1.:
+##                return -1
+##            elif damage_to_other > 1.:
+##                return 1
+##        return 0
 
     def get_distant_attack_result(self, other, terrain_bonus1, terrain_bonus2, self_is_defending): #-1, 0, 1
         """-1: self looses, 0: draw, 1: self wins"""
@@ -420,8 +481,8 @@ class Unit(MapObject):
         f = RACE_FIGHT_FACTOR.get((self_race, other_race), 1.)
         r = get_random_factor_fight()
         damage_to_other = terrain_bonus1 * r * f * self.strength / other.defense
-        if self_is_defending:
-            damage_to_other *= 0.5
+##        if self_is_defending:
+##            damage_to_other *= 0.5
         return damage_to_other
 
     def get_all_surrounding_units(self):

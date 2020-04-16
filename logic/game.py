@@ -289,8 +289,8 @@ class Game:
         self.me.func_reac_time()
         self.t += 1
         pygame.display.flip()
-        if self.t%100 == 0:
-            self.check_integrity()
+##        if self.t%100 == 0:
+##            self.check_integrity()
 
     def update_loading_bar(self, text, progress):
         self.map_initializer.update_loading_bar(text, progress)

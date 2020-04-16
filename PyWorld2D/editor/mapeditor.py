@@ -417,6 +417,8 @@ class MapEditor:
         self.screen.fill((0,0,0))
         #blit map
         self.cam.draw_grid(self.screen, self.show_grid_lines)
+        #blit cursor
+        self.cam.draw_rmouse(self.screen, self.box_hmap.get_rect())
         #blit objects
         self.cam.draw_objects(self.screen, self.dynamic_objects)
         #blit smoke effects
@@ -425,7 +427,7 @@ class MapEditor:
         self.update_cell_info()
         #blit right pane and draw rect on minimap
         self.e_box.blit()
-        self.cam.draw_rmouse(self.screen, self.box_hmap.get_rect())
+##        self.cam.draw_rmouse(self.screen, self.box_hmap.get_rect())
 ##        pygame.draw.rect(self.screen, (255,255,255), self.cam.rmouse, 1)
 
     def draw_no_update(self):

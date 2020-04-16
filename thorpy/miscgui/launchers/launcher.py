@@ -277,11 +277,21 @@ class _FakeLauncher:
         self.how_exited = how_exited
 
 def launch_blocking(element, after=None, func=None, set_auto_ok=True,
-                    add_ok_enter=None, set_auto_cancel=True):
+                    add_ok_enter=None, set_auto_cancel=True, click_quit=False):
     if set_auto_ok:
         auto_ok(element)
     if set_auto_cancel:
         auto_cancel(element)
+    if click_quit:
+##        auto_click_quit(element)
+        def click(e):
+            if element.get_fus_rect().collidepoint(e.pos):
+                if hasattr(element,"e_ok"):
+                    emulate_ok_press(element.e_ok)
+                elif hasattr(element, "e_cancel"):
+                    post_cancel(element)
+                    functions.quit_menu_func()
+        element.add_reaction(Reaction(pygame.MOUSEBUTTONDOWN, click))
     from thorpy.elements.inserter import Inserter
     inserters = []
     if add_ok_enter is None: #auto detect
@@ -336,6 +346,8 @@ def emulate_cancel_press(element, inserters=None):
             i.K_RETURN_pressed()
     post_cancel(element)
     functions.quit_menu_func()
+
+
 
 def auto_cancel(element):
     if hasattr(element,"e_cancel"):

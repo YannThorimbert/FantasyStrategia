@@ -88,7 +88,7 @@ std_help_range = {  'villager':(0,0),
                     'transport boat':(0,0),
                     'attack boat':(0,0)}
 
-std_strength = {'villager':0.6,
+std_strength = {'villager':0.5,
                 'infantry':1,
                 'archer':0.6,
                 'cavalry':2,
@@ -101,7 +101,7 @@ std_strength = {'villager':0.6,
                 'transport boat':0,
                 'attack boat':1} #attack boat only attack other boats
 
-std_defense =  {'villager':0.6,
+std_defense =  {'villager':0.5,
                 'infantry':1,
                 'archer':0.6,
                 'cavalry':2,

@@ -223,6 +223,8 @@ class FightingUnit:
 
     def fight_against_target_near(self):
         self_is_defending = self.battle.defender is self.unit
+        if not self_is_defending:
+            return
         result = self.unit.get_fight_result(self.target.unit,
                                             self.terrain_bonus,
                                             self.target.terrain_bonus,
@@ -231,6 +233,9 @@ class FightingUnit:
             self.battle.to_remove.append(self)
         elif result > 0:
             self.battle.to_remove.append(self.target)
+            if self_is_defending:
+                if self in self.battle.to_remove:
+                    self.battle.to_remove.remove(self)
 
 
 
@@ -309,6 +314,7 @@ class Battle:
 
     def __init__(self, game, units, defender, distance, zoom_level=0):
         self.battle_duration = BATTLE_DURATION
+        self.defender_start_shooting = BATTLE_DURATION//10
         self.projectile_class = Projectile
         self.distance = distance
         self.defender = defender
@@ -354,6 +360,12 @@ class Battle:
         self.projectiles = []
         self.before_f1 = None
         self.before_f2 = None
+        #
+##        self.defender.get_fight_infos(self.agressors[0], True)
+##        self.fired_by.terrain_bonus,
+##        self.target.terrain_bonus,
+##        self_is_defending
+##        unit.get_terrain_bonus()
 
 
     def get_units_dict_from_list(self, units):
@@ -388,9 +400,9 @@ class Battle:
             relative_dict[CENTER] = center_unit
         return relative_dict
 
-    def fight(self):
+    def fight(self, hourglass=False):
         self.prepare_battle()
-        self.show()
+        self.show(hourglass)
         return self.get_summary_stats()
 ##        self.game.me.draw()
 ##        e, show_death = self.get_summary()
@@ -398,10 +410,25 @@ class Battle:
 ##        thorpy.launch_blocking(e, add_ok_enter=True)
 
 
-    def show(self):
+    def show(self, hourglass=False):
         self.update_battle()
         done = False
+        rect = self.game.me.cam.get_rect_at_coord(self.defender.cell.coord)
+        i = 0
+        frame = 0
         while not done:
+            if hourglass:
+                if i%100 == 0:
+                    frame += 1
+                    frame = frame%len(self.game.hourglass)
+                    self.game.me.cam.draw_grid(self.surface,
+                                                self.game.me.show_grid_lines)
+                    #blit objects
+                    self.game.me.cam.draw_objects(self.surface,
+                                                    self.game.me.dynamic_objects)
+                    self.surface.blit(self.game.hourglass[frame], rect)
+                    pygame.display.update(rect)
+            i += 1
             done = self.update_battle()
 
 
@@ -612,7 +639,8 @@ class Battle:
                 uside.quantity -= 1
 
 
-    def get_summary_stats(self, nstars=3):
+    def get_summary_stats(self):
+        nstars = self.game.gui.nstars
         after = {}
         before = {}
         result = {}
@@ -654,6 +682,10 @@ class DistantFightingUnit(FightingUnit):
         pass
 
     def fight_against_target_distant(self):
+        self_is_defending = self.battle.defender is self.unit
+        if self_is_defending:
+            if self.battle.fight_t < self.battle.defender_start_shooting:
+                return
         if self.time_from_last_shot > self.unit.shot_frequency:
             projectile = self.battle.projectile_class(self, self.target)
             self.battle.projectiles.append(projectile)

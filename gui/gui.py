@@ -215,7 +215,7 @@ class Gui:
         #
         self.moving_units = []
         self.add_reactions()
-        self.life_font_size = guip.NFS
+        self.life_font_size = guip.NFS - 2
         self.life_font_color = (255,255,255)
         self.font_life = pygame.font.SysFont(guip.font_gui_life, self.life_font_size)
         self.refresh_lifes()
@@ -265,6 +265,7 @@ class Gui:
         self.current_battle_simulation = None
         self.empty_star = None
         self.plain_star = None
+        self.nstars = 3
         self.stars = []
 
 
@@ -620,12 +621,14 @@ class Gui:
         self.refresh_lifes()
 
     def try_attack_simulation(self):
-        if not self.current_battle_simulation:
+        if self.current_battle_simulation != self.cell_under_cursor.unit:
+            self.stars = []
+            self.current_battle_simulation = None
             uuc = self.unit_under_cursor()
             if uuc in self.can_be_fought:
                 if uuc.distance_to(self.selected_unit) == 1:
                     self.attack_simulation()
-                elif uuc.distance_to(self.selected_unit) < self.selected_unit.attack_range[1]:
+                elif uuc.distance_to(self.selected_unit) <= self.selected_unit.attack_range[1]:
                     self.distant_attack_simulation()
 
     def attack_simulation(self):
@@ -636,40 +639,39 @@ class Gui:
         self.current_battle_simulation = self.cell_under_cursor.unit
         w,h = self.plain_star.get_size()
         for u,v in result.items():
-            surf = pygame.Surface((w,h)).convert_alpha()
+            surf = pygame.Surface((self.nstars*w,h)).convert_alpha()
             surf.fill((255,255,255,0))
             x = 0
             for i in range(v):
                 surf.blit(self.plain_star, (x,0))
-                x += w
-            for i in range(3-v):
+                x += w//2
+            for i in range(self.nstars-v):
                 surf.blit(self.empty_star, (x,0))
-                x += w
+                x += w//2
             self.stars.append((u,surf))
-        print(self.stars)
 
 
     def distant_attack_simulation(self):
-        print("***caca")
-        return
-        units_in_battle, defender, distance = self.get_battle_units()
+        defender = self.unit_under_cursor()
+        distance = defender.distance_to(self.selected_unit)
+        units_in_battle = [self.selected_unit, defender]
         random.seed(0)
-        b = FakeBattle(self.game, units_in_battle, defender, distance)
-        result = b.fight()
+        b = FakeDistantBattle(self.game, units_in_battle, defender, distance)
+        result = b.fight(hourglass=True)
         self.current_battle_simulation = self.cell_under_cursor.unit
         w,h = self.plain_star.get_size()
         for u,v in result.items():
-            surf = pygame.Surface((w,h)).convert_alpha()
+            surf = pygame.Surface((self.nstars*w,h)).convert_alpha()
             surf.fill((255,255,255,0))
             x = 0
             for i in range(v):
                 surf.blit(self.plain_star, (x,0))
                 x += w
-            for i in range(3-v):
+            for i in range(self.nstars-v):
+                print(i,x)
                 surf.blit(self.empty_star, (x,0))
                 x += w
             self.stars.append((u,surf))
-        print(self.stars)
 
 
     def distant_attack(self):
@@ -1139,15 +1141,15 @@ class Gui:
     def show_options(self):
         e_life_size = thorpy.SliderX(100, (6, 20), "Life font size", type_=int,
                                             initial_value=self.life_font_size)
-        e_life_color = thorpy.ColorSetter(text="Life font color",
-                                            value=self.life_font_color)
+##        e_life_color = thorpy.ColorSetter(text="Life font color",
+##                                            value=self.life_font_color)
         e_title = thorpy.make_text("Units life")
-        e_box = thorpy.make_ok_cancel_box([e_title, e_life_size, e_life_color])
+        e_box = thorpy.make_ok_cancel_box([e_title, e_life_size])
         e_box.center()
         result = thorpy.launch_blocking(e_box)
         if result.how_exited == "done":
             self.life_font_size = e_life_size.get_value()
-            self.life_font_color = e_life_color.get_value()
+##            self.life_font_color = e_life_color.get_value()
             self.refresh_graphics_options()
         self.me.draw()
         self.menu.blit()
