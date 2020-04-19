@@ -1,6 +1,5 @@
 import os, random, pygame, thorpy
 from FantasyStrategia.effects import effects
-from FantasyStrategia.logic.unit import InteractiveObject
 from PyWorld2D.mapobjects.objects import MapObject
 
 INCOME_PER_VILLAGE = 100
@@ -93,7 +92,8 @@ class Game:
                             "fir2", "firsnow", "palm", "bush", "village",
                             "flag", "forest", "flag", "windmill", "construction"]
         self.burning = {} #e.g. burning[(4,12):2] means 2 remaining turns to burn
-        self.fire = InteractiveObject("fire", self.me, "sprites/fire")
+        fire_imgs = get_sprite_frames("sprites/fire_idle.png")
+        self.fire = MapObject(self.me, fire_imgs, "fire")
         self.fire.min_relpos=[0,-0.4]
         self.fire_max_relpos=[0,-0.4]
         self.fire.relpos=[0,-0.4]
@@ -157,7 +157,17 @@ class Game:
         obj.name = str_type
 
     def add_bridge(self, coord):
+        assert not coord in self.bridges
+##        bridge = self.find_right_bridge(coord)
+##        bridge = self.bridge_h
+        left = self.get_object("river", (coord[0]-1,coord[1]))
+        right = self.get_object("river", (coord[0]-1,coord[1]))
+        if left and right:
+            bridge = self.bridge_v
+        else:
+            bridge = self.bridge_h
         self.add_object(coord, bridge)
+        self.bridges.append(coord)
 
 ##    def refresh_captures(self):
 ##        to_remove = []
@@ -228,19 +238,15 @@ class Game:
             objs = self.get_cell_at(coord[0],coord[1]).objects #ok
             to_burn = [o for o in objs if o.str_type in self.is_burnable]
             for o in to_burn:
-                self.gui.add_onomatopoeia(self.gui.els_burned, o.cell.coord)
                 self.fire_extinguish_sound.play_next_channel()
                 o.remove_from_map(self.me)
-                if not(isinstance(o,InteractiveObject) and o.name == "bridge"):
-                    effects.draw_ashes(self, o)
-                else:
-                    self.bridges.remove(o.cell.coord)
-                    for o2 in o.cell.objects:
-                        if isinstance(o,MapObject) and o.name == "bridge":
-                            o.hide = True #just of the anim, then removed
+                effects.draw_ashes(self, o)
                 if o.str_type == "construction":
                     self.constructions[o.cell.coord][2].is_building = None
                     self.constructions.pop(o.cell.coord)
+                if o.name == "bridge":
+                    self.bridges.remove(o.cell.coord)
+
 
 
     def set_players(self, players, current=0):
@@ -274,6 +280,7 @@ class Game:
     def remove_all_grayed(self):
         to_remove = []
         for o in self.me.dynamic_objects:
+            print(o, o.str_type)
             if o.name[0] == "*":
                 to_remove.append(o)
         for o in to_remove:
@@ -327,30 +334,16 @@ class Game:
         neighs = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1),
                     (1, 0), (1, 1)]
         windmill_probability = 0.05
-##        can_windmill = ["grass", "rock", "thin snow", "snow", "sand"]
         can_windmill = [n.lower() for n in self.me.materials if not("water") in n.lower()]
         race1 = self.players[0].race
         race2 = self.players[1].race
         gnx,gny = self.get_map_size()
         self.me.build_objects_dict()
+        self.collect_path_objects(map_initializer)
         for obj in self.me.lm.static_objects:
             if obj.str_type == "bridge_h":
-                if self.bridge_h is None:
-                    self.bridge_h = InteractiveObject("bridge", self.me,
-                                                (obj.original_imgs[0],"idle"),
-                                                str_type="bridge_h")
-                    self.bridge_h.burnable = True
-                    self.bridge_h.is_ground = True
-                self.add_object(obj.cell.coord, self.bridge_h, 1)
                 self.bridges.append(obj.cell.coord)
             elif obj.str_type == "bridge_v":
-                if self.bridge_v is None:
-                    self.bridge_v = InteractiveObject("bridge", self.me,
-                                                (obj.original_imgs[0],"idle"),
-                                                str_type="bridge_v")
-                    self.bridge_v.burnable = True
-                    self.bridge_v.is_ground = True
-                self.add_object(obj.cell.coord, self.bridge_v, 1)
                 self.bridges.append(obj.cell.coord)
             elif obj.str_type == "village":
                 cx,cy = obj.cell.coord
@@ -372,36 +365,41 @@ class Game:
                                     if race:
                                         print("adding flag", obj.cell.coord)
                                         self.set_flag(coord, race.flag, race.team)
+
+
+    def collect_path_objects(self, map_initializer):
         self.cobblestone = map_initializer.cobblestone
         self.bridge_h = map_initializer.bridge_h_mapobject
         self.bridge_v = map_initializer.bridge_v_mapobject
-        if not self.cobblestone:
-            self.cobblestone = MapObject(self.me, map_initializer.cobble,
-                                         "cobblestone",
-                                         map_initializer.cobble_size)
-            self.cobblestone.is_ground = True
-        if not self.bridge_h:
-            bridge_h = MapObject(self.me, map_initializer.bridge_h, "bridge",
-                                    map_initializer.bridge_h_size,
-                                    str_type="bridge_h")
-            bridge_h.is_ground = True
-            bridge_h.max_relpos = [0., 0.]
-            bridge_h.min_relpos = [0., 0.]
-            self.bridge_h = bridge_h
-        if not self.bridge_v:
-            bridge_v = MapObject(self.me, map_initializer.bridge_v, "bridge",
-                                    map_initializer.bridge_v_size,
-                                    str_type="bridge_v")
-            bridge_v.is_ground = True
-            bridge_v.max_relpos = [0.,0.]
-            bridge_v.min_relpos = [0., 0.]
-            self.bridge_v = bridge_v
+        assert self.cobblestone
+        assert self.bridge_h
+        assert self.bridge_v
+##        if not self.cobblestone:
+##            self.cobblestone = MapObject(self.me, map_initializer.cobble,
+##                                         "cobblestone",
+##                                         map_initializer.cobble_size)
+##            self.cobblestone.is_ground = True
+##        if not self.bridge_h:
+##            bridge_h = MapObject(self.me, map_initializer.bridge_h, "bridge",
+##                                    map_initializer.bridge_h_size,
+##                                    str_type="bridge_h")
+##            bridge_h.is_ground = True
+##            bridge_h.max_relpos = [0., 0.]
+##            bridge_h.min_relpos = [0., 0.]
+##            self.bridge_h = bridge_h
+##        if not self.bridge_v:
+##            bridge_v = MapObject(self.me, map_initializer.bridge_v, "bridge",
+##                                    map_initializer.bridge_v_size,
+##                                    str_type="bridge_v")
+##            bridge_v.is_ground = True
+##            bridge_v.max_relpos = [0.,0.]
+##            bridge_v.min_relpos = [0., 0.]
+##            self.bridge_v = bridge_v
         self.bridge = self.bridge_h
         self.road = self.cobblestone
         self.buildable_objs["road"] = self.cobblestone
         self.buildable_objs["bridge_v"] = self.bridge_v
         self.buildable_objs["bridge_h"] = self.bridge_h
-
 
     def add_unit(self, coord, unit, quantity):
         u = self.me.add_unit(coord, unit, quantity)
@@ -459,7 +457,7 @@ class Game:
             self.fire_sound.play(-1)
             cell = self.get_cell_at(coord[0],coord[1])
             self.burning[coord] = n
-            names = ("village","bridge","forest","windmill","construction")
+            names = ("village","forest","windmill")
             self.add_obj_before_other_if_needed(self.fire,1,names,cell)
 
     def add_obj_before_other_if_needed(self, obj, qty, other_names, cell):

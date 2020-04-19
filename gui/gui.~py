@@ -145,7 +145,7 @@ class BuildingConstructionGUI:
             img = getattr(game, what).imgs_z_t[0][0]
             price = self.game.construction_price[what]
             price = "  " + str(price)+" $"
-            time = "  " + str(self.game.construction_time[what]//2)+" days"
+            time = "  " + str(self.game.construction_time[what]//2)+" turns"
             text = " ".join([what.capitalize(),price,time])
             #grayed
             e_text = thorpy.OneLineText(text)
@@ -396,9 +396,16 @@ class Gui:
         return cuc.material.name.lower() in self.game.can_build
 
     def check_build_water(self):
-        if self.cell_under_cursor.name == "river":
-            return not self.cell_under_cursor.unit
-        elif not self.cell_under_cursor.objects:
+        cuc = self.cell_under_cursor
+        if cuc.unit:
+            return False
+        if self.selected_unit.str_type != "villager":
+            return False
+        elif self.selected_unit.cell.distance_to(cuc) != 1:
+            return False
+        elif cuc.name == "river":
+            return True
+        elif not cuc.objects:
             return "water" in self.cell_under_cursor.material.name.lower()
 
     def check_continue_build(self):
@@ -919,16 +926,16 @@ class Gui:
 
 
     def launch_construction(self, type_):
-            self.game.coin_sound.play()
-            self.game.add_construction(self.cell_under_cursor.coord, type_,
-                                        self.selected_unit)
-            self.selected_unit.is_building = self.cell_under_cursor.coord
-            self.selected_unit.make_grayed()
-            self.game.current_player.money -= self.game.construction_price[type_]
-            self.e_gold_txt.set_text(str(self.game.current_player.money))
-            self.refresh()
-            self.small_clear()
-            thorpy.functions.quit_menu_func()
+        self.game.coin_sound.play()
+        self.game.add_construction(self.cell_under_cursor.coord, type_,
+                                    self.selected_unit)
+        self.selected_unit.is_building = self.cell_under_cursor.coord
+        self.selected_unit.make_grayed()
+        self.game.current_player.money -= self.game.construction_price[type_]
+        self.e_gold_txt.set_text(str(self.game.current_player.money))
+        self.refresh()
+        self.small_clear()
+        thorpy.functions.quit_menu_func()
 
     def build(self):
         self.game.construction_sound.play()
@@ -1037,7 +1044,7 @@ class Gui:
                 ################################################################
                 if u.is_building:
                     time_left = str(self.game.constructions[u.is_building][1])
-                    text = self.font_life.render(time_left+"d", True, font_color)
+                    text = self.font_life.render(time_left+"t", True, font_color)
 ##                                                 self.life_font_color)
                     x,y = self.game.me.cam.get_rect_at_coord(u.is_building).center
                     coord = x+4, y+4
@@ -1125,9 +1132,9 @@ class Gui:
             self.surface.blit(surf, r)
 
     def unit_dies(self, u):
-        for l in [self.has_moved, self.can_be_fought, self.can_be_helped]
-        if u in self.has_moved:
-            self.has_moved.remove(u)
+        for l in [self.has_moved, self.can_be_fought, self.can_be_helped]:
+            if u in l:
+                l.remove(u)
 
 
     def refresh(self):

@@ -120,7 +120,8 @@ class Camera:
         self.me.game.recompute_smokes_position()
 
     def get_cell(self, pix):
-        if self.map_rect.collidepoint(pix):
+##        if self.map_rect.collidepoint(pix):
+        if not self.box_hmap.get_fus_rect().collidepoint(pix):
             coord = self.get_coord_at_pix(pix)
             if self.lm.is_inside(coord):
                 return self.lm[coord]

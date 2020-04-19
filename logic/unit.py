@@ -136,7 +136,7 @@ class Unit(MapObject):
                         if next_cell.coord in self.game.bridges:
                             this_tot_cost = self.material_cost["bridge"]
                             break
-                        elif not isinstance(obj, InteractiveObject):
+                        else:
                             this_tot_cost = self.material_cost[obj.str_type]
                             break
                 else: #if break is never reached
@@ -460,6 +460,7 @@ class Unit(MapObject):
             return 1
         elif other_participate:
             return -1
+        return 0
 
 
 
@@ -539,96 +540,3 @@ def load_unit_sprites(fn, colors="blue", h=const.FAST, v=const.FAST, i=const.SLO
                 "lattack":(lattack,i), "rattack":(rattack,i),
                 "die":(die,h), "head":(head,h)}
     return sprites
-
-
-##
-##class InteractiveObject(Unit):
-##
-##    @staticmethod
-##    def get_saved_attributes():
-##        return Unit.get_saved_attributes() + ["color"]
-##
-##    def __init__(self, name, editor, sprites, race=None,
-##                 sprites_keys=("idle",), factor=1., relpos=(0,0), build=True,
-##                 new_type=True, str_type=None):
-##        self.stop_animation = float("inf")
-##        self.stop_animation_func = None
-##        self.set_animation_type("loop")
-##        self.animation_step = 0
-##        self.grayed = []
-##        self.highlights = {}
-##        self.sprites_ref = {}
-##        self.race = race
-##        if race is None:
-##            self.color = NEUTRAL_COLOR
-##        else:
-##            self.color = self.race.color
-##        if isinstance(sprites,str):
-##            fn = str(sprites)
-##            sprites = {}
-##            for key in sprites_keys:
-##                sprites[key] = get_unit_sprites(fn+"_"+key+".png", self.color), const.NORMAL
-##        elif isinstance(sprites,tuple):
-##            img,key = sprites
-##            sprites = {}
-##            sprites[key] = [img], const.NORMAL
-##        if sprites:
-##            imgs = []
-##            isprite = 0
-##            for key in sprites_keys:
-##                sprites_for_this_key, frame_type = sprites[key]
-##                imgs.extend(sprites_for_this_key)
-##                n = len(sprites_for_this_key)
-##                self.sprites_ref[key] = (isprite, n, frame_type)
-##                isprite += n
-##        else:
-##            imgs = [""]
-##        MapObject.__init__(self, editor, imgs, name, factor, relpos, build,
-##                            new_type, str_type)
-##        #
-##        self.cost = None
-##        self.base_number = None
-##        self.max_dist = None
-##        self.attack_range = None
-##        self.shot_frequency = None
-##        self.help_range = None
-##        self.material_cost = {}
-##        self.terrain_attack = {}
-##        self.object_defense = {}
-##        self.strength = None
-##        self.defense = None
-##        #
-##        self.race = None
-##        self.game = None
-##        #
-##        self.walk_img = {}
-##        self.set_frame_refresh_type(2) #type fast
-##        self.vel = 0.07
-##        self.current_isprite = 0
-##        self.team = None
-##        self.footprint = None
-##        self.projectile1 = None #projectile used in close battle
-##        self.id = Unit.unit_id
-##        Unit.unit_id += 1
-##        self.can_interact = True
-##
-##    def copy(self):
-##        obj = InteractiveObject(self.name, self.editor, None, self.race,
-##                                self.factor, list(self.relpos), new_type=False,
-##                                str_type=self.str_type)
-##        obj = Unit.copy(self, obj)
-##        obj.color = self.color
-##        return obj
-##
-##    def deep_copy(self):
-##        obj = InteractiveObject(self.name, self.editor, None, self.race,
-##                                self.factor, list(self.relpos), new_type=False,
-##                                str_type=self.str_type)
-##        obj = Unit.deep_copy(self, obj)
-##        obj.color = self.color
-##        return obj
-##
-####    def remove_from_game(self):
-######        self.game.objects.remove(self)
-####        self.game.me.dynamic_objects.remove(self)
-####        self.remove_from_cell_objects()

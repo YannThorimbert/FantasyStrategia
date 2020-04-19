@@ -2,6 +2,7 @@ import os
 import pygame
 from FantasyStrategia.logic import unit
 from FantasyStrategia.gui import texts
+from PyWorld2D.mapobjects.objects import MapObject
 
 std_material_cost = {'Deep water': float("inf"),
                      'Grass': 1.5,
@@ -18,6 +19,7 @@ std_material_cost = {'Deep water': float("inf"),
                      'windmill':1,
                      'construction':1,
                      'bridge':1,
+                     'flag':1,
                      'river':10,
                      'bush':5}
 
@@ -190,9 +192,8 @@ class Race:
         self.color = color
         for unit_type in units_type_to_load:
             self.add_type(unit_type, "sprites/"+baserace+"_"+unit_type)
-        self.flag = unit.InteractiveObject(self.name+" flag", self.me,
-                                            "sprites/flag", race=self,
-                                            str_type="flag")
+        imgs_flag = unit.get_unit_sprites("sprites/flag_idle.png", self.color)
+        self.flag = MapObject(self.me, imgs_flag, self.name+" flag", str_type="flag")
         self.flag.max_relpos = [0.7, -0.1]
         self.flag.min_relpos = [0.7, -0.1]
 ##        self.flag.always_drawn_last = True

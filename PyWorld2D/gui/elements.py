@@ -406,6 +406,7 @@ class UnitInfo: #name, image, nombre(=vie dans FS!)
         thorpy.launch_blocking(ps)
         newname = ins.get_value()
         newname = newname.replace("*","")
+        newname = newname.replace("bridge","")
         if newname:
             self.unit.name = newname
         self.update_em(self.unit.cell)

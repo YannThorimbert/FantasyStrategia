@@ -299,6 +299,7 @@ class MapInitializer:
         #
         cobble = MapObject(me,self.cobble,"cobblestone",self.cobble_size)
         cobble.is_ground = True
+        self.cobblestone = cobble
         bridge_h = MapObject(me,self.bridge_h,"bridge",self.bridge_h_size,
                                 str_type="bridge_h")
         bridge_h.is_ground = True
@@ -313,7 +314,8 @@ class MapInitializer:
         self.bridge_v_mapobject = bridge_v
         self._objects = {"oak":tree, "fir1":fir1, "fir2":fir2, "firsnow":firsnow,
                         "palm":palm, "bush":bush, "village":village1,
-                        "cobble":cobble, "bridge_h":bridge_h, "bridge_v":bridge_v}
+                        "cobble":cobble, "bridge_h":bridge_h, "bridge_v":bridge_v,
+                        "road":cobble}
         #4) we add the objects via distributors, to add them randomly in a nice way
         #normal forest
 ##        print("LALA 1", tree.relpos, tree.max_relpos, tree.min_relpos)

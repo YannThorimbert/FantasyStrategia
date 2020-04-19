@@ -33,6 +33,7 @@ map_initializer.max_number_of_roads = 5 #5
 map_initializer.max_number_of_rivers = 5 #5
 map_initializer.village_homogeneity = 0.1
 map_initializer.seed_static_objects = 15
+map_initializer.zoom_cell_sizes = [32]
 
 ##map_initializer.chunk = (11,9)
 ##map_initializer.reverse_hmap = False
@@ -44,14 +45,14 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
+si cellule deborde sur le bord, pas selectionnee... ==> juste controler que collide pas le menu
 
-#remplacer interactiveobject par mapobject
-#build pont appelle fonction speciale...
+#pas de surbrillance sur bridge dynamic au mousemotion
+
 #que faire avec les unites impliquees dans batailles ?
 
-#relimiter les bruits et shocks
-##Interactive Obj
-##Preproc box
+#relimiter les bruits et shocks du combat
+##Preproc box human
 ##Gui choices petit au bon endroit et transp
 ##40
 
@@ -94,6 +95,8 @@ game = Game(me)
 ################################################################################
 ################################################################################
 ##toujours possible d'annuler un deplacement si rien d'autre n'a ete fait depuis (comme dans aw)
+
+#en 64pixels, disp des battle marchent pas.
 
 #plus belles attaques, mais problem timing. Gros impact sur FakeBattle !!!
 
