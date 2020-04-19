@@ -108,15 +108,33 @@ class Game:
         self.windmill.min_relpos = [0, -0.15]
         self.windmill.max_relpos = [0, -0.15]
         self.windmill.randomize_relpos()
+        self.cobblestone = None
+        self.road = None
+        self.bridge_h = None
+        self.bridge_v = None
+        self.bridge = None
+
         #
         self.construction = MapObject(me, get_sprite_frames("sprites/construction.png"), "construction")
         self.construction.is_ground = True
         self.village = MapObject(me, get_sprite_frames("sprites/house.png", s="auto"), "village")
-        self.buildable_objs = {"windmill":self.windmill, "village":self.village}
+        self.buildable_objs = {"windmill":self.windmill, "village":self.village,
+                                "bridge_v":None, "bridge_h":None,
+                                "road":None}
         self.constructions = {}
-        self.construction_time = {"village":4, "windmill":6}
+        self.construction_time = {"village":4, "windmill":6, "bridge":6, "road":1}
         self.construction_price = {"village":INCOME_PER_VILLAGE*2,
-                                   "windmill":INCOME_PER_WINDMILL*2}
+                                   "windmill":INCOME_PER_WINDMILL*2,
+                                   "bridge":INCOME_PER_WINDMILL*2,
+                                   "road":INCOME_PER_VILLAGE//4}
+        self.construction_ground = {"village":True,
+                                    "windmill":True,
+                                    "bridge":False,
+                                    "road":True}
+        self.construction_flag = {"village":True,
+                                    "windmill":True,
+                                    "bridge":False,
+                                    "road":False}
         self.capturing = []
 
     def set_ambiant_sounds(self, val):
@@ -137,6 +155,9 @@ class Game:
         self.construction_sound.play()
         obj = self.add_object(coord, self.construction)
         obj.name = str_type
+
+    def add_bridge(self, coord):
+        self.add_object(coord, bridge)
 
 ##    def refresh_captures(self):
 ##        to_remove = []
@@ -168,8 +189,13 @@ class Game:
             if time_left == 0:
                 self.construction_sound.play_next_channel()
                 self.get_object("construction", coord).remove_from_map(self.me)
-                self.add_object(coord, self.buildable_objs[str_type])
-                self.set_flag(coord, self.current_player.race.flag, self.current_player.team)
+                if str_type == "bridge":
+                    self.add_bridge(coord)
+                else:
+                    self.add_object(coord, self.buildable_objs[str_type])
+                    if self.construction_flag[str_type]:
+                        self.set_flag(coord, self.current_player.race.flag,
+                                        self.current_player.team)
                 to_remove.append(coord)
                 unit.is_building = False
         for coord in to_remove:
@@ -346,6 +372,35 @@ class Game:
                                     if race:
                                         print("adding flag", obj.cell.coord)
                                         self.set_flag(coord, race.flag, race.team)
+        self.cobblestone = map_initializer.cobblestone
+        self.bridge_h = map_initializer.bridge_h_mapobject
+        self.bridge_v = map_initializer.bridge_v_mapobject
+        if not self.cobblestone:
+            self.cobblestone = MapObject(self.me, map_initializer.cobble,
+                                         "cobblestone",
+                                         map_initializer.cobble_size)
+            self.cobblestone.is_ground = True
+        if not self.bridge_h:
+            bridge_h = MapObject(self.me, map_initializer.bridge_h, "bridge",
+                                    map_initializer.bridge_h_size,
+                                    str_type="bridge_h")
+            bridge_h.is_ground = True
+            bridge_h.max_relpos = [0., 0.]
+            bridge_h.min_relpos = [0., 0.]
+            self.bridge_h = bridge_h
+        if not self.bridge_v:
+            bridge_v = MapObject(self.me, map_initializer.bridge_v, "bridge",
+                                    map_initializer.bridge_v_size,
+                                    str_type="bridge_v")
+            bridge_v.is_ground = True
+            bridge_v.max_relpos = [0.,0.]
+            bridge_v.min_relpos = [0., 0.]
+            self.bridge_v = bridge_v
+        self.bridge = self.bridge_h
+        self.road = self.cobblestone
+        self.buildable_objs["road"] = self.cobblestone
+        self.buildable_objs["bridge_v"] = self.bridge_v
+        self.buildable_objs["bridge_h"] = self.bridge_h
 
 
     def add_unit(self, coord, unit, quantity):

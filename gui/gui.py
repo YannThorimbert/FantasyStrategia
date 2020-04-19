@@ -110,19 +110,22 @@ class UnitProductionGUI:
                         u = race[unit_type]
                         cost = u.cost * INCOME_PER_VILLAGE
                         img = race.unit_types[unit_type].imgs_z_t[0][0]
-                        text = str(u.base_number) + " " + unit_type.capitalize()
+                        text = unit_type.capitalize()
                         text += "    (" + str(cost) + " $)"
+                        text_n = " " + str(u.base_number) + " X"
                         #not grayed
                         e_img = thorpy.Image(img)
                         e_text = thorpy.OneLineText(text)
-                        e_ghost = thorpy.make_group([e_img, e_text])
+                        e_n = thorpy.OneLineText(text_n)
+                        e_ghost = thorpy.make_group([e_n, e_img, e_text])
                         n_button = thorpy.Clickable(elements=[e_ghost])
                         n_button.fit_children()
                         n_button.add_basic_help(race.unit_descr[unit_type])
                         #grayed
                         e_img = thorpy.Image(img)
                         e_text = thorpy.OneLineText(text)
-                        e_ghost = thorpy.make_group([e_img, e_text])
+                        e_n = thorpy.OneLineText(text_n)
+                        e_ghost = thorpy.make_group([e_n, e_img, e_text])
                         g_button = thorpy.Pressable(elements=[e_ghost])
                         g_button = thorpy.Hoverable.make_hoverable(g_button)
                         g_button.fit_children()
@@ -143,7 +146,7 @@ class BuildingConstructionGUI:
             price = self.game.construction_price[what]
             price = "  " + str(price)+" $"
             time = "  " + str(self.game.construction_time[what]//2)+" days"
-            text = " ".join([what,price,time])
+            text = " ".join([what.capitalize(),price,time])
             #grayed
             e_text = thorpy.OneLineText(text)
             e_img = thorpy.Image(img)
@@ -231,6 +234,8 @@ class Gui:
                                     self.check_interact_burn),
                                 ("Continue building",self.continue_build,
                                     self.check_continue_build),
+                                ("Build",self.build,
+                                    self.check_build_water),
                                 ("Build",self.build,
                                     self.check_build)]
 ##                                ("Go there",self.choice_gotocell,
@@ -389,6 +394,12 @@ class Gui:
         elif self.selected_unit.cell.distance_to(cuc) != 1:
             return False
         return cuc.material.name.lower() in self.game.can_build
+
+    def check_build_water(self):
+        if self.cell_under_cursor.name == "river":
+            return not self.cell_under_cursor.unit
+        elif not self.cell_under_cursor.objects:
+            return "water" in self.cell_under_cursor.material.name.lower()
 
     def check_continue_build(self):
         if self.selected_unit.str_type != "villager":
@@ -906,33 +917,46 @@ class Gui:
         self.selected_unit.is_building = coord
         self.small_clear()
 
-    def build(self):
-        self.game.construction_sound.play()
-        set_theme("classic")
-        def construct(type_):
+
+    def launch_construction(self, type_):
             self.game.coin_sound.play()
             self.game.add_construction(self.cell_under_cursor.coord, type_,
                                         self.selected_unit)
             self.selected_unit.is_building = self.cell_under_cursor.coord
             self.selected_unit.make_grayed()
-##            self.has_moved.append(self.selected_unit)
             self.game.current_player.money -= self.game.construction_price[type_]
             self.e_gold_txt.set_text(str(self.game.current_player.money))
             self.refresh()
             self.small_clear()
             thorpy.functions.quit_menu_func()
+
+    def build(self):
+        self.game.construction_sound.play()
+        set_theme("classic")
+        on_water = False
+        if self.cell_under_cursor.name == "river":
+            on_water = True
+        else:
+            on_water = "water" in self.cell_under_cursor.material.name.lower()
         choices = []
+        possibilities = []
         for what in self.game.construction_price:
-            price = self.game.construction_price[what]
-            grayed = price > self.game.current_player.money
-            g, n = self.build_gui.choices[what]
-            if grayed:
-                button = g
-            else:
-                button = n
-                button.user_func = construct
-                button.user_params = {"type_":what}
-            choices.append(button)
+            ok = False
+            if on_water and not self.game.construction_ground[what]:
+                ok = True
+            elif not(on_water) and self.game.construction_ground[what]:
+                ok = True
+            if ok:
+                price = self.game.construction_price[what]
+                grayed = price > self.game.current_player.money
+                g, n = self.build_gui.choices[what]
+                if grayed:
+                    button = g
+                else:
+                    button = n
+                    button.user_func = self.launch_construction
+                    button.user_params = {"type_":what}
+                choices.append(button)
         def click_outside(event):
             if not e.get_fus_rect().collidepoint(event.pos):
                 thorpy.functions.quit_menu_func()
@@ -941,7 +965,6 @@ class Gui:
         e.center()
         reac = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, click_outside)
         e.add_reaction(reac)
-##        e.set_main_color((200,200,200,200))
         thorpy.launch_blocking(e, add_ok_enter=True)
         set_theme("human")
 
@@ -1000,28 +1023,6 @@ class Gui:
         rect.center = unit.get_current_rect_center(s)
         self.surface.blit(img, rect.topleft)
 
-    def draw_actions_possibility(self, unit, s):
-        x,y = unit.get_current_rect_center(s)
-        if unit.is_building:
-            t = self.game.me.lm.t3 % len(self.under_construct)
-            img = self.under_construct[t]
-            self.surface.blit(img, (x-s//2,y))
-        elif unit in self.has_moved:
-            t = self.game.me.lm.t3 % len(self.footstep)
-            self.surface.blit(self.footstep[t], (x-s//2,y))
-        ########################################################################
-        if unit in self.can_be_fought:
-            t = self.game.me.lm.t % len(self.sword)
-            img = self.sword[t]
-            rect = img.get_rect()
-            rect.center = (x,y)
-            self.surface.blit(img, rect)
-        elif unit in self.can_be_helped:
-            t = self.game.me.lm.t3 % len(self.medic)
-            img = self.medic[t]
-            rect = img.get_rect()
-            rect.center = (x,y)
-            self.surface.blit(img, rect)
 
     def refresh_lifes(self):
         self.lifes = []
@@ -1094,11 +1095,40 @@ class Gui:
             self.refresh_lifes()
             for img, coord in self.lifes:
                 self.surface.blit(img, coord)
-        for u in self.game.units:
-            self.draw_actions_possibility(u, s)
+        for unit in self.game.units:
+            x,y = unit.get_current_rect_center(s)
+            if unit.is_building:
+                t = self.game.me.lm.t3 % len(self.under_construct)
+                img = self.under_construct[t]
+                self.surface.blit(img, (x-s//2,y))
+        for unit in self.has_moved:
+            if not unit.is_building:
+                x,y = unit.get_current_rect_center(s)
+                t = self.game.me.lm.t3 % len(self.footstep)
+                self.surface.blit(self.footstep[t], (x-s//2,y))
+        for unit in self.can_be_helped:
+            x,y = unit.get_current_rect_center(s)
+            t = self.game.me.lm.t3 % len(self.medic)
+            img = self.medic[t]
+            rect = img.get_rect()
+            rect.center = (x,y)
+            self.surface.blit(img, rect)
+        for unit in self.can_be_fought:
+            x,y = unit.get_current_rect_center(s)
+            t = self.game.me.lm.t % len(self.sword)
+            img = self.sword[t]
+            rect = img.get_rect()
+            rect.center = (x,y)
+            self.surface.blit(img, rect)
         for u, surf in self.stars:
             r = u.get_current_rect(s)
             self.surface.blit(surf, r)
+
+    def unit_dies(self, u):
+        for l in [self.has_moved, self.can_be_fought, self.can_be_helped]:
+            if u in l:
+                l.remove(u)
+
 
     def refresh(self):
         self.enhancer.refresh()

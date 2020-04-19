@@ -45,7 +45,16 @@ game = Game(me)
 ################################################################################
 
 
-#draw_actions_poss n'a pas besoin d'etre appele sur TOUTES units sauf is building
+#remplacer interactiveobject par mapobject
+#build pont appelle fonction speciale...
+#que faire avec les unites impliquees dans batailles ?
+
+#relimiter les bruits et shocks
+##Interactive Obj
+##Preproc box
+##Gui choices petit au bon endroit et transp
+##40
+
 
 #sons: cris de guerre. SoundSnap, acheter quand meme ?
 #penser a enlever check integrity dans func time

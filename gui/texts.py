@@ -25,5 +25,14 @@ of money. However, they are more expensive
 than villages to build. Also they cannot
 produce unit, and can be burned easily."""
 
+DESCR_BRIDGE = """A bridge allows units to cross a river much
+more faster. However, it takes a long time
+to build."""
+
+DESCR_ROAD = """Roads are the fastest terrain for units
+to walk on. They are cheap and fast to build"""
+
 descr_building = {"village":DESCR_VILLAGE,
-                  "windmill":DESCR_WINDMILL}
+                  "windmill":DESCR_WINDMILL,
+                  "bridge":DESCR_BRIDGE,
+                  "road":DESCR_ROAD}

@@ -165,6 +165,9 @@ class MapInitializer:
         self.heights = []
         self.seed_static_objects = self.chunk
         self.rivers = None
+        self.cobblestone = None
+        self.bridge_h_mapobject= None
+        self.bridge_v_mapobject = None
 
     def set_terrain_type(self, terrain_type, colorscale):
         for key in terrain_type:
@@ -306,6 +309,8 @@ class MapInitializer:
         bridge_v.is_ground = True
         bridge_v.max_relpos = [0.,0.]
         bridge_v.min_relpos = [0., 0.]
+        self.bridge_h_mapobject = bridge_h
+        self.bridge_v_mapobject = bridge_v
         self._objects = {"oak":tree, "fir1":fir1, "fir2":fir2, "firsnow":firsnow,
                         "palm":palm, "bush":bush, "village":village1,
                         "cobble":cobble, "bridge_h":bridge_h, "bridge_v":bridge_v}

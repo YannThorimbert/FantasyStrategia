@@ -223,12 +223,14 @@ class FightingUnit:
 
     def fight_against_target_near(self):
         self_is_defending = self.battle.defender is self.unit
-        if not self_is_defending:
+        other_is_contact = not isinstance(self.target, DistantFightingUnit)
+        if not(self_is_defending) and other_is_contact:
             return
         result = self.unit.get_fight_result(self.target.unit,
                                             self.terrain_bonus,
                                             self.target.terrain_bonus,
-                                            self_is_defending)
+                                            self_is_defending,
+                                            other_is_contact)
         if result < 0:
             self.battle.to_remove.append(self)
         elif result > 0:
