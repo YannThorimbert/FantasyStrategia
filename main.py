@@ -29,8 +29,8 @@ app = thorpy.Application((W,H))
 
 map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
 map_initializer.chunk = (1322, 43944)
-map_initializer.max_number_of_roads = 5 #5
-map_initializer.max_number_of_rivers = 5 #5
+map_initializer.max_number_of_roads = 0 #5
+map_initializer.max_number_of_rivers = 0 #5
 map_initializer.village_homogeneity = 0.1
 map_initializer.seed_static_objects = 15
 map_initializer.zoom_cell_sizes = [32]
@@ -44,8 +44,6 @@ game = Game(me)
 ################################################################################
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
-
-si cellule deborde sur le bord, pas selectionnee... ==> juste controler que collide pas le menu
 
 #pas de surbrillance sur bridge dynamic au mousemotion
 

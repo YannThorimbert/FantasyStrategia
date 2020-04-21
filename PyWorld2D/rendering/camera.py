@@ -59,9 +59,10 @@ class Camera:
         assert lm.nx == self.world_size.x and lm.ny == self.world_size.y
 
     def get_dpix(self):
-       x = (self.campos.x - self.rcam.x)*self.cell_rect.w
-       y = (self.campos.y - self.rcam.y)*self.cell_rect.h
-       return x,y
+        """Returns the offset within the current cell"""
+        x = (self.campos.x - self.rcam.x)*self.cell_rect.w
+        y = (self.campos.y - self.rcam.y)*self.cell_rect.h
+        return x,y
 
     def draw_grid(self, screen, show_grid_lines):
         xpix, ypix = self.get_dpix()
@@ -121,8 +122,10 @@ class Camera:
 
     def get_cell(self, pix):
 ##        if self.map_rect.collidepoint(pix):
-        if not self.box_hmap.get_fus_rect().collidepoint(pix):
+        if not self.me.e_box.get_fus_rect().collidepoint(pix):
+            print("HEHO")
             coord = self.get_coord_at_pix(pix)
+            print(coord)
             if self.lm.is_inside(coord):
                 return self.lm[coord]
 
@@ -161,13 +164,17 @@ class Camera:
         return self.cell_rect.move((shift_x, shift_y)).move(self.map_rect.topleft)
 
     def get_coord_at_pix(self, pix):
-        pos = V2(self.get_dpix()) + pix - self.map_rect.topleft
+        pos = V2(self.get_dpix()) - self.map_rect.topleft + pix
         pos.x *= self.nx/self.map_rect.w
         pos.y *= self.ny/self.map_rect.h
-##        return (int(pos.x) + self.lm.current_x - 1,
-##                int(pos.y) + self.lm.current_y - 1)
-        return (int(pos.x) + self.lm.current_x,
-                int(pos.y) + self.lm.current_y)
+        #now pos represents the exact (not integer) coord relative to the first displayed coord !
+        deltax, deltay = 0, 0
+        if pos.x < 0:
+            deltax = -1
+        if pos.y < 0:
+            deltay = -1
+        return (int(pos.x) + self.lm.current_x + deltax,
+                int(pos.y) + self.lm.current_y + deltay)
 
     def get_rect_at_pix(self, pix):
         return self.get_rect_at_coord(self.get_coord_at_pix(pix))
