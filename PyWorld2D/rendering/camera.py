@@ -123,9 +123,7 @@ class Camera:
     def get_cell(self, pix):
 ##        if self.map_rect.collidepoint(pix):
         if not self.me.e_box.get_fus_rect().collidepoint(pix):
-            print("HEHO")
             coord = self.get_coord_at_pix(pix)
-            print(coord)
             if self.lm.is_inside(coord):
                 return self.lm[coord]
 

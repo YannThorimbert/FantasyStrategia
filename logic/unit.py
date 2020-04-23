@@ -82,6 +82,7 @@ class Unit(MapObject):
         self.object_defense = {}
         self.strength = None
         self.defense = None
+        self.help_repair = None
         #
         self.race = None
         self.game = None
@@ -198,6 +199,7 @@ class Unit(MapObject):
         obj.terrain_attack = self.terrain_attack
         obj.object_defense = self.object_defense
         obj.strength = self.strength
+        obj.help_repair = self.help_repair
         obj.defense = self.defense
         #
         obj.footprint = self.footprint
@@ -244,6 +246,7 @@ class Unit(MapObject):
         obj.object_defense = self.object_defense.copy()
         obj.strength = self.strength
         obj.defense = self.defense
+        obj.help_repair = self.help_repair
         #
         obj.highlights = {}
         for color in self.highlights:
@@ -452,7 +455,7 @@ class Unit(MapObject):
         g = RACE_FIGHT_FACTOR.get((other_race, self_race), 1.)
         damage_from_other = terrain_bonus2 * r * g * other.strength / self.defense
         damage_from_other *= ATTACKING_DAMAGE_FACTOR
-        print(damage_to_other, damage_from_other)
+##        print(damage_to_other, damage_from_other)
         tot = damage_from_other+damage_to_other
         if random.random() < 1. / tot:
             return 0
@@ -498,6 +501,12 @@ class Unit(MapObject):
 
     def get_all_surrounding_ennemies(self):
         return [u for u in self.get_all_surrounding_units() if u.team != self.team]
+
+    def repair_friend(self, friend):
+        delta = max(1, int(self.help_repair * friend.base_number))
+        friend.quantity += delta
+        if friend.quantity > friend.base_number:
+            friend.quantity = friend.base_number
 
 
 def get_unit_sprites(fn,  colors="blue", deltas=None, s=32, ckey=(255,255,255)):

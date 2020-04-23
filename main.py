@@ -45,54 +45,37 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-#pas de surbrillance sur bridge dynamic au mousemotion
+##human rect for production unit
 
-#que faire avec les unites impliquees dans batailles ?
+#drapeaux marchent pas
+
+#img units dans resume post combat
 
 #relimiter les bruits et shocks du combat
 ##Preproc box human
 ##Gui choices petit au bon endroit et transp
-##40
-
+##map sympa
 
 #sons: cris de guerre. SoundSnap, acheter quand meme ?
 #penser a enlever check integrity dans func time
 
+#fusionner les thorpy ICI et git!!!!
+
+
+
 
 ################################################################################
-#Valider le jeu sur 3 types d'units : fermier, fantassin, mage
-#conquete de base et batailles. Pas d'impots ni de gestion hors production unites.
-#village peuvent etre conquis et ***peuvent produire unites***
-# ***ressources : or, population***
-##==> a quoi sert-il de planter des drapeaux, d'ailleurs ? : a conquerir villages.
-##==> ***Tous les villages ont des drapeaux***
-#Ressources ??? : or.
-
-#2. FEUX:
-    #attention : bruler est une action a part entiere, empeche d'attaquer dans le meme tour
-
-#3. VILLAGES:
-    #Comment produisent-ils des unites ? (clique droit)
-
-#4. SYSTEME DE JEU ET REGLES:
-    #avant bataille, indiquer les bonus de defense et d'attaque, et autres aides de prevision
-
-#fusionner les thorpy ICI et git!!!!
+################################################################################
+################################################################################
 
 #TEST !! - V a1
 
 #load/save
 #editeur terrain
+#preprocess gui davantage
 
-#TEST - V a2
-
-#puis suite...
-
-
-################################################################################
-################################################################################
-################################################################################
 ##toujours possible d'annuler un deplacement si rien d'autre n'a ete fait depuis (comme dans aw)
+#ajouter objets en statiques car tte façon mieux pour perfs !!!
 
 #en 64pixels, disp des battle marchent pas.
 

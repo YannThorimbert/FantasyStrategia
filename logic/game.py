@@ -70,6 +70,7 @@ class Game:
         self.need_refresh_ui_box = True
         #
         self.sounds = thorpy.SoundCollection()
+        self.turn_page_sound = self.sounds.add("sounds/ui/turn_page.wav")[0]
         self.construction_sound = self.sounds.add("sounds/ui/metal-clash.wav")[0]
         self.village_sound = self.sounds.add("sounds/ui/leather_inventory.wav")[0]
 ##        self.coin_sound = self.sounds.add("sounds/ui/coin2.wav")[0]
@@ -94,6 +95,7 @@ class Game:
         self.burning = {} #e.g. burning[(4,12):2] means 2 remaining turns to burn
         fire_imgs = get_sprite_frames("sprites/fire_idle.png")
         self.fire = MapObject(self.me, fire_imgs, "fire")
+        self.fire.can_interact = True
         self.fire.min_relpos=[0,-0.4]
         self.fire_max_relpos=[0,-0.4]
         self.fire.relpos=[0,-0.4]
@@ -122,7 +124,7 @@ class Game:
                                 "bridge_v":None, "bridge_h":None,
                                 "road":None}
         self.constructions = {}
-        self.construction_time = {"village":4, "windmill":6, "bridge":6, "road":1}
+        self.construction_time = {"village":4, "windmill":6, "bridge":1, "road":1}
         self.construction_price = {"village":INCOME_PER_VILLAGE*2,
                                    "windmill":INCOME_PER_WINDMILL*2,
                                    "bridge":INCOME_PER_WINDMILL*2,
@@ -196,7 +198,7 @@ class Game:
             if unit:
                 time_left -= 1
             self.constructions[coord] = str_type, time_left, unit
-            if time_left == 0:
+            if time_left <= 0:
                 self.construction_sound.play_next_channel()
                 self.get_object("construction", coord).remove_from_map(self.me)
                 if str_type == "bridge":

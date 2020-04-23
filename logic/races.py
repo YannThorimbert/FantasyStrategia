@@ -82,13 +82,26 @@ std_help_range = {  'villager':(0,0),
                     'archer':(0,0),
                     'cavalry':(0,0),
                     'mounted archer':(0,0),
-                    'wizard':(0,0),
+                    'wizard':(0,1),
                     'arch wizard':(0,5),
                     'king':(0,0),
                     'cook':(0,0),
                     'doctor':(1,1),
                     'transport boat':(0,0),
                     'attack boat':(0,0)}
+
+std_help_repair = { 'villager':0,
+                    'infantry':0,
+                    'archer':0,
+                    'cavalry':0,
+                    'mounted archer':0,
+                    'wizard':0.2,
+                    'arch wizard':0.5,
+                    'king':0,
+                    'cook':0,
+                    'doctor':(1,1),
+                    'transport boat':0,
+                    'attack boat':0}
 
 std_strength = {'villager':0.5,
                 'infantry':1,
@@ -194,6 +207,7 @@ class Race:
             self.add_type(unit_type, "sprites/"+baserace+"_"+unit_type)
         imgs_flag = unit.get_unit_sprites("sprites/flag_idle.png", self.color)
         self.flag = MapObject(self.me, imgs_flag, self.name+" flag", str_type="flag")
+        self.flag.can_interact = True
         self.flag.max_relpos = [0.7, -0.1]
         self.flag.min_relpos = [0.7, -0.1]
 ##        self.flag.always_drawn_last = True
@@ -254,6 +268,8 @@ class Race:
                 u.strength = self.strength_factor * std_strength[type_name]
             if u.defense is None:
                 u.defense = self.defense_factor * std_defense[type_name]
+            if u.help_repair is None:
+                u.help_repair = std_help_repair[type_name]
             #
             u.material_cost = fusion_dicts(u.material_cost,
                                             self.base_material_cost)

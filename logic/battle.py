@@ -447,36 +447,7 @@ class Battle:
 
 
     def get_units_dict_from_list(self, units):
-        coords = [u.cell.coord for u in units]
-        assert 1 < len(coords) <= 5
-        neighbours = {}
-        for u in units:
-            x,y = u.cell.coord
-            neighbours[u] = []
-            for dx,dy in DELTAS:
-                if (x+dx,y+dy) in coords:
-                    neighbours[u].append((dx,dy))
-        #now choose the units with the largest amount of neighbours
-        candidates = [(len(neighbours[u]),units.index(u),u) for u in neighbours]
-        center_unit = max(candidates)[-1]
-        game = center_unit.game
-        x,y = center_unit.cell.coord
-        #build the relative dict
-        relative_dict = {}
-        for dx,dy in neighbours[center_unit]:
-            key = DELTA_TO_KEY[(dx,dy)]
-            other = game.get_unit_at(x+dx,y+dy)
-            relative_dict[key] = other
-        #now build the final dict
-        if len(coords) == 2:
-            assert len(relative_dict) == 1
-            only_key = list(relative_dict.keys())[0]
-            dx,dy = KEY_TO_DELTA[only_key]
-            otherkey = DELTA_TO_KEY[(-dx,-dy)]
-            relative_dict[otherkey] = center_unit
-        else:
-            relative_dict[CENTER] = center_unit
-        return relative_dict
+        return get_units_dict_from_list(units)
 
     def fight(self):
         self.prepare_battle()
@@ -1056,16 +1027,7 @@ class DistantBattle(Battle):
         self.sep_line_x = (self.surface.get_width() - self.separation_line.get_width())/2
 
     def get_units_dict_from_list(self, units):
-        coords = [u.cell.coord for u in units]
-        relative_dict = {}
-        if units[0].cell.coord[0] < units[1].cell.coord[0]:
-            relative_dict[LEFT] = units[0]
-            relative_dict[RIGHT] = units[1]
-        else:
-            relative_dict[LEFT] = units[1]
-            relative_dict[RIGHT] = units[0]
-        return relative_dict
-
+        return get_units_dict_from_list_distant(units)
 
     def refresh_and_blit_gui(self):
         self.refresh_timebar()
@@ -1332,3 +1294,47 @@ def get_img(cell, z):
         if "sand" in n or "snow" in n:
             footprint = True
     return img, splash, footprint
+
+def get_units_dict_from_list(units):
+    coords = [u.cell.coord for u in units]
+    assert 1 < len(coords) <= 5
+    neighbours = {}
+    for u in units:
+        x,y = u.cell.coord
+        neighbours[u] = []
+        for dx,dy in DELTAS:
+            if (x+dx,y+dy) in coords:
+                neighbours[u].append((dx,dy))
+    #now choose the units with the largest amount of neighbours
+    candidates = [(len(neighbours[u]),units.index(u),u) for u in neighbours]
+    center_unit = max(candidates)[-1]
+    game = center_unit.game
+    x,y = center_unit.cell.coord
+    #build the relative dict
+    relative_dict = {}
+    for dx,dy in neighbours[center_unit]:
+        key = DELTA_TO_KEY[(dx,dy)]
+        other = game.get_unit_at(x+dx,y+dy)
+        relative_dict[key] = other
+    #now build the final dict
+    if len(coords) == 2:
+        assert len(relative_dict) == 1
+        only_key = list(relative_dict.keys())[0]
+        dx,dy = KEY_TO_DELTA[only_key]
+        otherkey = DELTA_TO_KEY[(-dx,-dy)]
+        relative_dict[otherkey] = center_unit
+    else:
+        relative_dict[CENTER] = center_unit
+    return relative_dict
+
+
+def get_units_dict_from_list_distant(units):
+    coords = [u.cell.coord for u in units]
+    relative_dict = {}
+    if units[0].cell.coord[0] < units[1].cell.coord[0]:
+        relative_dict[LEFT] = units[0]
+        relative_dict[RIGHT] = units[1]
+    else:
+        relative_dict[LEFT] = units[1]
+        relative_dict[RIGHT] = units[0]
+    return relative_dict

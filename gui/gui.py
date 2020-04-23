@@ -4,11 +4,14 @@ import PyWorld2D.gui.elements as elements
 import PyWorld2D.gui.parameters as guip
 import PyWorld2D.saveload.io as io
 from FantasyStrategia.logic.battle import Battle, DistantBattle
+from FantasyStrategia.logic.battle import get_units_dict_from_list
+from FantasyStrategia.logic.battle import get_units_dict_from_list_distant
 from FantasyStrategia.logic.fakebattle import Battle as FakeBattle
 from FantasyStrategia.logic.fakebattle import DistantBattle as FakeDistantBattle
 from FantasyStrategia.logic.game import INCOME_PER_VILLAGE, INCOME_PER_WINDMILL
 from FantasyStrategia.gui import texts
 from FantasyStrategia.gui.theme import set_theme
+from FantasyStrategia.gui import transitions
 
 ONOMATOPOEIA_DURATION = 1.5
 ONOMATOPOEIA_COLOR = (255,)*3
@@ -164,10 +167,13 @@ class BuildingConstructionGUI:
             n_button.fit_children()
             n_button.add_basic_help(texts.descr_building[what])
             self.choices[what] = (g_button, n_button)
-        set_theme("classic")
+##        set_theme("classic")
         self.title = guip.get_title("Building")
-        self.line = thorpy.Line(500, "h")
-        set_theme("human")
+        self.line = thorpy.Line(300, "h")
+        self.box = thorpy.Element()
+        self.box.set_size((400,200))
+        self.box.center()
+##        set_theme("human")
 
 
 class Gui:
@@ -272,6 +278,9 @@ class Gui:
         self.plain_star = None
         self.nstars = 3
         self.stars = []
+        #
+        self.e_add = {key:thorpy.make_button("+") for key in ["left","right","top","down"]}
+        self.e_rem = {key:thorpy.make_button("-") for key in ["left","right","top","down"]}
 
 
     def set_map_gui(self):
@@ -350,12 +359,10 @@ class Gui:
     def extinguish(self):
         if self.game.get_object("fire", self.cell_under_cursor.coord):
             self.game.extinguish(self.cell_under_cursor.coord)
-##        for o in self.cell_under_cursor.objects:
-##            if o.str_type == "fire":
-##                self.game.extinguish(self.cell_under_cursor.coord)
 
     def check_extinguish(self):
         u = self.selected_unit
+        print("CHECK EXT", u.cell.distance_to(self.cell_under_cursor) <= u.help_range[1])
         if u.cell.distance_to(self.cell_under_cursor) <= u.help_range[1]:
             n = u.str_type
             return n == "wizard" or n == "arch_wizard"
@@ -512,7 +519,8 @@ class Gui:
                 d = other.cell.distance_to_coord(coord)
                 if other.team == ref_unit.team:
                     if d <= ref_unit.help_range[1]:
-                        self.can_be_helped.append(other)
+                        if other.quantity < other.base_number:
+                            self.can_be_helped.append(other)
                 elif d <= ref_unit.attack_range[1]:
                     self.can_be_fought.append(other)
 
@@ -625,32 +633,133 @@ class Gui:
         defender = self.unit_under_cursor()
         distance = defender.distance_to(self.selected_unit)
         units_in_battle = defender.get_all_surrounding_ennemies()
+        for u in units_in_battle:
+            if not(u is defender) and not(u is self.selected_unit):
+                if u.is_grayed:
+                    units_in_battle.remove(u)
         units_in_battle.append(defender)
         return units_in_battle, defender, distance
 
-    def attack(self):
-        units_in_battle, defender, distance = self.get_battle_units()
-        b = Battle(self.game, units_in_battle, defender, distance)
-        b.fight()
-        if self.selected_unit.quantity > 0:
-            self.selected_unit.make_grayed()
-        self.clear()
-        thorpy.get_current_menu().fps = guip.FPS
-        self.refresh_lifes()
-
-    def try_attack_simulation(self):
-        if self.current_battle_simulation != self.cell_under_cursor.unit:
+    def battle_confirmation(self, units, defender):
+        self.game.turn_page_sound.play()
+##        self.game.func_reac_time()
+        d = get_units_dict_from_list(units)
+        active = list(d.keys())
+        els = {}
+        names = {"left":"west", "right":"east", "up":"north", "down":"south",
+                    "center":"center"}
+        def uclick(side):
+            u = d.get(side)
+            sidename = names[side]
+            this_el = els[sidename]
+            if side in active: #deactivate unit
+                this_el.set_main_color((50,50,50))
+                active.remove(side)
+                for child in this_el.get_descendants():
+                    child.set_visible(False)
+            else:
+                for child in this_el.get_descendants():
+                    child.set_visible(True)
+                active.append(side)
+                this_el.set_main_color(thorpy.style.DEF_COLOR)
+            #
+            units_in_battle = [d[side] for side in active]
+            battle_infos = units_in_battle, defender, defender.distance_to(self.selected_unit)
             self.stars = []
             self.current_battle_simulation = None
-            uuc = self.unit_under_cursor()
+            self.attack_simulation(battle_infos)
+            for unit, surf in self.stars:
+                    for side, unit2 in d.items():
+                        if unit2 is unit:
+                            els[names[side]].stars.set_image(surf)
+            e.blit()
+            e.update()
+        for side in names.keys():
+            u = d.get(side)
+            sidename = names[side]
+            if u:
+                uinfo = thorpy.make_text(u.race.name + " " + u.name.capitalize() + " (" + str(u.quantity) + ")")
+                img = thorpy.Image(u.imgs_z_t[0][0])
+                for unit, surf in self.stars:
+                    if unit is u:
+                        img2 = thorpy.Image(surf, colorkey=(255,255,255))
+                        break
+                else:
+                    assert False
+                imgs = thorpy.make_group([img, img2])
+                e = thorpy.Togglable(elements=[uinfo, imgs])
+                e.stars = img2
+                thorpy.store(e)
+                e.fit_children()
+                els[sidename] = e
+                e.user_func = uclick
+                e.user_params = {"side":side}
+                if u is defender or u is self.selected_unit:
+                    e.set_pressed_state()
+                    e.set_active(False)
+        group_center = [els[n] for n in ["west", "center", "east"] if els.get(n)]
+        group_center = thorpy.make_group(group_center)
+        cancel = thorpy.make_button("Cancel", thorpy.functions.quit_menu_func)
+        class Choice:
+            choice = False
+        def gotobattle():
+            Choice.choice = True
+            thorpy.functions.quit_menu_func()
+        def clickquit(ev):
+            if not e.get_fus_rect().collidepoint(ev.pos):
+                thorpy.functions.quit_menu_func()
+        ok = thorpy.make_button("Go to battle", gotobattle)
+        okcancel = thorpy.make_group([ok, cancel])
+        elsbox = []
+        if els.get("north"):
+            elsbox.append(els["north"])
+        if group_center:
+            elsbox.append(group_center)
+        if els.get("south"):
+            elsbox.append(els["south"])
+        line = thorpy.Line(okcancel.get_fus_size()[0], "h")
+        elsbox += [line, okcancel]
+        e = thorpy.Box(elsbox)
+        e.center()
+        e.add_reaction(thorpy.Reaction(pygame.MOUSEBUTTONDOWN, clickquit))
+        m = thorpy.Menu(e)
+        m.play()
+        units_in_battle = [d[side] for side in active]
+        battle_infos = units_in_battle, defender, defender.distance_to(self.selected_unit)
+        return Choice.choice, battle_infos
+
+    def attack(self):
+        units_in_battle, defender, distance = self.get_battle_units()
+        choice = True
+        if len(units_in_battle) > 2:
+            transitions.fade_to_black_screen()
+            choice, battle_infos = self.battle_confirmation(units_in_battle, defender)
+            units_in_battle, defender, distance = battle_infos
+        if choice:
+            b = Battle(self.game, units_in_battle, defender, distance)
+            b.fight()
+            if self.selected_unit.quantity > 0:
+                self.selected_unit.make_grayed()
+            self.clear()
+            thorpy.get_current_menu().fps = guip.FPS
+            self.refresh_lifes()
+
+    def try_attack_simulation(self, battle_infos=None):
+        uuc = self.unit_under_cursor()
+        if self.current_battle_simulation != uuc:
+            self.stars = []
+            self.current_battle_simulation = None
             if uuc in self.can_be_fought:
                 if uuc.distance_to(self.selected_unit) == 1:
-                    self.attack_simulation()
+                    self.attack_simulation(battle_infos)
                 elif uuc.distance_to(self.selected_unit) <= self.selected_unit.attack_range[1]:
                     self.distant_attack_simulation()
 
-    def attack_simulation(self):
-        units_in_battle, defender, distance = self.get_battle_units()
+    def attack_simulation(self, battle_infos=None):
+        if battle_infos is None:
+            units_in_battle, defender, distance = self.get_battle_units()
+        else:
+            units_in_battle, defender, distance = battle_infos
         random.seed(0)
         b = FakeBattle(self.game, units_in_battle, defender, distance)
         result = b.fight()
@@ -736,8 +845,9 @@ class Gui:
 
     def help(self):
         friend = self.unit_under_cursor()
+        self.selected_unit.repair_friend(friend)
         self.selected_unit.make_grayed()
-        print("helping", friend.name, friend.team == self.selected_unit.team)
+##        print("helping", friend.name, friend.team == self.selected_unit.team)
 ##        raise Exception("Not implemented yet")
 
     def get_interaction_choices(self, objs, exceptions=""):
@@ -753,14 +863,16 @@ class Gui:
                     elif d == 1:
                         choices["Attack"] = self.attack
                 elif cell.unit in self.blue_highlights:
-                    if d > 1 and self.selected_unit.help_range[1] >= d: #distant help
-                        choices["Distant help"] = self.help
-                    elif d == 1:
-                        choices["Help"] = self.help
+                    if cell.unit.quantity < cell.unit.base_number:
+                        if d > 1 and self.selected_unit.help_range[1] >= d: #distant help
+                            choices["Resurrect deads from far"] = self.help
+                        elif d == 1:
+                            choices["Resurrect deads"] = self.help
             for o in objs:
                 if o != cell.unit:
                     if o.str_type in self.actions:
                         for name, func, check in self.actions[o.str_type]:
+                            print("CHECKING", check, name, exceptions)
                             if name in exceptions:
                                 continue
                             elif check():
@@ -775,11 +887,33 @@ class Gui:
 
 
     def user_make_choice(self, choices):
-        choice = thorpy.launch_blocking_choices_str("Choose an action",
-                                                    sorted(choices.keys())+["Cancel"],
-                                                    title_fontsize=guip.NFS,
-                                                    title_fontcolor=guip.NFC)
-        func = choices.get(choice, None)
+##        choice = thorpy.launch_blocking_choices_str("Choose an action",
+##                                                    sorted(choices.keys())+["Cancel"],
+##                                                    title_fontsize=guip.NFS,
+##                                                    title_fontcolor=guip.NFC)
+        title = thorpy.make_text("Choose an action")
+##        title = guip.get_title("Choose an action")
+        els = {t:thorpy.make_button(t) for t in choices.keys()}
+##        g = thorpy.make_group(list(els.values()), "v")
+        g = thorpy.Box([title] + list(els.values()))
+##        g.set_main_color((200,200,200,100))
+        r = self.me.cam.get_rect_at_coord(self.cell_under_cursor.coord)
+        g.set_topleft(r.topright)
+        def clickquit(e):
+            if not g.get_family_rect().collidepoint(e.pos):
+                thorpy.functions.quit_menu_func()
+        class Choice:
+            choice = None
+        def choice(what):
+            Choice.choice = what
+            thorpy.functions.quit_menu_func()
+        for key, e in els.items():
+            e.user_func = choice
+            e.user_params = {"what":key}
+        g.add_reaction(thorpy.Reaction(pygame.MOUSEBUTTONDOWN, clickquit))
+        m = thorpy.Menu(g)
+        m.play()
+        func = choices.get(Choice.choice, None)
         if func:
             func()
         if not self.forced_gotocell:
@@ -938,8 +1072,9 @@ class Gui:
         thorpy.functions.quit_menu_func()
 
     def build(self):
+        self.game.func_reac_time()
         self.game.construction_sound.play()
-        set_theme("classic")
+##        set_theme("classic")
         on_water = False
         if self.cell_under_cursor.name == "river":
             on_water = True
@@ -965,15 +1100,16 @@ class Gui:
                     button.user_params = {"type_":what}
                 choices.append(button)
         def click_outside(event):
-            if not e.get_fus_rect().collidepoint(event.pos):
+            if not self.build_gui.box.get_fus_rect().collidepoint(event.pos):
                 thorpy.functions.quit_menu_func()
-        e =  thorpy.make_ok_box([self.build_gui.title, self.build_gui.line]+\
-                                    choices)
-        e.center()
+        self.build_gui.box.remove_all_elements()
+        self.build_gui.box.add_elements([self.build_gui.title, self.build_gui.line] + choices)
+        thorpy.store(self.build_gui.box)
         reac = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, click_outside)
-        e.add_reaction(reac)
-        thorpy.launch_blocking(e, add_ok_enter=True)
-        set_theme("human")
+        self.build_gui.box.remove_all_reactions()
+        self.build_gui.box.add_reaction(reac)
+        thorpy.launch_blocking(self.build_gui.box, add_ok_enter=True)
+##        set_theme("human")
 
     def production(self, o):
         from FantasyStrategia.logic.races import std_cost, std_number
@@ -1098,21 +1234,25 @@ class Gui:
 
     def draw_after_objects(self, s):
         self.enhancer.draw_splashes()
+        # Life of units and building time
         if self.show_lifes:
             self.refresh_lifes()
             for img, coord in self.lifes:
                 self.surface.blit(img, coord)
+        # Construction icon for units
         for unit in self.game.units:
             x,y = unit.get_current_rect_center(s)
             if unit.is_building:
                 t = self.game.me.lm.t3 % len(self.under_construct)
                 img = self.under_construct[t]
                 self.surface.blit(img, (x-s//2,y))
+        # Has moved icon for units
         for unit in self.has_moved:
             if not unit.is_building:
                 x,y = unit.get_current_rect_center(s)
                 t = self.game.me.lm.t3 % len(self.footstep)
                 self.surface.blit(self.footstep[t], (x-s//2,y))
+        # Help symbol
         for unit in self.can_be_helped:
             x,y = unit.get_current_rect_center(s)
             t = self.game.me.lm.t3 % len(self.medic)
@@ -1120,6 +1260,7 @@ class Gui:
             rect = img.get_rect()
             rect.center = (x,y)
             self.surface.blit(img, rect)
+        # Attack symbol
         for unit in self.can_be_fought:
             x,y = unit.get_current_rect_center(s)
             t = self.game.me.lm.t % len(self.sword)
@@ -1127,9 +1268,15 @@ class Gui:
             rect = img.get_rect()
             rect.center = (x,y)
             self.surface.blit(img, rect)
+        # Battle projection stars
         for u, surf in self.stars:
             r = u.get_current_rect(s)
             self.surface.blit(surf, r)
+##            if self.cell_under_cursor.unit:
+##                x,y = self.cell_under_cursor.unit.cell.coord
+##                if x > self.selected_unit.cell.coord[0]:
+##                    self.e_add["right"].set_topleft(self.me.cam.get_rect_at_coord(u.cell.coord).topright)
+##                    self.e_add["right"].blit()
 
     def unit_dies(self, u):
         for l in [self.has_moved, self.can_be_fought, self.can_be_helped]:
