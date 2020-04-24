@@ -42,8 +42,8 @@ MAX_TARGETED_BY2 = 6
 
 SUMMARY_LIFEBAR_SIZE = (150,25)
 
-P_DEAD_SOUND = 0.5
-P_HIT_SOUND = 1.
+P_DEAD_SOUND = 0.7
+P_HIT_SOUND = 0.7
 
 DFIGHT = 16
 K = 2.
@@ -496,6 +496,10 @@ class Battle:
         bckgr.add_reaction(reac)
         #
         menu = thorpy.Menu(bckgr, fps=self.fps)
+        s = random.choice(self.game.battle_ambiant_sounds)
+        s.play_next_channel()
+        s.manager.reserve_current_channel()
+        print("*** mixer*", pygame.mixer.get_num_channels())
         self.observation(self.fps)
 ##        thorpy.interactive_pause(3.)
         #######################################################################
@@ -505,6 +509,7 @@ class Battle:
         for s in self.walk_sounds:
             s.stop()
         self.game.set_ambiant_sounds(True)
+        s.manager.reserved_channels = set()
 
     def observation(self, fps):
 ##        self.update_battle()
@@ -980,6 +985,7 @@ class Battle:
         for side in (LEFT, CENTER, RIGHT, UP, DOWN):
             u = getattr(self, side)
             if u:
+                img = thorpy.Image(u.imgs_z_t[0][0])
                 engaged = thorpy.LifeBar("Before battle: "+str(u.quantity),
                                             size=SUMMARY_LIFEBAR_SIZE)
                 before = u.quantity
@@ -998,7 +1004,7 @@ class Battle:
                     losses[u.race.name] = before-u.quantity
                 utype = thorpy.make_text(u.name.capitalize())
                 race_type = thorpy.make_group([race, utype])
-                els[side] = thorpy.Box([eside,line,race_type,engaged,dead])
+                els[side] = thorpy.Box([eside,line,img,race_type,engaged,dead])
                 if u.quantity <= 0:
                     show_death.append(u)
             else:

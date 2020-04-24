@@ -1108,6 +1108,7 @@ class Gui:
                     button = n
                     button.user_func = self.launch_construction
                     button.user_params = {"type_":what}
+                button._help_element.set_jailed(self.prod_gui.box)
                 choices.append(button)
         def click_outside(event):
             if not self.build_gui.box.get_fus_rect().collidepoint(event.pos):
@@ -1118,6 +1119,7 @@ class Gui:
         reac = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, click_outside)
         self.build_gui.box.remove_all_reactions()
         self.build_gui.box.add_reaction(reac)
+        self.build_gui.box.fit_children()
         thorpy.launch_blocking(self.build_gui.box, add_ok_enter=True)
 ##        set_theme("human")
 

@@ -45,29 +45,17 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-
-#Remove flag marche pas
-
-#img units dans resume post combat
-
-#relimiter les bruits et shocks du combat
-##Preproc box human
-##Gui choices petit au bon endroit et transp
 ##map sympa
 
-#sons: cris de guerre. SoundSnap, acheter quand meme ?
-#penser a enlever check integrity dans func time
-
 #fusionner les thorpy ICI et git!!!!
-
-
-
 
 ################################################################################
 ################################################################################
 ################################################################################
 
 #TEST !! - V a1
+
+#son celebration
 
 #load/save
 #editeur terrain

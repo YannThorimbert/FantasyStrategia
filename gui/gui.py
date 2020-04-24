@@ -1119,13 +1119,14 @@ class Gui:
         reac = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, click_outside)
         self.build_gui.box.remove_all_reactions()
         self.build_gui.box.add_reaction(reac)
+        self.build_gui.box.fit_children()
         thorpy.launch_blocking(self.build_gui.box, add_ok_enter=True)
 ##        set_theme("human")
 
     def production(self, o):
         from FantasyStrategia.logic.races import std_cost, std_number
         self.game.village_sound.play()
-        set_theme("classic")
+##        set_theme("classic")
         choices = []
         race = self.game.current_player.race
         def produce_unit(type_):

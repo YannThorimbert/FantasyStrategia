@@ -18,6 +18,7 @@ class FakeSound(object):
 class Sound(pygame.mixer.Sound):
 
     def __init__(self, filename, manager):
+        filename = filename.replace("\\","/")
         pygame.mixer.Sound.__init__(self, filename)
         self.manager = manager
 
@@ -25,8 +26,10 @@ class Sound(pygame.mixer.Sound):
         self.manager.current_channel_number += 1
         self.manager.current_channel_number %= pygame.mixer.get_num_channels()
         c = self.manager.current_channel_number
-        self.manager.current_channel = pygame.mixer.Channel(c)
-        self.manager.current_channel.play(self)
+        if not c in self.manager.reserved_channels:
+            print("Play sound on channel", c)
+            self.manager.current_channel = pygame.mixer.Channel(c)
+            self.manager.current_channel.play(self)
 
 class SoundCollection:
 
@@ -36,12 +39,16 @@ class SoundCollection:
         pygame.mixer.init(frequency=22050, size=-16, buffer=512)
         self.current_channel_number = 0
         self.current_channel = pygame.mixer.Channel(self.current_channel_number)
+        self.reserved_channels = set()
+
+    def reserve_current_channel(self):
+        self.reserved_channels.add(self.current_channel_number)
 
     def add(self, filename, name=None):
         pygame.mixer.init()
         fake = False
         try:
-            sound = Sound(filename, self)
+            sound = Sound(filename, manager=self)
             sound.play()
             pygame.mixer.stop()
             print("Loaded", filename, name)

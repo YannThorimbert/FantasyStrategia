@@ -45,7 +45,7 @@ def get_sounds(root, sc, volume=None):
     sounds = []
     for fn in os.listdir(root):
         if fn.endswith(".wav") or fn.endswith(".mp3"):
-            sound, fake = sc.add(os.path.join(root,fn))
+            sound, fake = sc.add(os.path.normpath(os.path.join(root,fn)))
             if not fake:
                 if volume is not None:
                     sound.set_volume(volume)
@@ -70,6 +70,7 @@ class Game:
         self.need_refresh_ui_box = True
         #
         self.sounds = thorpy.SoundCollection()
+        self.battle_ambiant_sounds = get_sounds("sounds/battle_ambiant", self.sounds)
         self.turn_page_sound = self.sounds.add("sounds/ui/turn_page.wav")[0]
         self.construction_sound = self.sounds.add("sounds/ui/metal-clash.wav")[0]
         self.village_sound = self.sounds.add("sounds/ui/leather_inventory.wav")[0]
