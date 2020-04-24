@@ -134,11 +134,19 @@ class UnitProductionGUI:
                         g_button.fit_children()
                         g_button.set_pressed_state()
                         g_button.add_basic_help(race.unit_descr[unit_type])
+##                        thorpy.makeup.add_basic_help(g_button, race.unit_descr[unit_type], jail=True)
                         self.choices[race.name][unit_type] = (e_text, g_button, n_button)
-        set_theme("classic")
+##        set_theme("classic")
         self.title = guip.get_title("Recruitment")
-        self.line = thorpy.Line(500, "h")
-        set_theme("human")
+        self.line = thorpy.Line(300, "h")
+        self.box = thorpy.Element()
+        some_race = self.game.players[0].race.name
+        choices = self.choices[some_race].values()
+        els = [e[-1] for e in choices] + [self.title, self.line]
+        h = int(1.1*sum([e.get_fus_size()[1] + 20 for e in els]))
+        self.box.set_size((400,h))
+        self.box.center()
+##        set_theme("human")
 
 class BuildingConstructionGUI:
     def __init__(self, game):
@@ -171,7 +179,9 @@ class BuildingConstructionGUI:
         self.title = guip.get_title("Building")
         self.line = thorpy.Line(300, "h")
         self.box = thorpy.Element()
-        self.box.set_size((400,200))
+        els = [e[0] for e in self.choices.values()] + [self.title, self.line]
+        h = int(1.1*sum([e.get_fus_size()[1] for e in els]))
+        self.box.set_size((400,h))
         self.box.center()
 ##        set_theme("human")
 
@@ -864,10 +874,10 @@ class Gui:
                         choices["Attack"] = self.attack
                 elif cell.unit in self.blue_highlights:
                     if cell.unit.quantity < cell.unit.base_number:
-                    if d > 1 and self.selected_unit.help_range[1] >= d: #distant help
-                        choices["Resurrect deads from far"] = self.help
-                    elif d == 1:
-                        choices["Resurrect deads"] = self.help
+                        if d > 1 and self.selected_unit.help_range[1] >= d: #distant help
+                            choices["Resurrect deads from far"] = self.help
+                        elif d == 1:
+                            choices["Resurrect deads"] = self.help
             for o in objs:
                 if o != cell.unit:
                     if o.str_type in self.actions:
@@ -1115,8 +1125,6 @@ class Gui:
         from FantasyStrategia.logic.races import std_cost, std_number
         self.game.village_sound.play()
         set_theme("classic")
-        e_title = self.prod_gui.title
-        e_line = self.prod_gui.line
         choices = []
         race = self.game.current_player.race
         def produce_unit(type_):
@@ -1132,10 +1140,10 @@ class Gui:
                 if unit_type in race.unit_types:
                     u = race[unit_type]
                     cost = u.cost * INCOME_PER_VILLAGE
-                    text = str(u.base_number) + " " + unit_type.capitalize()
-                    text += "    (" + str(cost) + " $)"
+##                    text = str(u.base_number) + " " + unit_type.capitalize()
+##                    text += "    (" + str(cost) + " $)"
                     t,g,n = self.prod_gui.choices[race.name][unit_type]
-                    t.set_text(text)
+##                    t.set_text(text)
                     grayed = cost > self.game.current_player.money
                     if grayed:
                         button = g
@@ -1143,17 +1151,27 @@ class Gui:
                         button = n
                         button.user_func = produce_unit
                         button.user_params = {"type_":unit_type}
+                    button._help_element.set_jailed(self.prod_gui.box)
                     choices.append(button)
         def click_outside(event):
-            if not e.get_fus_rect().collidepoint(event.pos):
+            if not self.prod_gui.box.get_fus_rect().collidepoint(event.pos):
                 thorpy.functions.quit_menu_func()
-        e =  thorpy.make_ok_box([e_title, e_line]+choices)
-        e.center()
+##        e =  thorpy.make_ok_box([e_title, e_line]+choices)
+##        e.center()
         reac = thorpy.Reaction(pygame.MOUSEBUTTONDOWN, click_outside)
-        e.add_reaction(reac)
+##        e.add_reaction(reac)
 ##        e.set_main_color((200,200,200,200))
-        thorpy.launch_blocking(e, add_ok_enter=True)
-        set_theme("human")
+##        thorpy.launch_blocking(e, add_ok_enter=True)
+##        set_theme("human")
+        self.prod_gui.box.remove_all_elements()
+        self.prod_gui.box.add_elements([self.prod_gui.title, self.prod_gui.line] + choices)
+        thorpy.store(self.prod_gui.box)
+        self.prod_gui.box.fit_children()
+        self.prod_gui.box.remove_all_reactions()
+        self.prod_gui.box.add_reaction(reac)
+##        thorpy.launch_blocking(self.prod_gui.box, add_ok_enter=True)
+        m = thorpy.Menu(self.prod_gui.box)
+        m.play()
 
 
     def get_alpha_dest(self):

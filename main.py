@@ -45,9 +45,8 @@ game = Game(me)
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-##human rect for production unit
 
-#drapeaux marchent pas
+#Remove flag marche pas
 
 #img units dans resume post combat
 
