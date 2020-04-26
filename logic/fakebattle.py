@@ -314,7 +314,8 @@ class Battle:
     """
 
 
-    def __init__(self, game, units, defender, distance, zoom_level=0):
+    def __init__(self, game, units, defender, distance):
+        zoom_level = game.me.zoom_level
         self.battle_duration = BATTLE_DURATION
         self.defender_start_shooting = BATTLE_DURATION//10
         self.projectile_class = Projectile
@@ -825,8 +826,8 @@ class DistantBattleProjectile(Projectile):
         return True
 
 class DistantBattle(Battle):
-    def __init__(self, game, units, defender, distance, zoom_level=0):
-        Battle.__init__(self, game, units, defender, distance, zoom_level)
+    def __init__(self, game, units, defender, distance):
+        Battle.__init__(self, game, units, defender, distance)
         self.battle_duration = DISTANT_BATTLE_DURATION
         self.projectile_class = DistantBattleProjectile
         self.separation_line = pygame.Surface((30,self.surface.get_height()))

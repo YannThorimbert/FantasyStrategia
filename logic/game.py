@@ -62,7 +62,7 @@ class Game:
         self.gui = None
         self.units = []
         self.t = 0
-        self.days_left = 10 #set -1 for an infinite number of days
+        self.days_left = -1 #set -1 for an infinite number of days
         self.days_elapsed = 1
         self.current_player = None
         self.players = None
@@ -125,7 +125,7 @@ class Game:
                                 "bridge_v":None, "bridge_h":None,
                                 "road":None}
         self.constructions = {}
-        self.construction_time = {"village":4, "windmill":6, "bridge":1, "road":1}
+        self.construction_time = {"village":4, "windmill":6, "bridge":6, "road":2}
         self.construction_price = {"village":INCOME_PER_VILLAGE*2,
                                    "windmill":INCOME_PER_WINDMILL*2,
                                    "bridge":INCOME_PER_WINDMILL*2,
@@ -256,6 +256,9 @@ class Game:
         self.players = players
         self.current_player = self.players[current]
         self.current_player_i = current
+        for p in players:
+            for u in p.race.unit_types.values():
+                p.team = p.race.team
 
     def get_players_from_team(self, team):
         return [p for p in self.players if p.team == team]
@@ -314,6 +317,7 @@ class Game:
         self.gui.has_moved = []
         #
         from_ = self.current_player.money
+        self.refresh_village_gui()
         self.update_player_income(self.current_player)
         self.gui.show_animation_income(from_, self.current_player.money)
         self.gui.e_gold_txt.set_text(str(self.current_player.money))
@@ -368,6 +372,7 @@ class Game:
                                     if race:
                                         print("adding flag", obj.cell.coord)
                                         self.set_flag(coord, race.flag, race.team)
+        thorpy.add_time_reaction(self.me.e_box, self.func_reac_time)
 
 
     def collect_path_objects(self, map_initializer):
@@ -468,21 +473,20 @@ class Game:
         for o in cell.objects: #ok
             for n in other_names:
                 if o.name == n:
-                    if o.relpos[1] >= obj.relpos[1]:
-                        has_other = True
-                        s = self.me.lm.get_current_cell_size()
-                        im2, r2 = o.get_current_img_and_rect(s)
-                        cell_rect = o.get_current_rect(s)
-                        obj.cell = cell
-                        obj_rect = obj.get_current_img().get_rect()
-                        obj_rect.bottom = r2.bottom + 1
-                        obj.cell = None
-                        #pos = centercell + relpos*s
-                        #<==> relpos = (pos - centercell)/s
-                        relpos = (obj_rect.centery - cell_rect.centery) / s
-                        obj.min_relpos = [0, relpos]
-                        obj.max_relpos = [0, relpos]
-                        break
+                    has_other = True
+                    s = self.me.lm.get_current_cell_size()
+                    im2, r2 = o.get_current_img_and_rect(s)
+                    cell_rect = o.get_current_cell_rect(s)
+                    obj.cell = cell
+                    obj_rect = obj.get_current_img().get_rect()
+                    obj_rect.bottom = r2.bottom + 1
+                    obj.cell = None
+                    #pos = centercell + relpos*s
+                    #<==> relpos = (pos - centercell)/s
+                    relpos = (obj_rect.centery - cell_rect.centery) / s
+                    obj.min_relpos = [0, relpos]
+                    obj.max_relpos = [0, relpos]
+                    break
         o = self.add_object(cell.coord, obj, qty, has_other)
         return o
 
@@ -500,7 +504,10 @@ class Game:
         return objs
 
     def get_all_objects_by_str_type(self, str_type):
-        return self.me.objects_dict[str_type].values()
+        d = self.me.objects_dict.get(str_type)
+        if d:
+            return d.values()
+        return []
 
     def get_map_size(self):
         return self.me.lm.nx, self.me.lm.ny
@@ -511,11 +518,12 @@ class Game:
 
     def get_objects_of_team(self, team, str_type):
         objs = []
-        for o in self.me.objects_dict["flag"].values():
-            if o.team == team:
-                obj = self.get_object(str_type, o.cell.coord)
-                if obj:
-                    objs.append(obj)
+        if "flag" in self.me.objects_dict:
+            for o in self.me.objects_dict["flag"].values():
+                if o.team == team:
+                    obj = self.get_object(str_type, o.cell.coord)
+                    if obj:
+                        objs.append(obj)
         return objs
 
     def update_player_income(self, p):
@@ -566,3 +574,45 @@ class Game:
         for u in self.units:
             races.add(u.race)
         return races
+
+    def initialize_last_parameters(self):
+        self.gui.footstep = get_sprite_frames("sprites/footstep.png", s=12,
+                                        resize_factor=0.6)
+        self.gui.sword = get_sprite_frames("sprites/sword_shine.png")
+        self.gui.medic = get_sprite_frames("sprites/medic.png", s=16)
+        self.gui.under_construct = get_sprite_frames("sprites/under_construction.png", s=16)
+        self.gui.under_capture = get_sprite_frames("sprites/under_capture.png", s=16)
+##        self.update_player_income(self.current_player)
+        self.gui.e_gold_txt.set_text(str(self.current_player.money))
+        self.gui.empty_star = get_sprite_frames("sprites/star_empty.png", s=13)[0]
+        self.gui.plain_star = get_sprite_frames("sprites/star_plain.png", s=13)[0]
+        self.hourglass = get_sprite_frames("sprites/hourglass.png")
+        p1,p2 = self.players
+        villages1 = self.get_objects_of_team(p1.team, "village")
+        villages2 = self.get_objects_of_team(p2.team, "village")
+        L1 = len(villages1)
+        L2 = len(villages2)
+        if L1 == L2: #including 0
+            return
+        if L1 > 0:
+            if L2 / L1 < 0.5:
+                v = random.choice(villages1)
+                self.set_flag(v.cell.coord, p2.race.flag, p2.team)
+        elif L2 > 0:
+            if L1 / L2 < 0.5:
+                v = random.choice(villages2)
+                self.set_flag(v.cell.coord, p1.race.flag, p1.team)
+
+
+    def initialize_money(self, amount):
+        for p in self.players:
+            p.money += amount
+        self.refresh_village_gui()
+        self.gui.refresh()
+        self.update_player_income(self.current_player)
+        self.gui.e_gold_txt.set_text(str(self.current_player.money))
+
+    def get_other_player(self, player):
+        if player is self.players[0]:
+            return self.players[1]
+        return self.players[0]

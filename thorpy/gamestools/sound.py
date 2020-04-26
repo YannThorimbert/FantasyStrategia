@@ -23,13 +23,13 @@ class Sound(pygame.mixer.Sound):
         self.manager = manager
 
     def play_next_channel(self):
-        self.manager.current_channel_number += 1
-        self.manager.current_channel_number %= pygame.mixer.get_num_channels()
-        c = self.manager.current_channel_number
-        if not c in self.manager.reserved_channels:
-            print("Play sound on channel", c)
-            self.manager.current_channel = pygame.mixer.Channel(c)
-            self.manager.current_channel.play(self)
+        self.play()
+##        self.manager.current_channel_number += 1
+##        self.manager.current_channel_number %= pygame.mixer.get_num_channels()
+##        c = self.manager.current_channel_number
+##        if not c in self.manager.reserved_channels:
+##            self.manager.current_channel = pygame.mixer.Channel(c)
+##            self.manager.current_channel.play(self)
 
 class SoundCollection:
 

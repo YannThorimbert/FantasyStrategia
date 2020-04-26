@@ -436,6 +436,7 @@ class Battle:
         self.text_finish.center()
         self.before_f1 = None
         self.before_f2 = None
+        self.ambiant_sound = None
         #GUI
         self.timebar = thorpy.LifeBar("Remaining time", size=(self.W//2, 25))
         self.timebar.set_main_color((220,220,220,100))
@@ -496,20 +497,20 @@ class Battle:
         bckgr.add_reaction(reac)
         #
         menu = thorpy.Menu(bckgr, fps=self.fps)
-        s = random.choice(self.game.battle_ambiant_sounds)
-        s.play_next_channel()
-        s.manager.reserve_current_channel()
-        print("*** mixer*", pygame.mixer.get_num_channels())
+        self.ambiant_sound = random.choice(self.game.battle_ambiant_sounds)
+        self.ambiant_sound.play_next_channel()
+        self.ambiant_sound.manager.reserve_current_channel()
         self.observation(self.fps)
 ##        thorpy.interactive_pause(3.)
         #######################################################################
         self.game.set_ambiant_sounds(False)
         self.add_walk_sounds()
         menu.play()
+        self.ambiant_sound.stop()
         for s in self.walk_sounds:
             s.stop()
+        self.ambiant_sound.manager.reserved_channels = set()
         self.game.set_ambiant_sounds(True)
-        s.manager.reserved_channels = set()
 
     def observation(self, fps):
 ##        self.update_battle()
@@ -721,6 +722,7 @@ class Battle:
                 thorpy.functions.quit_menu_func()
 
     def finish_battle(self):
+        self.ambiant_sound.fadeout(2000)
         self.slow()
         for u in self.f:
             u.target = None

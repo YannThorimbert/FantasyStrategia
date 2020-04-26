@@ -65,7 +65,7 @@ class GuiGraphicsEnhancement:
             return
         self.splash = self.splashes[self.gui.game.me.lm.t%len(self.splashes)]
         for u in self.units_splashes:
-            rect = u.get_current_rect(self.zoom)
+            rect = u.get_current_cell_rect(self.zoom)
             self.surface.blit(self.splash, rect.move(0,-6).bottomleft)
 
     def draw_footprints(self):
@@ -96,7 +96,7 @@ class GuiGraphicsEnhancement:
                 if self.show_footprints:
                     if t == "sand" or "snow" in t:
                         if not self.gui.game.get_object("forest", u.cell.coord):
-                            rect = u.get_current_rect(self.zoom)
+                            rect = u.get_current_cell_rect(self.zoom)
                             footprint = Footprint(u, 0, rect.center)
                             self.footprints[u.cell.coord] = footprint
 
@@ -111,7 +111,7 @@ class UnitProductionGUI:
                 if not "boat" in unit_type and not "king" in unit_type:
                     if unit_type in race.unit_types:
                         u = race[unit_type]
-                        cost = u.cost * INCOME_PER_VILLAGE
+                        cost = int(u.cost * INCOME_PER_VILLAGE)
                         img = race.unit_types[unit_type].imgs_z_t[0][0]
                         text = unit_type.capitalize()
                         text += "    (" + str(cost) + " $)"
@@ -195,10 +195,9 @@ class Gui:
         #
         self.font_colors_mat = {}
         for m in self.game.me.materials:
-            if "snow" in m.lower():
+            n = m.lower()
+            if "snow" in n or "sand" in n:
                 self.font_colors_mat[m] = (0,)*3
-##            elif "water" in m.lower():
-##                self.font_colors_mat[m] = (255,100,0)
             else:
                 self.font_colors_mat[m] = (255,)*3
         #
@@ -252,6 +251,8 @@ class Gui:
                                     self.check_continue_build),
                                 ("Build",self.build,
                                     self.check_build_water),
+##                                ("End turn",self.end_turn,
+##                                    self.check_end_turn),
                                 ("Build",self.build,
                                     self.check_build)]
 ##                                ("Go there",self.choice_gotocell,
@@ -291,6 +292,8 @@ class Gui:
         #
         self.e_add = {key:thorpy.make_button("+") for key in ["left","right","top","down"]}
         self.e_rem = {key:thorpy.make_button("-") for key in ["left","right","top","down"]}
+        self.game.initialize_last_parameters()
+        self.last_move = None
 
 
     def set_map_gui(self):
@@ -366,6 +369,14 @@ class Gui:
             else:
                 return str(self.game.days_left) + " days left"
 
+    def check_end_turn(self):
+        if self.selected_unit.is_grayed:
+            return False
+        return True
+
+    def end_turn(self):
+        self.selected_unit.make_grayed()
+
     def extinguish(self):
         if self.game.get_object("fire", self.cell_under_cursor.coord):
             self.game.extinguish(self.cell_under_cursor.coord)
@@ -400,11 +411,14 @@ class Gui:
                     return True
             if self.game.get_object("river", self.cell_under_cursor.coord):
                 return False
-        return self.cell_under_cursor.material.name.lower() in self.game.is_burnable
+        if self.selected_unit.str_type == "wizard":
+            return self.cell_under_cursor.material.name.lower() in self.game.is_burnable
 
     def check_build(self):
         cuc = self.cell_under_cursor
         if cuc.objects:
+            return False
+        elif cuc.coord in self.game.constructions:
             return False
         elif self.selected_unit.str_type != "villager":
             return False
@@ -419,6 +433,8 @@ class Gui:
         if self.selected_unit.str_type != "villager":
             return False
         elif self.selected_unit.cell.distance_to(cuc) != 1:
+            return False
+        elif cuc.coord in self.game.constructions:
             return False
         elif cuc.name == "river":
             return True
@@ -491,6 +507,13 @@ class Gui:
         self.can_be_helped = []
         self.current_battle_simulation = None
         self.stars = []
+
+    def cancel(self):
+        if self.last_move:
+            u, cell = self.last_move
+            self.has_moved.remove(u)
+            u.move_to_cell(cell)
+            self.last_move = None
 
     def get_destinations(self, cell):
         destinations = []
@@ -577,9 +600,12 @@ class Gui:
         if u.is_building:
             if not self.want_to_leave_construction(u):
                 return
+        self.last_move = u, u.cell
+        print("LOGGIG", self.last_move)
         u.move_to_cell_animated(path)
         self.moving_units.append(u)
         self.game.walk_sounds[0].play(-1)
+
 
     def small_clear(self):
         self.selected_unit = None
@@ -748,8 +774,10 @@ class Gui:
         if choice:
             b = Battle(self.game, units_in_battle, defender, distance)
             b.fight()
-            if self.selected_unit.quantity > 0:
-                self.selected_unit.make_grayed()
+            for u in units_in_battle:
+                if u.team == self.selected_unit.team:
+                    if u.quantity > 0:
+                        u.make_grayed()
             self.clear()
             thorpy.get_current_menu().fps = guip.FPS
             self.refresh_lifes()
@@ -964,14 +992,14 @@ class Gui:
                 if interactibles: #there are objects interactibles at the dest.
                     if cell.unit is None:
                         choices = self.get_interaction_choices(interactibles,
-                                                    exceptions=["Burn"])
+                                                    exceptions=["Burn", "End turn"])
                         if choices:
                             self.user_make_choice(choices)
                         if self.selected_unit:
                             self.treat_click_destination(cell)
                     else: #there is already a unit in the destination
                         choices = self.get_interaction_choices(interactibles,
-                                                    exceptions=["Burn"])
+                                                    exceptions=["Burn", "End turn"])
                         if choices:
                             self.user_make_choice(choices)
                 else:
@@ -1001,10 +1029,11 @@ class Gui:
                     o = self.game.get_object("village", cell.coord)
                     if o:
                         o2 = self.game.get_object("flag", cell.coord)
-                        if o2.team == self.game.current_player.team:
-                            self.production(o)
-                            self.small_clear()
-                            return
+                        if o2:
+                            if o2.team == self.game.current_player.team:
+                                self.production(o)
+                                self.small_clear()
+                                return
                     self.small_clear()
 
 
@@ -1075,13 +1104,16 @@ class Gui:
                                     self.selected_unit)
         self.selected_unit.is_building = self.cell_under_cursor.coord
         self.selected_unit.make_grayed()
-        self.game.current_player.money -= self.game.construction_price[type_]
+        self.game.current_player.money -= int(self.game.construction_price[type_])
         self.e_gold_txt.set_text(str(self.game.current_player.money))
         self.refresh()
         self.small_clear()
         thorpy.functions.quit_menu_func()
 
     def build(self):
+        if self.selected_unit.is_building:
+            if not self.want_to_leave_construction(self.selected_unit):
+                return
         self.game.func_reac_time()
         self.game.construction_sound.play()
 ##        set_theme("classic")
@@ -1133,7 +1165,7 @@ class Gui:
             self.game.coin_sound.play()
             u = self.game.add_unit(o.cell.coord, race[type_], std_number[type_])
             u.make_grayed()
-            self.game.current_player.money -= u.cost * INCOME_PER_VILLAGE
+            self.game.current_player.money -= int(u.cost * INCOME_PER_VILLAGE)
             self.e_gold_txt.set_text(str(self.game.current_player.money))
             self.refresh()
             thorpy.functions.quit_menu_func()
@@ -1141,7 +1173,7 @@ class Gui:
             if not "boat" in unit_type and not "king" in unit_type:
                 if unit_type in race.unit_types:
                     u = race[unit_type]
-                    cost = u.cost * INCOME_PER_VILLAGE
+                    cost = int(u.cost * INCOME_PER_VILLAGE)
 ##                    text = str(u.base_number) + " " + unit_type.capitalize()
 ##                    text += "    (" + str(cost) + " $)"
                     t,g,n = self.prod_gui.choices[race.name][unit_type]
@@ -1183,7 +1215,7 @@ class Gui:
     def draw_highlight(self, unit, color, s):
         img = unit.get_current_highlight(color)
         rect = img.get_rect()
-        rect.center = unit.get_current_rect_center(s)
+        rect.center = unit.get_current_cell_rect_center(s)
         self.surface.blit(img, rect.topleft)
 
 
@@ -1205,6 +1237,13 @@ class Gui:
                     x,y = self.game.me.cam.get_rect_at_coord(u.is_building).center
                     coord = x+4, y+4
                     self.lifes.append((text, (x,y)))
+        for coord, n in self.game.burning.items():
+            cell = self.game.get_cell_at(coord[0], coord[1])
+            font_color = self.font_colors_mat[cell.material.name]
+            text = self.font_life.render(str(n), True, font_color)
+            x,y = self.game.me.cam.get_rect_at_coord(coord).center
+            coord = x+4, y+4
+            self.lifes.append((text, coord))
 
     def unit_under_cursor(self):
         if self.cell_under_cursor:
@@ -1261,7 +1300,7 @@ class Gui:
                 self.surface.blit(img, coord)
         # Construction icon for units
         for unit in self.game.units:
-            x,y = unit.get_current_rect_center(s)
+            x,y = unit.get_current_cell_rect_center(s)
             if unit.is_building:
                 t = self.game.me.lm.t3 % len(self.under_construct)
                 img = self.under_construct[t]
@@ -1269,12 +1308,12 @@ class Gui:
         # Has moved icon for units
         for unit in self.has_moved:
             if not unit.is_building:
-                x,y = unit.get_current_rect_center(s)
+                x,y = unit.get_current_cell_rect_center(s)
                 t = self.game.me.lm.t3 % len(self.footstep)
                 self.surface.blit(self.footstep[t], (x-s//2,y))
         # Help symbol
         for unit in self.can_be_helped:
-            x,y = unit.get_current_rect_center(s)
+            x,y = unit.get_current_cell_rect_center(s)
             t = self.game.me.lm.t3 % len(self.medic)
             img = self.medic[t]
             rect = img.get_rect()
@@ -1282,7 +1321,7 @@ class Gui:
             self.surface.blit(img, rect)
         # Attack symbol
         for unit in self.can_be_fought:
-            x,y = unit.get_current_rect_center(s)
+            x,y = unit.get_current_cell_rect_center(s)
             t = self.game.me.lm.t % len(self.sword)
             img = self.sword[t]
             rect = img.get_rect()
@@ -1290,7 +1329,7 @@ class Gui:
             self.surface.blit(img, rect)
         # Battle projection stars
         for u, surf in self.stars:
-            r = u.get_current_rect(s)
+            r = u.get_current_cell_rect(s)
             self.surface.blit(surf, r)
 ##            if self.cell_under_cursor.unit:
 ##                x,y = self.cell_under_cursor.unit.cell.coord
@@ -1308,12 +1347,12 @@ class Gui:
         self.enhancer.refresh()
         if self.game.need_refresh_ui_box:
             self.e_info_day.set_text("Day "+str(self.game.days_elapsed))
-            if self.game.days_left > 0:
-                self.e_time_remaining.set_text(self.get_day_text())
-            if self.game.days_left < 3:
-                self.e_time_remaining.set_font_color((255,0,0))
-            else:
-                self.e_time_remaining.set_font_color((0,0,0))
+##            if self.game.days_left > 0:
+##                self.e_time_remaining.set_text(self.get_day_text())
+##            if self.game.days_left < 3:
+##                self.e_time_remaining.set_font_color((255,0,0))
+##            else:
+##                self.e_time_remaining.set_font_color((0,0,0))
             self.e_info_player.set_font_color(self.game.current_player.color_rgb)
             self.e_info_player.set_text(self.game.current_player.name)
             thorpy.store(self.me.e_box)
@@ -1321,6 +1360,13 @@ class Gui:
 
 ##    def add_flag(self):
 ##        self.game.add_unit((16,15), self.game.units[0].race["flag"], 1, team=self.game.units[0].team)
+
+    def find_free_unit(self):
+        for u in self.game.get_units_of_player(self.game.current_player):
+            if not u.is_grayed:
+                if not u in self.has_moved:
+                    if not u.is_building:
+                        self.game.center_cam_on_cell(u.cell.coord)
 
     def toggle_show_life(self):
         self.show_lifes = not(self.show_lifes)
@@ -1335,7 +1381,9 @@ class Gui:
 ##        reac_escape = thorpy.ConstantReaction(pygame.KEYDOWN, self.esc_menu, {"key":pygame.K_ESCAPE})
 ##        self.me.e_box.add_reaction(reac_escape)
         shortcuts = [(pygame.K_l, self.toggle_show_life),
-                     (pygame.K_ESCAPE, self.launch_map_menu)]
+                     (pygame.K_ESCAPE, self.launch_map_menu),
+                     (pygame.K_PERIOD, self.find_free_unit),
+                     (pygame.K_BACKSPACE, self.cancel)]
         reacs = []
         for key,func in shortcuts:
             reacs.append(thorpy.ConstantReaction(pygame.KEYDOWN, func,

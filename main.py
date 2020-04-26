@@ -3,49 +3,16 @@ Fantasy Strategia - A 2D, turn-based strategy game in a fantasy universe.
 (C) Yann Thorimbert - 2020
 yann.thorimbert@gmail.com
 """
-from __future__ import print_function, division
-
-import dependenciescheck as dc
-dc.check_console("thorpy")
-dc.check_gui("numpy")
-dc.check_gui("PIL")
-
-import pygame
-import thorpy #for GUI and other graphics - see www.thorpy.org
-
-import maps.maps as maps
-import gui.gui as gui
-from logic.races import Race, LUNAR, STELLAR, SOLAR
-from logic.game import Game, get_sprite_frames
-import gui.theme as theme
-from logic.player import Player
-################################################################################
-
-theme.set_theme("human")
-
-W,H = 1200, 700 #screen size
-FPS = 60
-app = thorpy.Application((W,H))
-
-map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
-map_initializer.chunk = (1322, 43944)
-map_initializer.max_number_of_roads = 0 #5
-map_initializer.max_number_of_rivers = 0 #5
-map_initializer.village_homogeneity = 0.1
-map_initializer.seed_static_objects = 15
-map_initializer.zoom_cell_sizes = [32]
-
-##map_initializer.chunk = (11,9)
-##map_initializer.reverse_hmap = False
-me = map_initializer.configure_map_editor(FPS) #me = "Map Editor"
-game = Game(me)
 
 
 ################################################################################
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-##map sympa
+#bien separer les choix, sinon bugs, comme la
+##map sympas : init unit sur la terre
+##verif fin de partie
+##menu principal avec plusieurs maps
 
 #fusionner les thorpy ICI et git!!!!
 
@@ -115,6 +82,49 @@ game = Game(me)
 ################################################################################
 
 
+
+from __future__ import print_function, division
+
+import dependenciescheck as dc
+dc.check_console("thorpy")
+dc.check_gui("numpy")
+dc.check_gui("PIL")
+
+import pygame
+import thorpy #for GUI and other graphics - see www.thorpy.org
+
+import maps.maps as maps
+import gui.gui as gui
+from logic.races import Race, LUNAR, STELLAR, SOLAR
+from logic.game import Game, get_sprite_frames
+import gui.theme as theme
+from logic.player import Player
+################################################################################
+
+theme.set_theme("human")
+
+W,H = 1200, 700 #screen size
+FPS = 60
+app = thorpy.Application((W,H))
+
+##map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
+maps.map1.chunk = (1322, 43944)
+maps.map1.max_number_of_roads = 5 #5
+maps.map1.max_number_of_rivers = 5 #5
+maps.map1.village_homogeneity = 0.1
+maps.map1.seed_static_objects = 15
+maps.map1.zoom_cell_sizes = [32]
+
+
+for map_initializer in [maps.map1, maps.map0, maps.map2, maps.map3]:
+    me = map_initializer.configure_map_editor(FPS) #me = "Map Editor"
+    app.get_screen().fill((0,0,0))
+    me.show_hmap()
+
+map_initializer = maps.map1
+
+
+game = Game(me)
 
 
 humans = Race("Green team", "human", LUNAR, me, "green", team=1) #LUNAR, STELLAR or SOLAR

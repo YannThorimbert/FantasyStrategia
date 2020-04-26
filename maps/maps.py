@@ -43,9 +43,10 @@ map1.add_object("bridge_h", 23, 17)
 map1.zoom_cell_sizes = [40,32]
 
 
+
 # ##############################################################################
 map2 = MapInitializer("Second demo map")
-map2.world_size = (256, 128) #with big maps it is better to use lower persistance
+map2.world_size = (64, 32) #with big maps it is better to use lower persistance
 map2.persistance = 1.3 #The higher, the bigger are the "continents"
 map2.palm_homogeneity = 0.9
 map2.chunk = (12345,0)
@@ -54,8 +55,32 @@ map2.chunk = (12345,0)
 # ##############################################################################
 map3 = MapInitializer("Third demo map")
 map3.chunk = (6666,6666)
-map3.world_size = (128,128)
+map3.world_size = (64, 64)
 map3.persistance = 1.5
 #Note : it is better to start the cells sizes with a power of 2. Then it doesn't matter.
 map3.zoom_cell_sizes = [32,20,8]
 map3.max_number_of_roads = 0
+map1.set_terrain_type(terrain_plains, colorscale_plains)
+
+
+
+
+
+
+
+### ##############################################################################
+##map2 = MapInitializer("Second demo map")
+##map2.world_size = (256, 128) #with big maps it is better to use lower persistance
+##map2.persistance = 1.3 #The higher, the bigger are the "continents"
+##map2.palm_homogeneity = 0.9
+##map2.chunk = (12345,0)
+##
+##
+### ##############################################################################
+##map3 = MapInitializer("Third demo map")
+##map3.chunk = (6666,6666)
+##map3.world_size = (128,128)
+##map3.persistance = 1.5
+###Note : it is better to start the cells sizes with a power of 2. Then it doesn't matter.
+##map3.zoom_cell_sizes = [32,20,8]
+##map3.max_number_of_roads = 0

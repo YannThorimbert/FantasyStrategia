@@ -69,6 +69,31 @@ class RandomObjectDistribution:
                             obj.randomize_relpos()
                             layer.static_objects.append(obj)
 
+def simple_distribution(me, objs, materials, n):
+    layer = me.lm
+    ntry = 10*n
+    counter = 0
+    nx,ny = layer.nx, layer.ny
+    for i in range(ntry):
+        if counter > n:
+            return
+        x = random.randint(0,nx-1)
+        y = random.randint(0,ny-1)
+        cell = layer.get_cell_at(x,y)
+##        print("***Trying", x, y, cell)
+        if cell:
+##            print("     ", cell.material.name, materials)
+            if cell.material.name in materials:
+                remove_objects_from_layer(cell, layer)
+                obj = random.choice(objs)
+                obj = obj.add_copy_on_cell(cell)
+                obj.is_static = True
+                obj.max_relpos = [0.1, 0.1]
+                obj.min_relpos = [-0.1, 0.1]
+                obj.randomize_relpos()
+                layer.static_objects.append(obj)
+                counter += 1
+
 ##class RandomInteractiveObjectDistribution:
 ##
 ##    def __init__(self, objs, hmap, master_map):
@@ -305,6 +330,18 @@ class MapObject:
         dest_cell.objects.append(self)
         self.cell = dest_cell
         self.game.me.add_to_objects_dict(self)
+##        v = self.game.get_object("village", self.cell.coord)
+##        if v:
+##            s = self.editor.lm.get_current_cell_size()
+##            v_bottom_rect = v.get_lowest_rect(s)
+##            v_cell_rect = v.get_current_cell_rect(s)
+##            self_bottom_rect = self.get_lowest_rect(s)
+##            self_bottom_rect.bottom = v_bottom_rect.bottom - 5 #wanted position
+##            #pos = centercell + relpos*s
+##            #<==> relpos = (pos - centercell)/s
+##            relpos = (self_bottom_rect.centery - v_cell_rect.centery) / s
+##            self.relpos[1] = relpos
+
 
     def move_to_cell_animated(self, path):
         self.anim_path = path
@@ -416,6 +453,19 @@ class MapObject:
         ir.move_ip(self.relpos[0]*cell_size, self.relpos[1]*cell_size)
         return img, ir
 
+    def get_lowest_rect(self, cell_size):
+        """Return img and absolute position of rect in the map, for the sprite
+        having the lowest y-pos"""
+        rects = []
+        for img in self.imgs_z_t[self.editor.zoom_level]:
+            r = self.editor.cam.get_rect_at_coord(self.cell.coord)
+            ir = img.get_rect()
+            ir.center = r.center
+            ir.move_ip(self.relpos[0]*cell_size, self.relpos[1]*cell_size)
+            rects.append(ir)
+        rects.sort(key=lambda x:x.bottom)
+        return ir
+
     def get_fakerect_and_img(self, cell_size):
         img = self.get_current_img()
         r = self.editor.cam.get_rect_at_coord(self.cell.coord)
@@ -424,13 +474,13 @@ class MapObject:
         ir.move_ip(self.relpos[0]*cell_size, self.relpos[1]*cell_size)
         return (ir.x, ir.y, ir.right, ir.bottom), img
 
-    def get_current_rect_center(self, cell_size):
-        r = self.editor.cam.get_rect_at_coord(self.cell.coord)
-        x = self.relpos[0]*cell_size+r.centerx
-        y = self.relpos[1]*cell_size+r.centery
+    def get_current_cell_rect_center(self, cell_size):
+        r = self.get_current_cell_rect(cell_size)
+        x = self.relpos[0]*cell_size + r.centerx
+        y = self.relpos[1]*cell_size + r.centery
         return x,y
 
-    def get_current_rect(self, cell_size):
+    def get_current_cell_rect(self, cell_size):
         return self.editor.cam.get_rect_at_coord(self.cell.coord)
 
     def get_relative_pos(self, cell_size):

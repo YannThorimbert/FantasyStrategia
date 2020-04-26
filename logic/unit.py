@@ -3,6 +3,7 @@ import pygame, thorpy
 from PyWorld2D.mapobjects.objects import MapObject
 import PyWorld2D.constants as const
 from FantasyStrategia.logic.races import RACE_FIGHT_FACTOR
+from FantasyStrategia.gui import transitions
 
 
 
@@ -115,6 +116,7 @@ class Unit(MapObject):
             obj.get_current_frame = obj._get_current_frame3
             obj.name = "*"+self.str_type
             obj.is_grayed = True
+            self.game.gui.last_move = None
 
     def get_description(self):
         return self.race.unit_descr[self.str_type]
@@ -309,6 +311,23 @@ class Unit(MapObject):
     def remove_from_game_after_die(self):
         self.game.units.remove(self)
         self.remove_from_map(self.game.me)
+        if self.is_building:
+            for coord in self.game.constructions:
+                what,t,u = self.game.constructions[coord]
+                if u is self:
+                    build_coord = coord
+                    break
+            self.game.constructions.pop(build_coord)
+        for p in self.game.players:
+            if len(list(self.game.get_units_of_player(p))) == 0:
+                transitions.fade_to_black_screen()
+                e = thorpy.make_text(self.game.get_other_player(p).name + " wins",
+                                     font_size=50, font_color=(255,255,255))
+                e.center()
+                e.blit()
+                e.update()
+                thorpy.get_application().pause()
+                print("Game finished")
 
     def reset_stop_animation(self):
         self.stop_animation = float("inf")
@@ -457,7 +476,7 @@ class Unit(MapObject):
         damage_from_other *= ATTACKING_DAMAGE_FACTOR
 ##        print(damage_to_other, damage_from_other)
         tot = damage_from_other+damage_to_other
-        if random.random() < 1. / tot:
+        if random.random() < 1.2 / tot:
             return 0
         elif random.random() < damage_to_other / tot:
             return 1

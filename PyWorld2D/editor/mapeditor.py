@@ -29,6 +29,7 @@ class MapEditor:
         self.name = name
         self.screen = thorpy.get_screen()
         self.W, self.H = self.screen.get_size() #self.screen size, wont change
+        self.hmap = None
         #values below are default values; they can change and
         # self.refresh_derived_parameters() must be called
         self.fps = 80
@@ -643,3 +644,20 @@ class MapEditor:
                     name = "_".join([str(i),str(n),str(type_)])+".png"
                     pygame.image.save(couple.tilers[0][n].imgs[type_],
                                         os.path.join(base_fn,name))
+
+    def get_hmap_img(self, size):
+##        if not self.hmap:
+        hmap = self.build_hmap()
+        img_hmap = ng.build_surface(self.hmap, self.colorscale_hmap)
+        new_img_hmap = pygame.Surface(self.world_size)
+        new_img_hmap.blit(img_hmap, (0,0))
+##        w = int(0.2*self.world_size[0]*self.cell_size)
+##        h = int(0.2*self.world_size[1]*self.cell_size)
+        w,h = size
+        img = pygame.transform.scale(new_img_hmap, (w,h))
+        return img
+##        rect = img.get_rect()
+##        rect.center = self.W//2, self.H//2
+##        thorpy.get_screen().blit(img, rect)
+##        pygame.display.flip()
+##        thorpy.get_application().pause()

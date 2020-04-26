@@ -137,7 +137,7 @@ class MapInitializer:
         self.village1_size = 1.
 ##        self.village2_size = 1.
 ##        self.village3_size = 1.
-        self.village_homogeneity = 0.05
+        self.village_homogeneity = 0.3
 ##        self.village1 = PW_PATH + "/mapobjects/images/pepperRacoon.png
 ##        self.village2 = PW_PATH + "/mapobjects/images/rgbfumes1.png"
 ##        self.village3 = PW_PATH + "/mapobjects/images/rgbfumes2.png"
@@ -369,8 +369,12 @@ class MapInitializer:
                             self._forest_map, ["Grass"], limit_relpos_y=False)
         distributor.max_density = 1
         distributor.homogeneity = self.village_homogeneity
-        distributor.zones_spread = [(0.1, 0.05), (0.2,0.05), (0.4,0.05), (0.5,0.05)]
-        distributor.distribute_objects(me.lm, exclusive=True)
+        distributor.zones_spread = [(0.1, 0.02), (0.2,0.02), (0.4,0.02), (0.5,0.02)]
+##        distributor.distribute_objects(me.lm, exclusive=True)
+        village_mat = list(me.materials.keys())
+        village_mat = [n for n in village_mat if not("water" in n.lower())]
+        village_mat.remove("outside")
+        objs.simple_distribution(me, [village1, village1.flip()], village_mat, 3)
         cobbles = [cobble, cobble.flip(True,False),
                     cobble.flip(False,True), cobble.flip(True,True)]
         ############################################################################
@@ -615,6 +619,8 @@ def add_random_river(me, layer, material_dict,
     #4) change the end to first shallow shore cell
     actual_path = []
     for cell in path:
+        if cell.name == "river":
+            break
         actual_path.append(cell)
         if "water" in cell.material.name.lower():
             break
