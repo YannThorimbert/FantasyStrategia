@@ -12,6 +12,7 @@ yann.thorimbert@gmail.com
 #+ de villages neutres, construire villages est + cher
 #refresh villages gui chaque tour ????
 #interdire de build sur un build (en tout cas bug sur riviere) ?
+#add_unit tj sur les points les plus extreme en fonction de team (0 = en haut)
 #fusionner les thorpy ICI et git!!!!
 
 ################################################################################
@@ -182,11 +183,11 @@ game.set_players(players)
 game.build_map(mi, fast=False, use_beach_tiler=True, load_tilers=False)
 
 
-def add_unit(pn):
+def add_unit(pn, unit_type, near_what):
     nx,ny = game.get_map_size()
-    unit = game.players[pn].race["villager"]
+    unit = game.players[pn].race[unit_type]
     unit.team = game.players[pn].race.team
-    for v in game.get_all_objects_by_str_type("village"):
+    for v in game.get_all_objects_by_str_type(near_what):
         flag = game.get_object("flag", v.cell.coord)
         if flag:
             team = flag.team
@@ -211,8 +212,11 @@ def add_unit(pn):
                             if random.random() < 0.5:
                                 game.add_unit((x,y), unit, 20)
                                 return
-add_unit(0)
-add_unit(1)
+
+for team in [0,1]:
+    add_unit(team, "villager", "village")
+    add_unit(team, "villager", "village")
+    add_unit(team, "infantry", "village")
 
 ui = gui.Gui(game)
 me.set_zoom(level=0)

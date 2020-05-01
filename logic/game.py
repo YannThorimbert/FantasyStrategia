@@ -126,8 +126,8 @@ class Game:
                                 "road":None}
         self.constructions = {}
         self.construction_time = {"village":4, "windmill":6, "bridge":6, "road":2}
-        self.construction_price = {"village":INCOME_PER_VILLAGE*2,
-                                   "windmill":INCOME_PER_WINDMILL*2,
+        self.construction_price = {"village":INCOME_PER_VILLAGE*5,
+                                   "windmill":INCOME_PER_WINDMILL*5,
                                    "bridge":INCOME_PER_WINDMILL*2,
                                    "road":INCOME_PER_VILLAGE//4}
         self.construction_ground = {"village":True,

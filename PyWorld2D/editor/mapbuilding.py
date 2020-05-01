@@ -374,7 +374,7 @@ class MapInitializer:
         village_mat = list(me.materials.keys())
         village_mat = [n for n in village_mat if not("water" in n.lower())]
         village_mat.remove("outside")
-        objs.simple_distribution(me, [village1, village1.flip()], village_mat, 3)
+        objs.simple_distribution(me, [village1, village1.flip()], village_mat, 6)
         cobbles = [cobble, cobble.flip(True,False),
                     cobble.flip(False,True), cobble.flip(True,True)]
         ############################################################################
