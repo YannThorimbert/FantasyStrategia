@@ -17,7 +17,7 @@ std_material_cost = {'Deep water': float("inf"),
                      'cobblestone':1,
                      'village':1,
                      'windmill':1,
-                     'construction':1,
+                     'construction':float("inf"),
                      'bridge':1,
                      'flag':1,
                      'river':10,
@@ -162,7 +162,7 @@ std_object_defense = {"bush":1.3,
 
 std_distance_factor = 5
 
-units_type_to_load = ["infantry", "wizard", "villager"]
+units_type_to_load = ["wizard", "infantry", "villager"]
 
 assert set(std_help_range.keys()) == set(std_attack_range.keys()) == set(std_max_dist.keys())
 

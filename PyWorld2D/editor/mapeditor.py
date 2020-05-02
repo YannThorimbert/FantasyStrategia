@@ -10,6 +10,7 @@ import PyWorld2D.gui.elements as gui
 from PyWorld2D.rendering.camera import Camera
 import PyWorld2D.saveload.io as io
 from PyWorld2D.mapobjects.objects import MapObject
+from FantasyStrategia.logic.unit import Unit
 
 def sgn(x):
     if x < 0:
@@ -171,7 +172,7 @@ class MapEditor:
                 level = int(levels*self.e_zoom.get_value()/self.e_zoom.limvals[1])
                 self.set_zoom(levels-level,False)
         ########################################################################
-        self.cell_info = gui.CellInfo(self.menu_rect.inflate((-10,0)).size,
+        self.cell_info = gui.CellInfo(self, self.menu_rect.inflate((-10,0)).size,
                          self.cell_rect.size, self.draw_no_update, e_hmap)
         self.unit_info = gui.UnitInfo(self,self.menu_rect.inflate((-10,0)).size,
                          self.cell_rect.size, self.draw_no_update, e_hmap)
@@ -421,7 +422,7 @@ class MapEditor:
         #blit cursor
 ##        self.cam.draw_rmouse(self.screen, self.box_hmap.get_rect())
         #blit objects
-        self.cam.draw_objects(self.screen, self.dynamic_objects)
+        self.cam.draw_objects(self.screen, self.dynamic_objects, True)
         #blit smoke effects
         self.game.refresh_smokes()
         #update right pane
@@ -438,7 +439,7 @@ class MapEditor:
         #blit map
         self.cam.draw_grid(self.screen, self.show_grid_lines)
         #blit objects
-        self.cam.draw_objects(self.screen, self.dynamic_objects)
+        self.cam.draw_objects(self.screen, self.dynamic_objects, True)
         #blit smoke effects
         self.game.refresh_smokes()
         #blit right pane and draw rect on minimap
@@ -661,3 +662,15 @@ class MapEditor:
 ##        thorpy.get_screen().blit(img, rect)
 ##        pygame.display.flip()
 ##        thorpy.get_application().pause()
+
+    def extract_img(self, cell):
+        img = pygame.Surface((self.cell_size,)*2)
+        img.blit(self.screen, (0,0), self.cam.get_rect_at_coord(cell.coord))
+        return img
+##        new_img = cell.get_static_img_at_zoom(0)
+##        cell_size = self.cell_size
+##        for o in cell.objects:
+##            if not o.is_static:
+##                if not isinstance(o, Unit):
+##                    new_img.blit(o.imgs_z_t[0][0], o.get_relative_pos(cell_size))
+##        return new_img

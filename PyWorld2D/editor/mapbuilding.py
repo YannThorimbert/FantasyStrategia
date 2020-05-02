@@ -8,10 +8,18 @@ from PyWorld2D import PW_PATH
 from PyWorld2D.ia.path import BranchAndBoundForMap
 
 
-terrain_small = {  "hdeepwater": 0.3, #deep water only below 0.4
-                    "hwater": 0.4, #normal water between 0.4 and 0.55
-                    "hshore": 0.5, #shore water between 0.55 and 0.6
+terrain_small = {  "hdeepwater": 0.3, #deep water only below 0.3
+                    "hwater": 0.4, #normal water between 0.3 and 0.4
+                    "hshore": 0.5, #shore water between 0.4 and 0.5
                     "hsand": 0.6, #and so on...
+                    "hgrass": 0.7,
+                    "hrock": 0.8,
+                    "hthinsnow": 0.9}
+
+terrain_medium = {  "hdeepwater": 0.3,
+                    "hwater": 0.4,
+                    "hshore": 0.55,
+                    "hsand": 0.6,
                     "hgrass": 0.7,
                     "hrock": 0.8,
                     "hthinsnow": 0.9}

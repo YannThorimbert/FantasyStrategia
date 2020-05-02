@@ -428,7 +428,8 @@ class Battle:
                                                 self.game.me.show_grid_lines)
                     #blit objects
                     self.game.me.cam.draw_objects(self.surface,
-                                                    self.game.me.dynamic_objects)
+                                                    self.game.me.dynamic_objects,
+                                                    True)
                     self.surface.blit(self.game.hourglass[frame], rect)
                     pygame.display.update(rect)
             i += 1

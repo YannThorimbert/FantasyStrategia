@@ -197,9 +197,9 @@ class Camera:
     #How it works:
     #   We collect all the objects to be drawn, plus the static objects around them.
     #   Then, we sort this big list by rect bottom coord, and we draw them.
-    def draw_objects(self, screen, objs):
+    def draw_objects(self, screen, objs, draw_ui):
         s = self.lm.get_current_cell_size()
-        if self.ui_manager:
+        if draw_ui:
             self.ui_manager.draw_before_objects(s)
         to_sort = set()
         drawn_last = set()
@@ -222,20 +222,13 @@ class Camera:
         force_drawn_first = [(img,rect) for rect,img,o in force_drawn_first if not o.hide]
         drawn_second = [(img,rect) for rect,img,o in to_sort if not o.hide]
         drawn_second.sort(key=lambda x:x[1][3])
-##        for r,i,o2 in drawn_last:
-##            if not o2.hide:
-##                if o2.cell.coord == (13,6):
-##                    if o2.str_type == "cobblestone":
-##                        print("DL cobble", o.name, o.cell.coord)
-##                elif o2.cell.coord == (12,6):
-##                    if o2.str_type == "forest":
-##                        print("DL forest", o.name, o.cell.coord)
         drawn_last = [(img,rect) for rect,img,o in drawn_last if not o.hide]
         screen.blits(force_drawn_first)
         screen.blits(drawn_second)
         screen.blits(drawn_last)
-        if self.ui_manager:
+        if draw_ui:
             self.ui_manager.draw_after_objects(s)
+
 
     def get_center_coord(self):
         return self.get_coord_at_pix(self.map_rect.center)

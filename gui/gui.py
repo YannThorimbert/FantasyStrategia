@@ -360,7 +360,74 @@ class Gui:
 
 
     def show_players_infos(self):
-        ...
+        w = self.game.me.screen.get_width()//2
+        objs = ["village", "windmill"]
+        unit_types = set([u.str_type for u in self.game.units])
+        boxes = []
+        o_e = []
+        for pn in [0,1]:
+            p = self.game.players[pn]
+            title = thorpy.make_text(p.name, 15, p.color_rgb)
+            line = thorpy.Line(w, "h")
+            p = self.game.players[pn]
+            els = []
+            for typ in objs:
+                for o in self.game.get_objects_of_team(p.team, typ):
+##                    img = self.game.me.extract_img(o.cell)
+                    if typ == "village":
+                        img = self.game.village.imgs_z_t[0][0]
+                    elif typ == "windmill":
+                        img = self.game.windmill.imgs_z_t[0][0]
+                    els.append(thorpy.Image(img))
+                    o_e.append((els[-1], o))
+            thorpy.grid_store(10, pygame.Rect(0,0,100,100), els)
+            g_buildings = thorpy.make_group(els, mode=None)
+            #
+            els = []
+            for typ in unit_types:
+                for u in self.game.units:
+                    if u.str_type == typ and u.race.team == p.team:
+                        img = u.imgs_z_t[0][u.get_current_frame()]
+                        els.append(thorpy.Image(img))
+                        o_e.append((els[-1], u))
+            thorpy.grid_store(10, pygame.Rect(0,0,100,100), els)
+            g_units = thorpy.make_group(els, mode=None)
+            #
+            money_img = thorpy.Image(self.e_gold_img.get_image())
+            money_txt = thorpy.make_text(str(p.money))
+            income = self.game.compute_player_income(p)
+            income_txt = thorpy.make_text("  (income: "+str(income)+")")
+            g_money = thorpy.make_group([money_img, money_txt, income_txt])
+            g = thorpy.Element(elements=[title,line,g_units,g_buildings,g_money])
+            thorpy.store(g)
+            g.fit_children()
+            boxes.append(g)
+        e = thorpy.Box(boxes)
+        e.center()
+        def refresh():
+            for element, obj in o_e:
+                img = obj.imgs_z_t[0][obj.get_current_frame()]
+##                fire = self.game.get_object("fire", obj.cell.coord)
+##                if fire:
+##                    img_fire = fire.imgs_z_t[0][fire.get_current_frame()]
+##                    r = img_fire.get_rect()
+##                    w,h = img.get_size()
+##                    r.center = w//2, h//2
+##                    r.bottom = h
+##                    img.blit(img_fire, r)
+                element.set_image(img)
+            self.game.me.func_reac_time()
+            self.game.t += 1
+            e.blit()
+            pygame.display.flip()
+        thorpy.add_time_reaction(e, refresh)
+        def click():
+            if not e.get_fus_rect().collidepoint(pygame.mouse.get_pos()):
+                thorpy.functions.quit_menu_func()
+        thorpy.add_click_reaction(e, click)
+        m = thorpy.Menu(e, fps=self.game.me.fps)
+        m.play()
+
 
     def get_day_text(self):
         if self.game.days_left > 0:
@@ -416,9 +483,10 @@ class Gui:
 
     def check_build(self):
         cuc = self.cell_under_cursor
-        if cuc.objects:
-            return False
-        elif cuc.coord in self.game.constructions:
+        for o in cuc.objects:
+            if not o.str_type in self.game.allowed_build_on:
+                return False
+        if cuc.coord in self.game.constructions:
             return False
         elif self.selected_unit.str_type != "villager":
             return False
@@ -511,9 +579,10 @@ class Gui:
     def cancel(self):
         if self.last_move:
             u, cell = self.last_move
-            self.has_moved.remove(u)
-            u.move_to_cell(cell)
-            self.last_move = None
+            if u in self.has_moved:
+                self.has_moved.remove(u)
+                u.move_to_cell(cell)
+                self.last_move = None
 
     def get_destinations(self, cell):
         destinations = []
@@ -1367,6 +1436,7 @@ class Gui:
                 if not u in self.has_moved:
                     if not u.is_building:
                         self.game.center_cam_on_cell(u.cell.coord)
+                        self.blue_highlights.append(u)
 
     def toggle_show_life(self):
         self.show_lifes = not(self.show_lifes)

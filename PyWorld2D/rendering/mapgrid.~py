@@ -114,6 +114,7 @@ class LogicalMap(BaseGrid):
         self.frame_slowness1 = None #associated to t1. Reset in mapbuilding !!!
         self.frame_slowness2 = None #associated to t2
         self.frame_slowness3 = None
+        self.frame_slowness4 = None
         #
         self.refresh_cell_heights(hmap)
         self.refresh_cell_types()

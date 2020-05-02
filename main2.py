@@ -9,17 +9,11 @@ yann.thorimbert@gmail.com
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
-#+ de villages neutres, construire villages est + cher
-#refresh villages gui chaque tour ????
-#interdire de build sur un build (en tout cas bug sur riviere) ?
-#add_unit tj sur les points les plus extreme en fonction de team (0 = en haut)
-#fusionner les thorpy ICI et git!!!!
-
-################################################################################
-################################################################################
-################################################################################
-
 #TEST !! - V a1
+
+##laisser tomber fakebattle et utiliser une heuristique, car tte facon marche pas
+
+#windmill static (TOUT EST PRET)
 
 #visualiser zone de danger
 #son celebration
@@ -102,7 +96,7 @@ import gui.theme as theme
 from logic.player import Player
 ################################################################################
 
-theme.set_theme("human")
+theme.set_theme("round")
 
 W,H = 1200, 700 #screen size
 FPS = 60
@@ -123,15 +117,15 @@ app = thorpy.Application((W,H))
 ##    me.show_hmap()
 
 import random
-from PyWorld2D.editor.mapbuilding import MapInitializer, terrain_plains, terrain_flat, terrain_small
+from PyWorld2D.editor.mapbuilding import MapInitializer, terrain_plains, terrain_flat, terrain_small, terrain_medium
 from PyWorld2D.thornoise.purepython.noisegen import colorscale_plains, colorscale_flat, colorscale_normal
 
 def generate_map():
     mi = MapInitializer("First demo map")
     mi.chunk = (random.randint(0,1000), random.randint(0,1000))
     mi.world_size = (32,32)
-    mi.set_terrain_type(terrain_plains, colorscale_normal)
-    ##mi.set_terrain_type(terrain_small, colorscale_normal)
+##    mi.set_terrain_type(terrain_plains, colorscale_normal)
+    mi.set_terrain_type(terrain_medium, colorscale_normal)
     mi.max_number_of_roads = random.randint(0, 6)
     mi.max_number_of_rivers = random.randint(0, 6)
     mi.zoom_cell_sizes = [32,]
@@ -194,7 +188,7 @@ def add_unit(pn, unit_type, near_what):
         else:
             team = None
         if team == unit.team:
-            dx,dy = random.choice([(-1,0),(1,0),(0,-1),(0,1)])
+            dx,dy = random.choice([(-1,0),(1,0),(0,-1),(0,1),(0,0)])
             cell = game.get_cell_at(v.cell.coord[0]+dx,v.cell.coord[1]+dy)
             if cell:
                 if not cell.unit:
@@ -213,10 +207,10 @@ def add_unit(pn, unit_type, near_what):
                                 game.add_unit((x,y), unit, 20)
                                 return
 
-for team in [0,1]:
-    add_unit(team, "villager", "village")
-    add_unit(team, "villager", "village")
-    add_unit(team, "infantry", "village")
+for i in range(2):
+    for unit in ["villager", "infantry"]:
+        for team in [0,1]:
+            add_unit(team, unit, "village")
 
 ui = gui.Gui(game)
 me.set_zoom(level=0)
@@ -224,10 +218,6 @@ game.check_integrity()
 game.set_ambiant_sounds(True)
 game.initialize_money(200)
 
-for v in game.get_objects_of_team(0, "village"):
-    print(0,v.cell.coord)
-for v in game.get_objects_of_team(1, "village"):
-    print(1,v.cell.coord)
 
 m = thorpy.Menu(me.e_box,fps=me.fps)
 m.play()

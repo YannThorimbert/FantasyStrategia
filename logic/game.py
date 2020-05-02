@@ -124,6 +124,7 @@ class Game:
         self.buildable_objs = {"windmill":self.windmill, "village":self.village,
                                 "bridge_v":None, "bridge_h":None,
                                 "road":None}
+        self.allowed_build_on = ["cobblestone"]
         self.constructions = {}
         self.construction_time = {"village":4, "windmill":6, "bridge":6, "road":2}
         self.construction_price = {"village":INCOME_PER_VILLAGE*5,
@@ -213,6 +214,7 @@ class Game:
                 unit.is_building = False
         for coord in to_remove:
             self.constructions.pop(coord)
+        self.refresh_village_gui()
 
 
     def add_smoke(self, type_, coord, delta=None, what=""):
@@ -338,42 +340,45 @@ class Game:
     def build_map(self, map_initializer, fast, use_beach_tiler, load_tilers):
         map_initializer.build_map(self.me, fast, use_beach_tiler, load_tilers)
         self.map_initializer = map_initializer
-        neighs = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1),
-                    (1, 0), (1, 1)]
-        windmill_probability = 0.05
-        can_windmill = [n.lower() for n in self.me.materials if not("water") in n.lower()]
-        race1 = self.players[0].race
-        race2 = self.players[1].race
-        gnx,gny = self.get_map_size()
         self.me.build_objects_dict()
         self.collect_path_objects(map_initializer)
-        for obj in self.me.lm.static_objects:
-            if obj.str_type == "bridge_h":
-                self.bridges.append(obj.cell.coord)
-            elif obj.str_type == "bridge_v":
-                self.bridges.append(obj.cell.coord)
-            elif obj.str_type == "village":
-                cx,cy = obj.cell.coord
-                race = None
-                if obj.cell.coord[1] > gny//2 + 0:
-                    race = race1
-                elif obj.cell.coord[1] < gny//2 - 0:
-                    race = race2
-                if race:
-                    self.set_flag(obj.cell.coord, race.flag, race.team)
-                for x,y in neighs:
-                    coord = cx+x, cy+y
-                    cell = self.get_cell_at(coord[0], coord[1])
-                    if cell:
-                        if not cell.objects:
-                            if cell.material.name.lower() in can_windmill:
-                                if random.random() < windmill_probability:
-                                    self.add_object(coord, self.windmill, 1)
-                                    if race:
-                                        print("adding flag", obj.cell.coord)
-                                        self.set_flag(coord, race.flag, race.team)
+        self.add_structures()
         thorpy.add_time_reaction(self.me.e_box, self.func_reac_time)
 
+    def add_structures(self):
+        windmill_probability = 0.05
+        can_windmill = [n.lower() for n in self.me.materials if not("water") in n.lower()]
+        neighs = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1),
+                    (1, 0), (1, 1)]
+        gnx,gny = self.get_map_size()
+        race1 = self.players[0].race
+        race2 = self.players[1].race
+        for obj in self.get_all_objects_by_name("bridge"):
+            self.bridges.append(obj.cell.coord)
+        villages = list(self.get_all_objects_by_str_type("village"))
+        idx = random.randint(0,1)
+        villages.sort(key=lambda x:x.cell.coord[idx])
+        villages_1 = villages[0:len(villages)//3]
+        villages_2 = villages[(2*len(villages))//3:]
+        for obj in villages: #add flag to villages and add windmills
+            cx,cy = obj.cell.coord
+            race = None
+            if obj in villages_1:
+                race = race1
+            elif obj in villages_2:
+                race = race2
+            if race:
+                self.set_flag(obj.cell.coord, race.flag, race.team)
+            for x,y in neighs:
+                coord = cx+x, cy+y
+                cell = self.get_cell_at(coord[0], coord[1])
+                if cell:
+                    if not cell.objects:
+                        if cell.material.name.lower() in can_windmill:
+                            if random.random() < windmill_probability:
+                                self.add_object(coord, self.windmill, 1)
+                                if race:
+                                    self.set_flag(coord, race.flag, race.team)
 
     def collect_path_objects(self, map_initializer):
         self.cobblestone = map_initializer.cobblestone
@@ -382,27 +387,6 @@ class Game:
         assert self.cobblestone
         assert self.bridge_h
         assert self.bridge_v
-##        if not self.cobblestone:
-##            self.cobblestone = MapObject(self.me, map_initializer.cobble,
-##                                         "cobblestone",
-##                                         map_initializer.cobble_size)
-##            self.cobblestone.is_ground = True
-##        if not self.bridge_h:
-##            bridge_h = MapObject(self.me, map_initializer.bridge_h, "bridge",
-##                                    map_initializer.bridge_h_size,
-##                                    str_type="bridge_h")
-##            bridge_h.is_ground = True
-##            bridge_h.max_relpos = [0., 0.]
-##            bridge_h.min_relpos = [0., 0.]
-##            self.bridge_h = bridge_h
-##        if not self.bridge_v:
-##            bridge_v = MapObject(self.me, map_initializer.bridge_v, "bridge",
-##                                    map_initializer.bridge_v_size,
-##                                    str_type="bridge_v")
-##            bridge_v.is_ground = True
-##            bridge_v.max_relpos = [0.,0.]
-##            bridge_v.min_relpos = [0., 0.]
-##            self.bridge_v = bridge_v
         self.bridge = self.bridge_h
         self.road = self.cobblestone
         self.buildable_objs["road"] = self.cobblestone
@@ -515,6 +499,7 @@ class Game:
     def center_cam_on_cell(self, coord):
         """To actually see the result, first draw the map, then display()"""
         self.me.cam.center_on_cell(coord)
+        self.recompute_smokes_position()
 
     def get_objects_of_team(self, team, str_type):
         objs = []
@@ -527,13 +512,16 @@ class Game:
         return objs
 
     def update_player_income(self, p):
+        p.money += self.compute_player_income(p)
+
+    def compute_player_income(self, p):
         #1. villages
         v = len(self.get_objects_of_team(p.team, "village"))
-        p.money += int(v * INCOME_PER_VILLAGE * p.tax)
+        income = int(v * INCOME_PER_VILLAGE * p.tax)
         #2. windmills
         w = len(self.get_objects_of_team(p.team, "windmill"))
-        p.money += int(w * INCOME_PER_WINDMILL)
-
+        income += int(w * INCOME_PER_WINDMILL)
+        return income
 
 
     def get_units_of_player(self, p):
@@ -587,26 +575,32 @@ class Game:
         self.gui.empty_star = get_sprite_frames("sprites/star_empty.png", s=13)[0]
         self.gui.plain_star = get_sprite_frames("sprites/star_plain.png", s=13)[0]
         self.hourglass = get_sprite_frames("sprites/hourglass.png")
-        p1,p2 = self.players
-        villages1 = self.get_objects_of_team(p1.team, "village")
-        villages2 = self.get_objects_of_team(p2.team, "village")
-        L1 = len(villages1)
-        L2 = len(villages2)
-        if L1 == L2: #including 0
-            return
-        if L1 > 0:
-            if L2 / L1 < 0.5:
-                v = random.choice(villages1)
-                self.set_flag(v.cell.coord, p2.race.flag, p2.team)
-        elif L2 > 0:
-            if L1 / L2 < 0.5:
-                v = random.choice(villages2)
-                self.set_flag(v.cell.coord, p1.race.flag, p1.team)
+##        p1,p2 = self.players
+##        villages1 = self.get_objects_of_team(p1.team, "village")
+##        villages2 = self.get_objects_of_team(p2.team, "village")
+##        L1 = len(villages1)
+##        L2 = len(villages2)
+##        if L1 == L2: #including 0
+##            return
+##        if L1 > 0:
+##            if L2 / L1 < 0.5:
+##                v = random.choice(villages1)
+##                self.set_flag(v.cell.coord, p2.race.flag, p2.team)
+##        elif L2 > 0:
+##            if L1 / L2 < 0.5:
+##                v = random.choice(villages2)
+##                self.set_flag(v.cell.coord, p1.race.flag, p1.team)
 
 
     def initialize_money(self, amount):
         for p in self.players:
             p.money += amount
+        income1 = self.compute_player_income(self.players[0])
+        income2 = self.compute_player_income(self.players[1])
+        if income1 > income2:
+            self.players[1].money += 2*(income1 - income2)
+        elif income2 > income1:
+            self.players[0].money += 2*(income2 - income1)
         self.refresh_village_gui()
         self.gui.refresh()
         self.update_player_income(self.current_player)

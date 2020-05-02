@@ -1,6 +1,5 @@
 import pygame, thorpy
 import PyWorld2D.gui.parameters as guip
-from FantasyStrategia.logic.unit import Unit
 
 
 def get_help_text(*texts, start="normal"):
@@ -77,7 +76,8 @@ class MiscInfo:
         self.e.set_size((size[0],None))
 
 class CellInfo:
-    def __init__(self, size, cell_size, redraw, external_e):
+    def __init__(self, me, size, cell_size, redraw, external_e):
+        self.me = me
         self.wline = int(0.75*size[0])
         self.e_coordalt = thorpy.make_text("(?,?)", font_size=10, font_color=(200,200,200))
         self.e_mat_img = thorpy.Image.make(pygame.Surface(cell_size))
@@ -236,12 +236,8 @@ class CellInfo:
             text = objs[0]
         self.e_obj_name.set_text(text.capitalize())
         #
+##        new_img = self.me.extract_image(cell)
         new_img = cell.get_static_img_at_zoom(0)
-        for o in cell.objects:
-            if not o.is_static:
-                if not isinstance(o, Unit): #then blit it anyway
-                    cell_size = o.editor.cell_size
-                    new_img.blit(o.imgs_z_t[0][0], o.get_relative_pos(cell_size))
         self.e_mat_img.set_image(new_img)
         if len(objs) > 0:
             thorpy.store(self.e_mat_obj)
