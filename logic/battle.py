@@ -358,7 +358,7 @@ class Battle:
     """
 
 
-    def __init__(self, game, units, defender, distance, zoom_level=0):
+    def __init__(self, game, units, defender, distance, zoom_level=None):
         self.fps = game.me.fps
         self.units_to_blit = []
         self.observation_time = BATTLE_DURATION//10
@@ -389,7 +389,14 @@ class Battle:
         self.center = units.get(CENTER)
         #
         self.terrain = pygame.Surface(self.surface.get_size())
+        if zoom_level is None:
+            for i,s in enumerate(self.game.me.zoom_cell_sizes):
+                if s == 32:
+                    zoom_level = i
+                    break
         self.z = zoom_level
+        self.original_zoom = self.game.me.zoom_level
+        self.game.me.set_zoom(self.z)
         self.cell_size = None
         self.f1 = []
         self.f2 = []
@@ -457,6 +464,7 @@ class Battle:
         transitions.fade_to_black_screen()
         self.show()
         transitions.fade_to_black_screen(t=1.)
+        self.game.me.set_zoom(self.original_zoom)
         self.game.me.draw()
         e, show_death = self.get_summary()
         e.blit()
@@ -734,6 +742,7 @@ class Battle:
         W,H = self.surface.get_size()
         s = self.game.me.zoom_cell_sizes[self.z]
         self.cell_size = s
+        print("***",self.cell_size)
         self.nx = W//self.cell_size
         self.ny = H//self.cell_size
 ##        self.W -= self.cell_size//2
@@ -903,7 +912,7 @@ class Battle:
                     break
         objs_to_blit = []
         for o in self.objects[side]:
-            if not(o.str_type == "cobblestone" or "bridge" in o.str_type):
+            if not(o.str_type == "cobblestone"):
                 objs_to_blit.append(o)
         for x,y in disp:
 ##            self.terrain.blit(img, (x,y)) #blit base material (e.g. grass)
@@ -987,7 +996,7 @@ class Battle:
         for side in (LEFT, CENTER, RIGHT, UP, DOWN):
             u = getattr(self, side)
             if u:
-                img = thorpy.Image(u.imgs_z_t[0][0])
+                img = thorpy.Image(u.imgs_z_t[self.z][0])
                 engaged = thorpy.LifeBar("Before battle: "+str(u.quantity),
                                             size=SUMMARY_LIFEBAR_SIZE)
                 before = u.quantity
@@ -1027,7 +1036,7 @@ class Battle:
 
 
 class DistantBattle(Battle):
-    def __init__(self, game, units, defender, distance, zoom_level=0):
+    def __init__(self, game, units, defender, distance, zoom_level=None):
         Battle.__init__(self, game, units, defender, distance, zoom_level)
         self.battle_duration = DISTANT_BATTLE_DURATION
         self.projectile_class = DistantBattleProjectile

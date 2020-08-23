@@ -8,9 +8,14 @@ yann.thorimbert@gmail.com
 ################################################################################
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
+#autoriser le traversage des cellules amies sinon trop nul
+#mettre base a capturer/general a tuer car sinon bataille trop longues en general
+##garder selection unit apres deplacement
+#distant battle : enlever sons de guerre
+#bug affichage au moment de la selection des allies
+#continuer chantier marche plus
 
-#bien separer les choix, sinon bugs, comme la
-##map sympas : init unit sur la terre
+
 ##verif fin de partie
 ##menu principal avec plusieurs maps
 
@@ -23,6 +28,7 @@ yann.thorimbert@gmail.com
 #TEST !! - V a1
 
 #son celebration
+##zoom grand : dezoomer pour batailles (pour l'instant les appels a "set_zoom" sont commentes dans fakebattle)
 
 #load/save
 #editeur terrain
@@ -104,10 +110,11 @@ from logic.player import Player
 theme.set_theme("human")
 
 W,H = 1200, 700 #screen size
-FPS = 60
+FPS = 30
 app = thorpy.Application((W,H))
 
-##map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
+map_initializer = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
+maps.map1.world_size = (32,32)
 maps.map1.chunk = (1322, 43944)
 maps.map1.max_number_of_roads = 5 #5
 maps.map1.max_number_of_rivers = 5 #5
@@ -116,12 +123,13 @@ maps.map1.seed_static_objects = 15
 maps.map1.zoom_cell_sizes = [32]
 
 
-for map_initializer in [maps.map1, maps.map0, maps.map2, maps.map3]:
-    me = map_initializer.configure_map_editor(FPS) #me = "Map Editor"
-    app.get_screen().fill((0,0,0))
-    me.show_hmap()
-
+##for map_initializer in [maps.map1, maps.map0, maps.map2, maps.map3]:
+##    me = map_initializer.configure_map_editor(FPS) #me = "Map Editor"
+##    app.get_screen().fill((0,0,0))
+####    me.show_hmap()
 map_initializer = maps.map1
+me = map_initializer.configure_map_editor(FPS)
+
 
 
 game = Game(me)

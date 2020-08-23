@@ -422,7 +422,7 @@ class MapEditor:
         #blit cursor
 ##        self.cam.draw_rmouse(self.screen, self.box_hmap.get_rect())
         #blit objects
-        self.cam.draw_objects(self.screen, self.dynamic_objects)
+        self.cam.draw_objects(self.screen, self.dynamic_objects, True)
         #blit smoke effects
         self.game.refresh_smokes()
         #update right pane
@@ -439,7 +439,7 @@ class MapEditor:
         #blit map
         self.cam.draw_grid(self.screen, self.show_grid_lines)
         #blit objects
-        self.cam.draw_objects(self.screen, self.dynamic_objects)
+        self.cam.draw_objects(self.screen, self.dynamic_objects, True)
         #blit smoke effects
         self.game.refresh_smokes()
         #blit right pane and draw rect on minimap
@@ -615,6 +615,7 @@ class MapEditor:
         if self.reverse_hmap:
             ng.apply(hmap, lambda x:1.-x)
         self.hmap = hmap
+        print("***CACA", len(hmap), len(hmap[0]))
         return hmap
 
 ##    def to_file(self, fn):

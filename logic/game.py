@@ -247,7 +247,9 @@ class Game:
                 o.remove_from_map(self.me)
                 effects.draw_ashes(self, o)
                 if o.str_type == "construction":
-                    self.constructions[o.cell.coord][2].is_building = None
+                    u = self.constructions[o.cell.coord][2]
+                    if u:
+                        u.is_building = None
                     self.constructions.pop(o.cell.coord)
                 if o.name == "bridge":
                     self.bridges.remove(o.cell.coord)
@@ -592,15 +594,15 @@ class Game:
 ##                self.set_flag(v.cell.coord, p1.race.flag, p1.team)
 
 
-    def initialize_money(self, amount):
+    def initialize_money(self, amount, compensation):
         for p in self.players:
             p.money += amount
         income1 = self.compute_player_income(self.players[0])
         income2 = self.compute_player_income(self.players[1])
         if income1 > income2:
-            self.players[1].money += 2*(income1 - income2)
+            self.players[1].money += compensation*(income1 - income2)
         elif income2 > income1:
-            self.players[0].money += 2*(income2 - income1)
+            self.players[0].money += compensation*(income2 - income1)
         self.refresh_village_gui()
         self.gui.refresh()
         self.update_player_income(self.current_player)

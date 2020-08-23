@@ -22,7 +22,7 @@ def get_onomatopoeia_frames(text, color):
     return els
 
 def quit_func():
-    io.ask_save(me)
+##    io.ask_save(self.game.me)
     thorpy.functions.quit_func()
 
 class Footprint:
@@ -233,7 +233,7 @@ class Gui:
         #
         self.moving_units = []
         self.add_reactions()
-        self.life_font_size = guip.NFS - 2
+        self.life_font_size = guip.NFS
         self.life_font_color = (255,255,255)
         self.font_life = pygame.font.SysFont(guip.font_gui_life, self.life_font_size)
         self.refresh_lifes()
@@ -848,7 +848,10 @@ class Gui:
                     if u.quantity > 0:
                         u.make_grayed()
             self.clear()
-            thorpy.get_current_menu().fps = guip.FPS
+            try:
+                thorpy.get_current_menu().fps = self.game.me.FPS
+            except:
+                pass
             self.refresh_lifes()
 
     def try_attack_simulation(self, battle_infos=None):
@@ -944,9 +947,9 @@ class Gui:
         self.small_clear()
 
     def burn(self):
-        time_left = 4
+        time_left = 2
         if self.game.get_object("windmill", self.cell_under_cursor.coord):
-            time_left = 2
+            time_left = 1
         self.game.set_fire(self.cell_under_cursor.coord, time_left)
         self.selected_unit.make_grayed()
 
@@ -1338,7 +1341,13 @@ class Gui:
             for pos in self.destinations_lmb:
                 rect.center = pos
                 self.surface.blit(surf, rect)
-        #2. mousemotion
+        #2. highlights
+        for unit in self.red_highlights:
+            self.draw_highlight(unit, "red", s)
+        for unit in self.blue_highlights:
+            self.draw_highlight(unit, "blue", s)
+
+    def draw_destinations(self, s):
         if self.destinations_mousemotion:
             surf = pygame.Surface((s-2,s-2))
             rect = surf.get_rect()
@@ -1355,12 +1364,9 @@ class Gui:
 ##                        cost = self.last_destination_score[coord][0]
 ##                        text = thorpy.make_text(str(cost))
 ##                        self.surface.blit(text.get_image(), rect)
-        for unit in self.red_highlights:
-            self.draw_highlight(unit, "red", s)
-        for unit in self.blue_highlights:
-            self.draw_highlight(unit, "blue", s)
 
     def draw_after_objects(self, s):
+        self.draw_destinations(s)
         self.enhancer.draw_splashes()
         # Life of units and building time
         if self.show_lifes:

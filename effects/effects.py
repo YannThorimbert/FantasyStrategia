@@ -64,8 +64,6 @@ def refresh_smokes(game):
     smokegen_small.draw(game.me.screen)
     smokegen_large.draw(game.me.screen)
 
-
-
 def draw_ashes(game, obj, n=40, frame=0):
     global smokegen_mod
     tmp = smokegen_mod

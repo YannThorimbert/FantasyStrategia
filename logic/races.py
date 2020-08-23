@@ -147,7 +147,7 @@ std_number = {'villager':20, #does not tell where units can be produced
             'archer':20,
             'cavalry':20,
             'mounted archer':20,
-            'wizard':5,
+            'wizard':10,
             'arch wizard':1,
             'king':1,
             'cook':1,

@@ -9,6 +9,7 @@ yann.thorimbert@gmail.com
 ############################ OBJECTIF IMMEDIAT #################################
 ################################################################################
 
+################################################################################
 #TEST !! - V a1
 
 ##laisser tomber fakebattle et utiliser une heuristique, car tte facon marche pas
@@ -99,8 +100,12 @@ from logic.player import Player
 theme.set_theme("round")
 
 W,H = 1200, 700 #screen size
-FPS = 60
 app = thorpy.Application((W,H))
+
+##W,H = thorpy.functions.get_max_screen_size()
+##app = thorpy.Application((W,H), flags=pygame.FULLSCREEN)
+
+FPS = 60
 
 ####mi = maps.map1 #go in mymaps.py and PLAY with PARAMS !!!
 ##maps.map1.chunk = (1322, 43944)
@@ -123,16 +128,17 @@ from PyWorld2D.thornoise.purepython.noisegen import colorscale_plains, colorscal
 def generate_map():
     mi = MapInitializer("First demo map")
     mi.chunk = (random.randint(0,1000), random.randint(0,1000))
-    mi.world_size = (32,32)
+    wm,hm = 32,32
+    mi.world_size = (wm,hm)
 ##    mi.set_terrain_type(terrain_plains, colorscale_normal)
     mi.set_terrain_type(terrain_medium, colorscale_normal)
     mi.max_number_of_roads = random.randint(0, 6)
     mi.max_number_of_rivers = random.randint(0, 6)
-    mi.zoom_cell_sizes = [32,]
+    mi.zoom_cell_sizes = [32, 16]
     mi.seed_static_objects = random.randint(0,1000)
     me = mi.configure_map_editor(FPS) #me = "Map Editor"
-    img = me.get_hmap_img((200,200))
-    print(mi.chunk, mi.seed_static_objects)
+    img = me.get_hmap_img((wm*10,hm*10))
+    print("CHUNK", mi.chunk, mi.seed_static_objects)
     return me, img, mi
 
 def refresh():
@@ -216,7 +222,7 @@ ui = gui.Gui(game)
 me.set_zoom(level=0)
 game.check_integrity()
 game.set_ambiant_sounds(True)
-game.initialize_money(200)
+game.initialize_money(200, compensation=5)
 
 
 m = thorpy.Menu(me.e_box,fps=me.fps)

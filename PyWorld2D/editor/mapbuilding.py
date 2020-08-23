@@ -502,7 +502,6 @@ class MapInitializer:
         me.build_gui_elements()
 
 
-
     def h(self, x,y,h):
         if isinstance(h,str):
             h = getattr(self, "h"+h) - 0.001

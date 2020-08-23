@@ -315,7 +315,6 @@ class Battle:
 
 
     def __init__(self, game, units, defender, distance):
-        zoom_level = game.me.zoom_level
         self.battle_duration = BATTLE_DURATION
         self.defender_start_shooting = BATTLE_DURATION//10
         self.projectile_class = Projectile
@@ -338,7 +337,15 @@ class Battle:
         self.down = units.get(DOWN)
         self.center = units.get(CENTER)
         #
+        zoom_level = None
+        if zoom_level is None:
+            for i,s in enumerate(self.game.me.zoom_cell_sizes):
+                if s == 32:
+                    zoom_level = i
+                    break
         self.z = zoom_level
+        self.original_zoom = self.game.me.zoom_level
+##        self.game.me.set_zoom(self.z)
         self.cell_size = None
         self.f1 = []
         self.f2 = []
@@ -406,6 +413,7 @@ class Battle:
     def fight(self, hourglass=False):
         self.prepare_battle()
         self.show(hourglass)
+##        self.game.me.set_zoom(self.original_zoom)
         return self.get_summary_stats()
 ##        self.game.me.draw()
 ##        e, show_death = self.get_summary()
@@ -853,19 +861,4 @@ class DistantBattle(Battle):
         if self.finished:
             self.text_finish.blit()
 
-
-def get_img(cell, z):
-    splash = False
-    footprint = False
-    for obj in cell.objects:
-        if obj.str_type == "river":
-            img = obj.imgs_z_t[z][0]
-            splash = True
-            break
-    else:
-        img = cell.material.imgs[z][0]
-        n = cell.material.name.lower()
-        if "sand" in n or "snow" in n:
-            footprint = True
-    return img, splash, footprint
 
